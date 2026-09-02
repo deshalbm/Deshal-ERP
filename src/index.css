@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+html, body {
+  min-height: 100%;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Tajawal', 'Cairo', 'Alexandria', system-ui, -apple-system, sans-serif;
+  padding-top: var(--sat);
+  padding-inline-start: var(--sal);
+  padding-inline-end: var(--sar);
+}
+
+/* Fix Arabic cursive letter-spacing & RTL rendering */
+[dir="rtl"], [dir="auto"], :lang(ar), .arabic-text {
+  letter-spacing: normal !important;
+}
+
+#receipt-voucher-print-area {
+  font-family: 'Tajawal', 'Cairo', 'Alexandria', system-ui, -apple-system, sans-serif;
+}
+
+/* Standalone PWA safe-bottom padding */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pwa-safe-bottom {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 5mm;
+}
+
+@media print {
+  /* Reset page for single-page printing */
+  html, body {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Hide headers, footers, toolbars, modal overlays, bottom navigation and interactive elements */
+  header, nav, footer, .print\:hidden, [data-pwa-nav], [data-install-banner] {
+    display: none !important;
+  }
+
+  /* Adjust main container for full-width print */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Target exact receipt printable area */
+  #receipt-voucher-print-area {
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 auto !important;
+    padding: 4mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 285mm !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    overflow: hidden !important;
+  }
+}

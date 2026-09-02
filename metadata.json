@@ -1,0 +1,10 @@
+{
+  "name": "Deshal Business Management ERP",
+  "description": "Deshal Business Management ERP - Comprehensive platform for enterprise finance, General Ledger (GL) & Double-Entry Accounting, POS cashier, lease contracts, workspace & meeting hall bookings, consulting services, CRM 360°, inventory, staff payroll WPS, dynamic requests engine & certified QR documents.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
