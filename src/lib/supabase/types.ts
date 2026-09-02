@@ -45,114 +45,256 @@ export interface Database {
           updated_at?: string;
         };
       };
-      branches: {
+      stock_balances: {
         Row: {
           id: string;
           company_id: string;
-          code: string;
-          name_ar: string;
-          name_en: string | null;
-          city: string;
-          is_active: boolean;
+          product_id: string;
+          warehouse_id: string;
+          quantity: number;
+          reserved_quantity: number;
+          available_quantity: number;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           company_id: string;
-          code: string;
-          name_ar: string;
-          name_en?: string | null;
-          city?: string;
-          is_active?: boolean;
+          product_id: string;
+          warehouse_id: string;
+          quantity?: number;
+          reserved_quantity?: number;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           company_id?: string;
-          code?: string;
-          name_ar?: string;
-          name_en?: string | null;
-          city?: string;
-          is_active?: boolean;
+          product_id?: string;
+          warehouse_id?: string;
+          quantity?: number;
+          reserved_quantity?: number;
           updated_at?: string;
         };
       };
-      profiles: {
+      inventory_transactions: {
         Row: {
           id: string;
           company_id: string;
-          employee_id: string | null;
-          full_name: string;
-          email: string;
-          phone: string | null;
-          avatar_url: string | null;
-          is_active: boolean;
+          warehouse_id: string;
+          product_id: string;
+          transaction_number: string;
+          transaction_type:
+            | 'OPENING'
+            | 'PURCHASE_RECEIPT'
+            | 'PURCHASE_RETURN'
+            | 'SALE_ISSUE'
+            | 'SALE_RETURN'
+            | 'TRANSFER_OUT'
+            | 'TRANSFER_IN'
+            | 'ADJUSTMENT_IN'
+            | 'ADJUSTMENT_OUT'
+            | 'PRODUCTION_IN'
+            | 'PRODUCTION_OUT';
+          status: 'DRAFT' | 'POSTED' | 'CANCELLED';
+          quantity: number;
+          unit_cost: number;
+          total_cost: number;
+          transaction_date: string;
+          reference_type: string | null;
+          reference_id: string | null;
+          source_warehouse_id: string | null;
+          destination_warehouse_id: string | null;
+          notes: string | null;
+          posted_at: string | null;
+          posted_by: string | null;
+          created_by: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          id: string;
+          id?: string;
           company_id: string;
-          employee_id?: string | null;
-          full_name: string;
-          email: string;
-          phone?: string | null;
-          avatar_url?: string | null;
-          is_active?: boolean;
+          warehouse_id: string;
+          product_id: string;
+          transaction_number: string;
+          transaction_type:
+            | 'OPENING'
+            | 'PURCHASE_RECEIPT'
+            | 'PURCHASE_RETURN'
+            | 'SALE_ISSUE'
+            | 'SALE_RETURN'
+            | 'TRANSFER_OUT'
+            | 'TRANSFER_IN'
+            | 'ADJUSTMENT_IN'
+            | 'ADJUSTMENT_OUT'
+            | 'PRODUCTION_IN'
+            | 'PRODUCTION_OUT';
+          status?: 'DRAFT' | 'POSTED' | 'CANCELLED';
+          quantity: number;
+          unit_cost?: number;
+          transaction_date?: string;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          source_warehouse_id?: string | null;
+          destination_warehouse_id?: string | null;
+          notes?: string | null;
+          posted_at?: string | null;
+          posted_by?: string | null;
+          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           company_id?: string;
-          employee_id?: string | null;
-          full_name?: string;
-          email?: string;
-          phone?: string | null;
-          avatar_url?: string | null;
-          is_active?: boolean;
+          warehouse_id?: string;
+          product_id?: string;
+          transaction_number?: string;
+          transaction_type?:
+            | 'OPENING'
+            | 'PURCHASE_RECEIPT'
+            | 'PURCHASE_RETURN'
+            | 'SALE_ISSUE'
+            | 'SALE_RETURN'
+            | 'TRANSFER_OUT'
+            | 'TRANSFER_IN'
+            | 'ADJUSTMENT_IN'
+            | 'ADJUSTMENT_OUT'
+            | 'PRODUCTION_IN'
+            | 'PRODUCTION_OUT';
+          status?: 'DRAFT' | 'POSTED' | 'CANCELLED';
+          quantity?: number;
+          unit_cost?: number;
+          transaction_date?: string;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          source_warehouse_id?: string | null;
+          destination_warehouse_id?: string | null;
+          notes?: string | null;
+          posted_at?: string | null;
+          posted_by?: string | null;
+          created_by?: string | null;
           updated_at?: string;
         };
       };
-      customers: {
+      stock_transfers: {
         Row: {
           id: string;
           company_id: string;
-          name: string;
-          phone: string | null;
-          email: string | null;
-          city: string | null;
-          tax_id: string | null;
-          cr_number: string | null;
-          category: string;
+          transfer_number: string;
+          source_warehouse_id: string;
+          destination_warehouse_id: string;
+          status: 'DRAFT' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
+          transfer_date: string;
+          shipped_at: string | null;
+          received_at: string | null;
+          notes: string | null;
+          created_by: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           company_id: string;
-          name: string;
-          phone?: string | null;
-          email?: string | null;
-          city?: string | null;
-          tax_id?: string | null;
-          cr_number?: string | null;
-          category?: string;
+          transfer_number: string;
+          source_warehouse_id: string;
+          destination_warehouse_id: string;
+          status?: 'DRAFT' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
+          transfer_date?: string;
+          shipped_at?: string | null;
+          received_at?: string | null;
+          notes?: string | null;
+          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           company_id?: string;
-          name?: string;
-          phone?: string | null;
-          email?: string | null;
-          city?: string | null;
-          tax_id?: string | null;
-          cr_number?: string | null;
-          category?: string;
+          transfer_number?: string;
+          source_warehouse_id?: string;
+          destination_warehouse_id?: string;
+          status?: 'DRAFT' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
+          transfer_date?: string;
+          shipped_at?: string | null;
+          received_at?: string | null;
+          notes?: string | null;
+          created_by?: string | null;
+          updated_at?: string;
+        };
+      };
+      stock_transfer_lines: {
+        Row: {
+          id: string;
+          stock_transfer_id: string;
+          product_id: string;
+          quantity: number;
+          unit_cost: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          stock_transfer_id: string;
+          product_id: string;
+          quantity: number;
+          unit_cost?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          stock_transfer_id?: string;
+          product_id?: string;
+          quantity?: number;
+          unit_cost?: number;
+        };
+      };
+      stock_reservations: {
+        Row: {
+          id: string;
+          company_id: string;
+          warehouse_id: string;
+          product_id: string;
+          sales_order_id: string | null;
+          sales_order_line_id: string | null;
+          reserved_quantity: number;
+          status: 'ACTIVE' | 'RELEASED' | 'FULFILLED' | 'CANCELLED';
+          reserved_at: string;
+          released_at: string | null;
+          fulfilled_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          warehouse_id: string;
+          product_id: string;
+          sales_order_id?: string | null;
+          sales_order_line_id?: string | null;
+          reserved_quantity: number;
+          status?: 'ACTIVE' | 'RELEASED' | 'FULFILLED' | 'CANCELLED';
+          reserved_at?: string;
+          released_at?: string | null;
+          fulfilled_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          warehouse_id?: string;
+          product_id?: string;
+          sales_order_id?: string | null;
+          sales_order_line_id?: string | null;
+          reserved_quantity?: number;
+          status?: 'ACTIVE' | 'RELEASED' | 'FULFILLED' | 'CANCELLED';
+          reserved_at?: string;
+          released_at?: string | null;
+          fulfilled_at?: string | null;
+          created_by?: string | null;
           updated_at?: string;
         };
       };
@@ -238,98 +380,6 @@ export interface Database {
           cancelled_by?: string | null;
           cancellation_reason?: string | null;
           created_by?: string | null;
-          updated_at?: string;
-        };
-      };
-      payment_allocations: {
-        Row: {
-          id: string;
-          company_id: string;
-          payment_id: string;
-          invoice_id: string;
-          allocated_amount: number;
-          notes: string | null;
-          created_by: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          payment_id: string;
-          invoice_id: string;
-          allocated_amount: number;
-          notes?: string | null;
-          created_by?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          payment_id?: string;
-          invoice_id?: string;
-          allocated_amount?: number;
-          notes?: string | null;
-          created_by?: string | null;
-        };
-      };
-      receipts: {
-        Row: {
-          id: string;
-          company_id: string;
-          branch_id: string | null;
-          receipt_number: string;
-          payment_id: string;
-          customer_id: string | null;
-          receipt_date: string;
-          amount: number;
-          currency: string;
-          status: 'ISSUED' | 'CANCELLED';
-          notes: string | null;
-          issued_at: string;
-          issued_by: string | null;
-          cancelled_at: string | null;
-          cancelled_by: string | null;
-          cancellation_reason: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          branch_id?: string | null;
-          receipt_number: string;
-          payment_id: string;
-          customer_id?: string | null;
-          receipt_date?: string;
-          amount: number;
-          currency?: string;
-          status?: 'ISSUED' | 'CANCELLED';
-          notes?: string | null;
-          issued_at?: string;
-          issued_by?: string | null;
-          cancelled_at?: string | null;
-          cancelled_by?: string | null;
-          cancellation_reason?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          branch_id?: string | null;
-          receipt_number?: string;
-          payment_id?: string;
-          customer_id?: string | null;
-          receipt_date?: string;
-          amount?: number;
-          currency?: string;
-          status?: 'ISSUED' | 'CANCELLED';
-          notes?: string | null;
-          issued_at?: string;
-          issued_by?: string | null;
-          cancelled_at?: string | null;
-          cancelled_by?: string | null;
-          cancellation_reason?: string | null;
           updated_at?: string;
         };
       };
