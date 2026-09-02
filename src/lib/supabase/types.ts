@@ -45,731 +45,431 @@ export interface Database {
           updated_at?: string;
         };
       };
-      purchase_orders: {
+      employee_contracts: {
         Row: {
           id: string;
           company_id: string;
+          employee_id: string;
           branch_id: string | null;
-          supplier_id: string;
-          warehouse_id: string | null;
-          purchase_number: string;
-          supplier_invoice_no: string | null;
-          date: string;
-          due_date: string | null;
-          subtotal: number;
-          discount_amount: number;
-          tax_amount: number;
-          total_amount: number;
-          status: 'DRAFT' | 'CONFIRMED' | 'PARTIALLY_RECEIVED' | 'RECEIVED' | 'CANCELLED';
+          department_id: string | null;
+          contract_number: string;
+          contract_type: 'LIMITED' | 'UNLIMITED' | 'PART_TIME' | 'TEMPORARY' | 'CONSULTING';
+          status: 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED' | 'CANCELLED';
+          start_date: string;
+          end_date: string | null;
+          probation_end_date: string | null;
+          basic_salary: number;
+          housing_allowance: number;
+          transport_allowance: number;
+          other_allowances: number;
+          gross_salary: number;
+          currency: string;
+          working_hours_per_day: number;
+          working_days_per_week: number;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          employee_id: string;
+          branch_id?: string | null;
+          department_id?: string | null;
+          contract_number: string;
+          contract_type?: 'LIMITED' | 'UNLIMITED' | 'PART_TIME' | 'TEMPORARY' | 'CONSULTING';
+          status?: 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED' | 'CANCELLED';
+          start_date: string;
+          end_date?: string | null;
+          probation_end_date?: string | null;
+          basic_salary?: number;
+          housing_allowance?: number;
+          transport_allowance?: number;
+          other_allowances?: number;
+          currency?: string;
+          working_hours_per_day?: number;
+          working_days_per_week?: number;
+          notes?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          employee_id?: string;
+          branch_id?: string | null;
+          department_id?: string | null;
+          contract_number?: string;
+          contract_type?: 'LIMITED' | 'UNLIMITED' | 'PART_TIME' | 'TEMPORARY' | 'CONSULTING';
+          status?: 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED' | 'CANCELLED';
+          start_date?: string;
+          end_date?: string | null;
+          probation_end_date?: string | null;
+          basic_salary?: number;
+          housing_allowance?: number;
+          transport_allowance?: number;
+          other_allowances?: number;
+          currency?: string;
+          working_hours_per_day?: number;
+          working_days_per_week?: number;
+          notes?: string | null;
+          created_by?: string | null;
+          updated_at?: string;
+        };
+      };
+      salary_components: {
+        Row: {
+          id: string;
+          company_id: string;
+          code: string;
+          name_ar: string;
+          name_en: string | null;
+          component_type: 'EARNING' | 'DEDUCTION' | 'EMPLOYER_CONTRIBUTION';
+          calculation_type: 'FIXED' | 'PERCENTAGE';
+          percentage_of: 'BASIC_SALARY' | 'GROSS_SALARY' | null;
+          default_amount: number;
+          default_percentage: number | null;
+          is_taxable: boolean;
+          is_active: boolean;
+          display_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          code: string;
+          name_ar: string;
+          name_en?: string | null;
+          component_type: 'EARNING' | 'DEDUCTION' | 'EMPLOYER_CONTRIBUTION';
+          calculation_type?: 'FIXED' | 'PERCENTAGE';
+          percentage_of?: 'BASIC_SALARY' | 'GROSS_SALARY' | null;
+          default_amount?: number;
+          default_percentage?: number | null;
+          is_taxable?: boolean;
+          is_active?: boolean;
+          display_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          code?: string;
+          name_ar?: string;
+          name_en?: string | null;
+          component_type?: 'EARNING' | 'DEDUCTION' | 'EMPLOYER_CONTRIBUTION';
+          calculation_type?: 'FIXED' | 'PERCENTAGE';
+          percentage_of?: 'BASIC_SALARY' | 'GROSS_SALARY' | null;
+          default_amount?: number;
+          default_percentage?: number | null;
+          is_taxable?: boolean;
+          is_active?: boolean;
+          display_order?: number;
+          updated_at?: string;
+        };
+      };
+      employee_salary_components: {
+        Row: {
+          id: string;
+          company_id: string;
+          employee_id: string;
+          salary_component_id: string;
+          effective_from: string;
+          effective_to: string | null;
+          amount: number | null;
+          percentage: number | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          employee_id: string;
+          salary_component_id: string;
+          effective_from?: string;
+          effective_to?: string | null;
+          amount?: number | null;
+          percentage?: number | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          employee_id?: string;
+          salary_component_id?: string;
+          effective_from?: string;
+          effective_to?: string | null;
+          amount?: number | null;
+          percentage?: number | null;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+      };
+      attendance_records: {
+        Row: {
+          id: string;
+          company_id: string;
+          employee_id: string;
+          branch_id: string | null;
+          attendance_date: string;
+          check_in_at: string | null;
+          check_out_at: string | null;
+          scheduled_check_in_at: string | null;
+          scheduled_check_out_at: string | null;
+          status: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'ON_LEAVE' | 'HOLIDAY' | 'WEEKEND' | 'REMOTE_WORK';
+          total_work_minutes: number;
+          regular_work_minutes: number;
+          overtime_minutes: number;
+          late_minutes: number;
+          early_departure_minutes: number;
+          source: 'KIOSK' | 'MANUAL' | 'SYSTEM' | 'IMPORT' | 'MOBILE';
+          is_locked: boolean;
+          notes: string | null;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          employee_id: string;
+          branch_id?: string | null;
+          attendance_date: string;
+          check_in_at?: string | null;
+          check_out_at?: string | null;
+          scheduled_check_in_at?: string | null;
+          scheduled_check_out_at?: string | null;
+          status?: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'ON_LEAVE' | 'HOLIDAY' | 'WEEKEND' | 'REMOTE_WORK';
+          total_work_minutes?: number;
+          regular_work_minutes?: number;
+          overtime_minutes?: number;
+          late_minutes?: number;
+          early_departure_minutes?: number;
+          source?: 'KIOSK' | 'MANUAL' | 'SYSTEM' | 'IMPORT' | 'MOBILE';
+          is_locked?: boolean;
+          notes?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          employee_id?: string;
+          branch_id?: string | null;
+          attendance_date?: string;
+          check_in_at?: string | null;
+          check_out_at?: string | null;
+          scheduled_check_in_at?: string | null;
+          scheduled_check_out_at?: string | null;
+          status?: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'ON_LEAVE' | 'HOLIDAY' | 'WEEKEND' | 'REMOTE_WORK';
+          total_work_minutes?: number;
+          regular_work_minutes?: number;
+          overtime_minutes?: number;
+          late_minutes?: number;
+          early_departure_minutes?: number;
+          source?: 'KIOSK' | 'MANUAL' | 'SYSTEM' | 'IMPORT' | 'MOBILE';
+          is_locked?: boolean;
+          notes?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          updated_at?: string;
+        };
+      };
+      leave_types: {
+        Row: {
+          id: string;
+          company_id: string;
+          code: string;
+          name_ar: string;
+          name_en: string | null;
+          annual_entitlement: number;
+          is_paid: boolean;
+          requires_approval: boolean;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          code: string;
+          name_ar: string;
+          name_en?: string | null;
+          annual_entitlement?: number;
+          is_paid?: boolean;
+          requires_approval?: boolean;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          code?: string;
+          name_ar?: string;
+          name_en?: string | null;
+          annual_entitlement?: number;
+          is_paid?: boolean;
+          requires_approval?: boolean;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+      };
+      employee_leave_balances: {
+        Row: {
+          id: string;
+          company_id: string;
+          employee_id: string;
+          leave_type_id: string;
+          year: number;
+          opening_balance: number;
+          accrued_days: number;
+          used_days: number;
+          adjusted_days: number;
+          closing_balance: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          employee_id: string;
+          leave_type_id: string;
+          year: number;
+          opening_balance?: number;
+          accrued_days?: number;
+          used_days?: number;
+          adjusted_days?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          employee_id?: string;
+          leave_type_id?: string;
+          year?: number;
+          opening_balance?: number;
+          accrued_days?: number;
+          used_days?: number;
+          adjusted_days?: number;
+          updated_at?: string;
+        };
+      };
+      payroll_slips: {
+        Row: {
+          id: string;
+          company_id: string;
+          employee_id: string;
+          contract_id: string | null;
+          month: string;
+          period_start: string | null;
+          period_end: string | null;
+          basic_salary: number;
+          total_allowances: number;
+          total_earnings: number;
+          total_deductions: number;
+          net_salary: number;
+          status: 'DRAFT' | 'POSTED' | 'PAID' | 'LOCKED' | 'CANCELLED';
           payment_status: 'UNPAID' | 'PARTIAL' | 'PAID' | null;
-          received_at: string | null;
-          confirmed_at: string | null;
-          cancelled_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          branch_id?: string | null;
-          supplier_id: string;
-          warehouse_id?: string | null;
-          purchase_number: string;
-          supplier_invoice_no?: string | null;
-          date: string;
-          due_date?: string | null;
-          subtotal?: number;
-          discount_amount?: number;
-          tax_amount?: number;
-          total_amount?: number;
-          status?: 'DRAFT' | 'CONFIRMED' | 'PARTIALLY_RECEIVED' | 'RECEIVED' | 'CANCELLED';
-          payment_status?: 'UNPAID' | 'PARTIAL' | 'PAID' | null;
-          received_at?: string | null;
-          confirmed_at?: string | null;
-          cancelled_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          branch_id?: string | null;
-          supplier_id?: string;
-          warehouse_id?: string | null;
-          purchase_number?: string;
-          supplier_invoice_no?: string | null;
-          date?: string;
-          due_date?: string | null;
-          subtotal?: number;
-          discount_amount?: number;
-          tax_amount?: number;
-          total_amount?: number;
-          status?: 'DRAFT' | 'CONFIRMED' | 'PARTIALLY_RECEIVED' | 'RECEIVED' | 'CANCELLED';
-          payment_status?: 'UNPAID' | 'PARTIAL' | 'PAID' | null;
-          received_at?: string | null;
-          confirmed_at?: string | null;
-          cancelled_at?: string | null;
-          updated_at?: string;
-        };
-      };
-      purchase_order_lines: {
-        Row: {
-          id: string;
-          purchase_order_id: string;
-          product_id: string;
-          description: string | null;
-          quantity: number;
-          received_quantity: number;
-          invoiced_quantity: number;
-          unit_price: number;
-          discount_amount: number;
-          tax_amount: number;
-          line_total: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          purchase_order_id: string;
-          product_id: string;
-          description?: string | null;
-          quantity: number;
-          received_quantity?: number;
-          invoiced_quantity?: number;
-          unit_price?: number;
-          discount_amount?: number;
-          tax_amount?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          purchase_order_id?: string;
-          product_id?: string;
-          description?: string | null;
-          quantity?: number;
-          received_quantity?: number;
-          invoiced_quantity?: number;
-          unit_price?: number;
-          discount_amount?: number;
-          tax_amount?: number;
-          updated_at?: string;
-        };
-      };
-      goods_receipts: {
-        Row: {
-          id: string;
-          company_id: string;
-          purchase_order_id: string;
-          supplier_id: string;
-          warehouse_id: string;
-          receipt_number: string;
-          receipt_date: string;
-          status: 'DRAFT' | 'RECEIVED' | 'CANCELLED';
-          notes: string | null;
-          received_at: string | null;
-          received_by: string | null;
-          created_by: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          purchase_order_id: string;
-          supplier_id: string;
-          warehouse_id: string;
-          receipt_number: string;
-          receipt_date?: string;
-          status?: 'DRAFT' | 'RECEIVED' | 'CANCELLED';
-          notes?: string | null;
-          received_at?: string | null;
-          received_by?: string | null;
-          created_by?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          purchase_order_id?: string;
-          supplier_id?: string;
-          warehouse_id?: string;
-          receipt_number?: string;
-          receipt_date?: string;
-          status?: 'DRAFT' | 'RECEIVED' | 'CANCELLED';
-          notes?: string | null;
-          received_at?: string | null;
-          received_by?: string | null;
-          created_by?: string | null;
-          updated_at?: string;
-        };
-      };
-      goods_receipt_lines: {
-        Row: {
-          id: string;
-          goods_receipt_id: string;
-          purchase_order_line_id: string;
-          product_id: string;
-          quantity: number;
-          accepted_quantity: number;
-          rejected_quantity: number;
-          unit_cost: number;
-          notes: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          goods_receipt_id: string;
-          purchase_order_line_id: string;
-          product_id: string;
-          quantity: number;
-          accepted_quantity: number;
-          rejected_quantity?: number;
-          unit_cost?: number;
-          notes?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          goods_receipt_id?: string;
-          purchase_order_line_id?: string;
-          product_id?: string;
-          quantity?: number;
-          accepted_quantity?: number;
-          rejected_quantity?: number;
-          unit_cost?: number;
-          notes?: string | null;
-        };
-      };
-      supplier_invoices: {
-        Row: {
-          id: string;
-          company_id: string;
-          supplier_id: string;
-          purchase_order_id: string | null;
-          invoice_number: string;
-          supplier_invoice_number: string | null;
-          invoice_date: string;
-          due_date: string | null;
-          subtotal: number;
-          discount_amount: number;
-          tax_amount: number;
-          total_amount: number;
-          paid_amount: number;
-          outstanding_amount: number;
-          currency: string;
-          status: 'DRAFT' | 'POSTED' | 'PARTIAL' | 'PAID' | 'CANCELLED';
+          posted_at: string | null;
+          posted_by: string | null;
+          locked_at: string | null;
+          disbursed_at: string | null;
           journal_entry_id: string | null;
-          posted_at: string | null;
-          posted_by: string | null;
-          notes: string | null;
-          created_by: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           company_id: string;
-          supplier_id: string;
-          purchase_order_id?: string | null;
-          invoice_number: string;
-          supplier_invoice_number?: string | null;
-          invoice_date?: string;
-          due_date?: string | null;
-          subtotal?: number;
-          discount_amount?: number;
-          tax_amount?: number;
-          total_amount?: number;
-          paid_amount?: number;
-          currency?: string;
-          status?: 'DRAFT' | 'POSTED' | 'PARTIAL' | 'PAID' | 'CANCELLED';
+          employee_id: string;
+          contract_id?: string | null;
+          month: string;
+          period_start?: string | null;
+          period_end?: string | null;
+          basic_salary?: number;
+          total_allowances?: number;
+          total_earnings?: number;
+          total_deductions?: number;
+          net_salary?: number;
+          status?: 'DRAFT' | 'POSTED' | 'PAID' | 'LOCKED' | 'CANCELLED';
+          payment_status?: 'UNPAID' | 'PARTIAL' | 'PAID' | null;
+          posted_at?: string | null;
+          posted_by?: string | null;
+          locked_at?: string | null;
+          disbursed_at?: string | null;
           journal_entry_id?: string | null;
-          posted_at?: string | null;
-          posted_by?: string | null;
-          notes?: string | null;
-          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           company_id?: string;
-          supplier_id?: string;
-          purchase_order_id?: string | null;
-          invoice_number?: string;
-          supplier_invoice_number?: string | null;
-          invoice_date?: string;
-          due_date?: string | null;
-          subtotal?: number;
-          discount_amount?: number;
-          tax_amount?: number;
-          total_amount?: number;
-          paid_amount?: number;
-          currency?: string;
-          status?: 'DRAFT' | 'POSTED' | 'PARTIAL' | 'PAID' | 'CANCELLED';
+          employee_id?: string;
+          contract_id?: string | null;
+          month?: string;
+          period_start?: string | null;
+          period_end?: string | null;
+          basic_salary?: number;
+          total_allowances?: number;
+          total_earnings?: number;
+          total_deductions?: number;
+          net_salary?: number;
+          status?: 'DRAFT' | 'POSTED' | 'PAID' | 'LOCKED' | 'CANCELLED';
+          payment_status?: 'UNPAID' | 'PARTIAL' | 'PAID' | null;
+          posted_at?: string | null;
+          posted_by?: string | null;
+          locked_at?: string | null;
+          disbursed_at?: string | null;
           journal_entry_id?: string | null;
-          posted_at?: string | null;
-          posted_by?: string | null;
-          notes?: string | null;
-          created_by?: string | null;
           updated_at?: string;
         };
       };
-      supplier_invoice_lines: {
+      payroll_slip_lines: {
         Row: {
           id: string;
-          supplier_invoice_id: string;
-          purchase_order_line_id: string | null;
-          goods_receipt_line_id: string | null;
-          product_id: string | null;
-          description: string | null;
-          quantity: number;
-          unit_price: number;
-          discount_amount: number;
-          tax_amount: number;
-          line_total: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          supplier_invoice_id: string;
-          purchase_order_line_id?: string | null;
-          goods_receipt_line_id?: string | null;
-          product_id?: string | null;
-          description?: string | null;
-          quantity: number;
-          unit_price?: number;
-          discount_amount?: number;
-          tax_amount?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          supplier_invoice_id?: string;
-          purchase_order_line_id?: string | null;
-          goods_receipt_line_id?: string | null;
-          product_id?: string | null;
-          description?: string | null;
-          quantity?: number;
-          unit_price?: number;
-          discount_amount?: number;
-          tax_amount?: number;
-          updated_at?: string;
-        };
-      };
-      supplier_payment_allocations: {
-        Row: {
-          id: string;
-          payment_id: string;
-          supplier_invoice_id: string;
-          allocated_amount: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          payment_id: string;
-          supplier_invoice_id: string;
-          allocated_amount: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          payment_id?: string;
-          supplier_invoice_id?: string;
-          allocated_amount?: number;
-        };
-      };
-      stock_balances: {
-        Row: {
-          id: string;
-          company_id: string;
-          product_id: string;
-          warehouse_id: string;
-          quantity: number;
-          reserved_quantity: number;
-          available_quantity: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          product_id: string;
-          warehouse_id: string;
-          quantity?: number;
-          reserved_quantity?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          product_id?: string;
-          warehouse_id?: string;
-          quantity?: number;
-          reserved_quantity?: number;
-          updated_at?: string;
-        };
-      };
-      inventory_transactions: {
-        Row: {
-          id: string;
-          company_id: string;
-          warehouse_id: string;
-          product_id: string;
-          transaction_number: string;
-          transaction_type:
-            | 'OPENING'
-            | 'PURCHASE_RECEIPT'
-            | 'PURCHASE_RETURN'
-            | 'SALE_ISSUE'
-            | 'SALE_RETURN'
-            | 'TRANSFER_OUT'
-            | 'TRANSFER_IN'
-            | 'ADJUSTMENT_IN'
-            | 'ADJUSTMENT_OUT'
-            | 'PRODUCTION_IN'
-            | 'PRODUCTION_OUT';
-          status: 'DRAFT' | 'POSTED' | 'CANCELLED';
-          quantity: number;
-          unit_cost: number;
-          total_cost: number;
-          transaction_date: string;
-          reference_type: string | null;
-          reference_id: string | null;
-          source_warehouse_id: string | null;
-          destination_warehouse_id: string | null;
-          notes: string | null;
-          posted_at: string | null;
-          posted_by: string | null;
-          created_by: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          warehouse_id: string;
-          product_id: string;
-          transaction_number: string;
-          transaction_type:
-            | 'OPENING'
-            | 'PURCHASE_RECEIPT'
-            | 'PURCHASE_RETURN'
-            | 'SALE_ISSUE'
-            | 'SALE_RETURN'
-            | 'TRANSFER_OUT'
-            | 'TRANSFER_IN'
-            | 'ADJUSTMENT_IN'
-            | 'ADJUSTMENT_OUT'
-            | 'PRODUCTION_IN'
-            | 'PRODUCTION_OUT';
-          status?: 'DRAFT' | 'POSTED' | 'CANCELLED';
-          quantity: number;
-          unit_cost?: number;
-          transaction_date?: string;
-          reference_type?: string | null;
-          reference_id?: string | null;
-          source_warehouse_id?: string | null;
-          destination_warehouse_id?: string | null;
-          notes?: string | null;
-          posted_at?: string | null;
-          posted_by?: string | null;
-          created_by?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          warehouse_id?: string;
-          product_id?: string;
-          transaction_number?: string;
-          transaction_type?:
-            | 'OPENING'
-            | 'PURCHASE_RECEIPT'
-            | 'PURCHASE_RETURN'
-            | 'SALE_ISSUE'
-            | 'SALE_RETURN'
-            | 'TRANSFER_OUT'
-            | 'TRANSFER_IN'
-            | 'ADJUSTMENT_IN'
-            | 'ADJUSTMENT_OUT'
-            | 'PRODUCTION_IN'
-            | 'PRODUCTION_OUT';
-          status?: 'DRAFT' | 'POSTED' | 'CANCELLED';
-          quantity?: number;
-          unit_cost?: number;
-          transaction_date?: string;
-          reference_type?: string | null;
-          reference_id?: string | null;
-          source_warehouse_id?: string | null;
-          destination_warehouse_id?: string | null;
-          notes?: string | null;
-          posted_at?: string | null;
-          posted_by?: string | null;
-          created_by?: string | null;
-          updated_at?: string;
-        };
-      };
-      stock_transfers: {
-        Row: {
-          id: string;
-          company_id: string;
-          transfer_number: string;
-          source_warehouse_id: string;
-          destination_warehouse_id: string;
-          status: 'DRAFT' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
-          transfer_date: string;
-          shipped_at: string | null;
-          received_at: string | null;
-          notes: string | null;
-          created_by: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          transfer_number: string;
-          source_warehouse_id: string;
-          destination_warehouse_id: string;
-          status?: 'DRAFT' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
-          transfer_date?: string;
-          shipped_at?: string | null;
-          received_at?: string | null;
-          notes?: string | null;
-          created_by?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          transfer_number?: string;
-          source_warehouse_id?: string;
-          destination_warehouse_id?: string;
-          status?: 'DRAFT' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
-          transfer_date?: string;
-          shipped_at?: string | null;
-          received_at?: string | null;
-          notes?: string | null;
-          created_by?: string | null;
-          updated_at?: string;
-        };
-      };
-      stock_transfer_lines: {
-        Row: {
-          id: string;
-          stock_transfer_id: string;
-          product_id: string;
-          quantity: number;
-          unit_cost: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          stock_transfer_id: string;
-          product_id: string;
-          quantity: number;
-          unit_cost?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          stock_transfer_id?: string;
-          product_id?: string;
-          quantity?: number;
-          unit_cost?: number;
-        };
-      };
-      stock_reservations: {
-        Row: {
-          id: string;
-          company_id: string;
-          warehouse_id: string;
-          product_id: string;
-          sales_order_id: string | null;
-          sales_order_line_id: string | null;
-          reserved_quantity: number;
-          status: 'ACTIVE' | 'RELEASED' | 'FULFILLED' | 'CANCELLED';
-          reserved_at: string;
-          released_at: string | null;
-          fulfilled_at: string | null;
-          created_by: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          warehouse_id: string;
-          product_id: string;
-          sales_order_id?: string | null;
-          sales_order_line_id?: string | null;
-          reserved_quantity: number;
-          status?: 'ACTIVE' | 'RELEASED' | 'FULFILLED' | 'CANCELLED';
-          reserved_at?: string;
-          released_at?: string | null;
-          fulfilled_at?: string | null;
-          created_by?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          warehouse_id?: string;
-          product_id?: string;
-          sales_order_id?: string | null;
-          sales_order_line_id?: string | null;
-          reserved_quantity?: number;
-          status?: 'ACTIVE' | 'RELEASED' | 'FULFILLED' | 'CANCELLED';
-          reserved_at?: string;
-          released_at?: string | null;
-          fulfilled_at?: string | null;
-          created_by?: string | null;
-          updated_at?: string;
-        };
-      };
-      payments: {
-        Row: {
-          id: string;
-          company_id: string;
-          branch_id: string | null;
-          payment_number: string;
-          direction: 'INBOUND' | 'OUTBOUND';
-          payment_date: string;
+          payroll_slip_id: string;
+          salary_component_id: string | null;
+          component_code: string;
+          component_name_ar: string;
+          component_name_en: string | null;
+          component_type: 'EARNING' | 'DEDUCTION' | 'EMPLOYER_CONTRIBUTION';
           amount: number;
-          currency: string;
-          exchange_rate: number;
-          payment_method: 'CASH' | 'BANK_TRANSFER' | 'CHEQUE' | 'CARD' | 'ONLINE' | 'WALLET' | 'OTHER';
-          status: 'DRAFT' | 'POSTED' | 'CANCELLED';
-          customer_id: string | null;
-          supplier_id: string | null;
-          bank_account_id: string | null;
-          journal_entry_id: string | null;
-          external_reference: string | null;
-          reference_number: string | null;
           notes: string | null;
-          posted_at: string | null;
-          posted_by: string | null;
-          cancelled_at: string | null;
-          cancelled_by: string | null;
-          cancellation_reason: string | null;
-          created_by: string | null;
           created_at: string;
-          updated_at: string;
         };
         Insert: {
           id?: string;
-          company_id: string;
-          branch_id?: string | null;
-          payment_number: string;
-          direction?: 'INBOUND' | 'OUTBOUND';
-          payment_date?: string;
-          amount: number;
-          currency?: string;
-          exchange_rate?: number;
-          payment_method: 'CASH' | 'BANK_TRANSFER' | 'CHEQUE' | 'CARD' | 'ONLINE' | 'WALLET' | 'OTHER';
-          status?: 'DRAFT' | 'POSTED' | 'CANCELLED';
-          customer_id?: string | null;
-          supplier_id?: string | null;
-          bank_account_id?: string | null;
-          journal_entry_id?: string | null;
-          external_reference?: string | null;
-          reference_number?: string | null;
-          notes?: string | null;
-          posted_at?: string | null;
-          posted_by?: string | null;
-          cancelled_at?: string | null;
-          cancelled_by?: string | null;
-          cancellation_reason?: string | null;
-          created_by?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          branch_id?: string | null;
-          payment_number?: string;
-          direction?: 'INBOUND' | 'OUTBOUND';
-          payment_date?: string;
+          payroll_slip_id: string;
+          salary_component_id?: string | null;
+          component_code: string;
+          component_name_ar: string;
+          component_name_en?: string | null;
+          component_type: 'EARNING' | 'DEDUCTION' | 'EMPLOYER_CONTRIBUTION';
           amount?: number;
-          currency?: string;
-          exchange_rate?: number;
-          payment_method?: 'CASH' | 'BANK_TRANSFER' | 'CHEQUE' | 'CARD' | 'ONLINE' | 'WALLET' | 'OTHER';
-          status?: 'DRAFT' | 'POSTED' | 'CANCELLED';
-          customer_id?: string | null;
-          supplier_id?: string | null;
-          bank_account_id?: string | null;
-          journal_entry_id?: string | null;
-          external_reference?: string | null;
-          reference_number?: string | null;
           notes?: string | null;
-          posted_at?: string | null;
-          posted_by?: string | null;
-          cancelled_at?: string | null;
-          cancelled_by?: string | null;
-          cancellation_reason?: string | null;
-          created_by?: string | null;
-          updated_at?: string;
-        };
-      };
-      invoices: {
-        Row: {
-          id: string;
-          company_id: string;
-          branch_id: string | null;
-          customer_id: string;
-          sales_order_id: string | null;
-          quotation_id: string | null;
-          invoice_number: string;
-          date: string;
-          due_date: string | null;
-          subtotal: number;
-          tax_amount: number;
-          total_amount: number;
-          status: 'DRAFT' | 'UNPAID' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          branch_id?: string | null;
-          customer_id: string;
-          sales_order_id?: string | null;
-          quotation_id?: string | null;
-          invoice_number: string;
-          date: string;
-          due_date?: string | null;
-          subtotal?: number;
-          tax_amount?: number;
-          total_amount: number;
-          status?: 'DRAFT' | 'UNPAID' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
           created_at?: string;
-          updated_at?: string;
         };
         Update: {
           id?: string;
-          company_id?: string;
-          branch_id?: string | null;
-          customer_id?: string;
-          sales_order_id?: string | null;
-          quotation_id?: string | null;
-          invoice_number?: string;
-          date?: string;
-          due_date?: string | null;
-          subtotal?: number;
-          tax_amount?: number;
-          total_amount?: number;
-          status?: 'DRAFT' | 'UNPAID' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-          updated_at?: string;
+          payroll_slip_id?: string;
+          salary_component_id?: string | null;
+          component_code?: string;
+          component_name_ar?: string;
+          component_name_en?: string | null;
+          component_type?: 'EARNING' | 'DEDUCTION' | 'EMPLOYER_CONTRIBUTION';
+          amount?: number;
+          notes?: string | null;
         };
       };
     };
