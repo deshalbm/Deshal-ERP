@@ -11,6 +11,51 @@ import type {
   AttendanceMovementLog,
 } from '../../types';
 import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import { uploadImageToStorage } from './storageService';
+
+// ──────────────────────────────────────────────
+// Helper: Ensure Employee Record Exists in Supabase
+// ──────────────────────────────────────────────
+async function ensureEmployeeExists(
+  employeeId: string,
+  companyId: string,
+  employeeCode?: string,
+  employeeName?: string,
+  jobTitle?: string,
+  department?: string
+): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  try {
+    const empId = ensureValidUuid(employeeId);
+    const cId = ensureValidUuid(companyId);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase.from('employees') as any)
+      .select('id')
+      .eq('id', empId)
+      .maybeSingle();
+
+    if (!data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('employees') as any).upsert({
+        id: empId,
+        company_id: cId,
+        employee_code: employeeCode || 'EMP-001',
+        full_name: employeeName || 'موظف',
+        job_title: jobTitle || 'موظف',
+        department: department || 'عام',
+        status: 'ACTIVE',
+        basic_salary: 0,
+        housing_allowance: 0,
+        transport_allowance: 0,
+        other_allowances: 0,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' });
+    }
+  } catch (err) {
+    console.error('[HRService] ensureEmployeeExists error:', err);
+  }
+}
 
 // ──────────────────────────────────────────────
 // Attendance Records
@@ -96,6 +141,8 @@ export async function upsertAttendanceRecord(
   const recId = ensureValidUuid(record.id);
   const empId = ensureValidUuid(record.employeeId);
   const branchId = ensureNullableUuid(record.branchId);
+
+  await ensureEmployeeExists(empId, cId, record.employeeCode, record.employeeName, record.jobTitle, record.department);
 
   const dateStr = record.date || new Date().toISOString().split('T')[0];
 
@@ -200,6 +247,17 @@ export async function addAttendanceMovementLog(
   const empId = ensureValidUuid(log.employeeId);
   const deviceId = ensureNullableUuid(log.deviceId);
 
+  await ensureEmployeeExists(empId, cId, log.employeeCode, log.employeeName, log.jobTitle, log.department);
+
+  let finalPhotoUrl = log.photoUrl || null;
+  if (log.photoUrl && log.photoUrl.startsWith('data:image/')) {
+    const fileName = `kiosk_${empId}_${Date.now()}.jpg`;
+    const uploadRes = await uploadImageToStorage('attendance_photos', fileName, log.photoUrl);
+    if (uploadRes.publicUrl) {
+      finalPhotoUrl = uploadRes.publicUrl;
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('attendance_movement_logs') as any).upsert({
     id: logId,
@@ -211,7 +269,7 @@ export async function addAttendanceMovementLog(
     timestamp: log.timestamp || new Date().toISOString(),
     date: log.date || new Date().toISOString().split('T')[0],
     time: log.time || '08:00:00',
-    photo_url: log.photoUrl || null,
+    photo_url: finalPhotoUrl,
     reason: log.reason || null,
     sync_status: log.syncStatus || 'SYNCED',
     created_at: log.createdAt || new Date().toISOString(),
