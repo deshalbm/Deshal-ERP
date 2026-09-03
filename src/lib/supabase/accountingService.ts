@@ -210,7 +210,7 @@ export async function getFiscalPeriods(companyId: string): Promise<FiscalPeriod[
   const { data, error } = await (supabase.from('fiscal_periods') as any)
     .select('*')
     .eq('company_id', companyId)
-    .order('year', { ascending: false });
+    .order('fiscal_year', { ascending: false });
 
   if (error) {
     console.error('[AccountingService] getFiscalPeriods:', error.message);

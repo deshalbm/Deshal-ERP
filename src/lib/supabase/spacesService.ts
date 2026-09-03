@@ -26,7 +26,7 @@ export async function getRentalSpaces(companyId: string): Promise<RentalSpace[]>
   const { data, error } = await (supabase.from('spaces') as any)
     .select('*')
     .eq('company_id', companyId)
-    .order('name', { ascending: true });
+    .order('name_ar', { ascending: true });
 
   if (error) { console.error('[SpacesService] getRentalSpaces:', error.message); return []; }
 
@@ -99,7 +99,7 @@ export async function getSpaceBookings(companyId: string): Promise<SpaceBooking[
   const { data, error } = await (supabase.from('space_bookings') as any)
     .select('*')
     .eq('company_id', companyId)
-    .order('start_date', { ascending: false });
+    .order('start_time', { ascending: false });
 
   if (error) { console.error('[SpacesService] getSpaceBookings:', error.message); return []; }
 
@@ -562,7 +562,7 @@ export async function getServiceBookings(companyId: string): Promise<ServiceBook
   const { data, error } = await (supabase.from('service_bookings') as any)
     .select('*')
     .eq('company_id', companyId)
-    .order('preferred_date', { ascending: false });
+    .order('booking_date', { ascending: false });
 
   if (error) { console.error('[SpacesService] getServiceBookings:', error.message); return []; }
 

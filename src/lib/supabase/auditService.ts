@@ -51,7 +51,7 @@ export async function getAuditLogs(
   const { data, error } = await (supabase.from('audit_logs') as any)
     .select('*')
     .eq('company_id', companyId)
-    .order('performed_at', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(limit);
 
   if (error) {

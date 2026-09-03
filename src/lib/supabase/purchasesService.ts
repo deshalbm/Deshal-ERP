@@ -17,7 +17,7 @@ export async function getPurchases(companyId: string): Promise<PurchaseInvoice[]
   const { data, error } = await (supabase.from('purchase_orders') as any)
     .select('*, purchase_order_lines(*)')
     .eq('company_id', companyId)
-    .order('order_date', { ascending: false });
+    .order('date', { ascending: false });
 
   if (error) {
     console.error('[PurchasesService] getPurchases:', error.message);
@@ -112,7 +112,7 @@ export async function getVouchers(companyId: string): Promise<ReceiptVoucher[]> 
   const { data, error } = await (supabase.from('invoices') as any)
     .select('*')
     .eq('company_id', companyId)
-    .order('invoice_date', { ascending: false });
+    .order('date', { ascending: false });
 
   if (error) {
     console.error('[PurchasesService] getVouchers:', error.message);

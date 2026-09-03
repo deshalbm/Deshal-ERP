@@ -186,7 +186,7 @@ export async function getPayrollSlips(companyId: string): Promise<PayrollSlip[]>
   const { data, error } = await (supabase.from('payroll_slips') as any)
     .select('*')
     .eq('company_id', companyId)
-    .order('payroll_month', { ascending: false });
+    .order('month', { ascending: false });
 
   if (error) {
     console.error('[HRService] getPayrollSlips:', error.message);

@@ -17,7 +17,7 @@ export async function getInventoryItems(companyId: string): Promise<InventoryIte
   const { data, error } = await (supabase.from('products') as any)
     .select('*, stock_balances(*)')
     .eq('company_id', companyId)
-    .order('name', { ascending: true });
+    .order('name_ar', { ascending: true });
 
   if (error) {
     console.error('[InventoryService] getInventoryItems:', error.message);
@@ -173,7 +173,7 @@ function mapRowToInventoryItem(row: any): InventoryItem {
     id: row.id,
     sku: row.sku ?? '',
     barcode: row.barcode ?? '',
-    name: row.name ?? '',
+    name: row.name_ar ?? row.name ?? '',
     category: row.category ?? '',
     warehouse: row.warehouse ?? '',
     branchId: row.branch_id ?? '',
@@ -200,7 +200,7 @@ function mapInventoryItemToRow(item: InventoryItem, companyId: string): Record<s
     company_id: companyId,
     sku: item.sku,
     barcode: item.barcode,
-    name: item.name,
+    name_ar: item.name,
     category: item.category,
     warehouse: item.warehouse,
     branch_id: item.branchId,
