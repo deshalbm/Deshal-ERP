@@ -5,6 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { Customer } from '../../types';
+import { enqueueOperation } from '../offline/indexedDBQueue';
 
 // ──────────────────────────────────────────────
 // Read
@@ -50,6 +51,17 @@ export async function upsertCustomer(
 ): Promise<{ success: boolean; data?: Customer; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    await enqueueOperation({
+      entity_type: 'CUSTOMER',
+      entity_id: customer.id,
+      action: 'UPSERT',
+      payload: customer,
+      company_id: companyId,
+    }).catch(console.error);
+    return { success: true, data: customer };
+  }
+
   const row = mapCustomerToRow(customer, companyId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,16 +70,45 @@ export async function upsertCustomer(
     .select()
     .single();
 
-  if (error) return { success: false, error: error.message };
+  if (error) {
+    await enqueueOperation({
+      entity_type: 'CUSTOMER',
+      entity_id: customer.id,
+      action: 'UPSERT',
+      payload: customer,
+      company_id: companyId,
+    }).catch(console.error);
+    return { success: true, data: customer };
+  }
   return { success: true, data: mapRowToCustomer(data) };
 }
 
 export async function deleteCustomer(id: string): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    await enqueueOperation({
+      entity_type: 'CUSTOMER',
+      entity_id: id,
+      action: 'DELETE',
+      payload: { id },
+      company_id: '00000000-0000-0000-0000-000000000001',
+    }).catch(console.error);
+    return { success: true };
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('customers') as any).delete().eq('id', id);
-  if (error) return { success: false, error: error.message };
+  if (error) {
+    await enqueueOperation({
+      entity_type: 'CUSTOMER',
+      entity_id: id,
+      action: 'DELETE',
+      payload: { id },
+      company_id: '00000000-0000-0000-0000-000000000001',
+    }).catch(console.error);
+    return { success: true };
+  }
   return { success: true };
 }
 

@@ -129,19 +129,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         setIsLoading(false);
         const emp: Employee = {
           id: supaRes.user.id,
-          name: supaRes.user.fullName,
+          employeeCode: supaRes.user.id,
+          fullName: supaRes.user.fullName,
+          fullNameEn: supaRes.user.fullNameEn,
+          role: "ADMIN",
           jobTitle: supaRes.user.role,
           department: "Management",
           email: supaRes.user.email,
           phone: "",
-          nationalId: "",
+          civilId: "",
           hireDate: new Date().toISOString(),
           basicSalary: 0,
           allowances: 0,
-          deductions: 0,
-          netSalary: 0,
+          currency: "OMR",
           status: "ACTIVE",
           branchId: supaRes.user.branchId || "branch-sohar",
+          permissions: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -153,6 +156,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           fullNameEn: supaRes.user.fullNameEn,
           role: supaRes.user.role as any,
           passwordHash: "",
+          twoFactorEnabled: false,
+          failedLoginAttempts: 0,
+          isLocked: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };

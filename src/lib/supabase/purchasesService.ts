@@ -159,7 +159,16 @@ export async function upsertVoucher(
   return { success: true, data: mapRowToVoucher(data) };
 }
 
+export async function deleteVoucher(id: string): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('invoices') as any).delete().eq('id', id);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
 // ──────────────────────────────────────────────
+
 // Mappers
 // ──────────────────────────────────────────────
 

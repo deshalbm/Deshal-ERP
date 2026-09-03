@@ -920,6 +920,9 @@ export default function App() {
     const cust = customersList.find((c) => c.id === customerId);
     const updated = customersList.filter((c) => c.id !== customerId);
     setCustomersList(updated);
+    if (isSupabaseConfigured) {
+      customerSvc.deleteCustomer(customerId).catch(console.error);
+    }
     saveCustomers(updated);
 
     triggerAuditLog(
@@ -961,6 +964,9 @@ export default function App() {
     const target = vouchersList.find((v) => v.id === id);
     const updated = vouchersList.filter((v) => v.id !== id);
     setVouchersList(updated);
+    if (isSupabaseConfigured) {
+      purchasesSvc.deleteVoucher(id).catch(console.error);
+    }
     saveVouchers(updated);
     if (activeVoucher.id === id && updated.length > 0) {
       setActiveVoucher(updated[0]);
@@ -979,6 +985,9 @@ export default function App() {
   const handleDeleteMultipleVouchers = (ids: string[]) => {
     const updated = vouchersList.filter((v) => !ids.includes(v.id));
     setVouchersList(updated);
+    if (isSupabaseConfigured) {
+      Promise.all(ids.map((id) => purchasesSvc.deleteVoucher(id))).catch(console.error);
+    }
     saveVouchers(updated);
     if (ids.includes(activeVoucher.id) && updated.length > 0) {
       setActiveVoucher(updated[0]);
@@ -1606,6 +1615,9 @@ export default function App() {
     const target = consultingServicesList.find((s) => s.id === serviceId);
     const updated = consultingServicesList.filter((s) => s.id !== serviceId);
     setConsultingServicesList(updated);
+    if (isSupabaseConfigured) {
+      spacesSvc.deleteConsultingService(serviceId).catch(console.error);
+    }
     saveConsultingServices(updated);
     triggerAuditLog(
       "DELETE",
@@ -1637,6 +1649,9 @@ export default function App() {
   const handleDeleteMembershipPackage = (pkgId: string) => {
     const updated = membershipPackagesList.filter((p) => p.id !== pkgId);
     setMembershipPackagesList(updated);
+    if (isSupabaseConfigured) {
+      spacesSvc.deleteMembershipPackage(pkgId).catch(console.error);
+    }
     saveMembershipPackages(updated);
   };
 
@@ -1660,6 +1675,9 @@ export default function App() {
   const handleDeleteTenantSubscription = (subId: string) => {
     const updated = tenantSubscriptionsList.filter((s) => s.id !== subId);
     setTenantSubscriptionsList(updated);
+    if (isSupabaseConfigured) {
+      spacesSvc.deleteTenantSubscription(subId).catch(console.error);
+    }
     saveTenantSubscriptions(updated);
   };
 
@@ -1931,6 +1949,9 @@ export default function App() {
     const target = leaseContractsList.find((c) => c.id === contractId);
     const updated = leaseContractsList.filter((c) => c.id !== contractId);
     setLeaseContractsList(updated);
+    if (isSupabaseConfigured) {
+      spacesSvc.deleteLeaseContract(contractId).catch(console.error);
+    }
     saveLeaseContracts(updated);
 
     triggerAuditLog(

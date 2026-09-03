@@ -104,7 +104,8 @@ export async function signUpWithEmail(
   const companyId = '00000000-0000-0000-0000-000000000001';
 
   // Create profile record in public.profiles table
-  const { error: profileError } = await supabase.from('profiles').upsert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: profileError } = await (supabase.from('profiles') as any).upsert({
     id: data.user.id,
     email: data.user.email,
     full_name: fullName,
@@ -301,7 +302,8 @@ async function fetchUserProfile(userId: string): Promise<SupabaseAuthUser | null
         const fallbackName = userEmail ? userEmail.split('@')[0] : 'User';
         const companyId = '00000000-0000-0000-0000-000000000001';
 
-        await supabase.from('profiles').upsert({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from('profiles') as any).upsert({
           id: userId,
           email: userEmail,
           full_name: fallbackName,

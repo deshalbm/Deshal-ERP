@@ -166,6 +166,12 @@ export function logActivity(
 
   const updated = [newLog, ...existing];
   saveAuditLogs(updated);
+
+  // Asynchronously push to Supabase audit_logs
+  import('../lib/supabase/auditService').then((svc) => {
+    svc.logToSupabase(newLog, '00000000-0000-0000-0000-000000000001').catch(console.error);
+  }).catch(console.error);
+
   return updated;
 }
 
