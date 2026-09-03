@@ -98,7 +98,17 @@ async function resolveValidKioskDeviceId(
 
     if (data) return data.id;
 
-    const validBranchId = await resolveValidBranchId(branchId);
+    let validBranchId = await resolveValidBranchId(branchId);
+    if (!validBranchId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: firstBranch } = await (supabase.from('branches') as any)
+        .select('id')
+        .eq('company_id', cId)
+        .limit(1)
+        .maybeSingle();
+      if (firstBranch) validBranchId = firstBranch.id;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('kiosk_devices') as any).upsert({
       id: dId,
@@ -112,6 +122,7 @@ async function resolveValidKioskDeviceId(
     }, { onConflict: 'id' });
 
     if (!error) return dId;
+    console.error('[HRService] resolveValidKioskDeviceId error:', error.message);
     return null;
   } catch {
     return null;
