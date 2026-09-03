@@ -871,6 +871,19 @@ export default function App() {
     setVouchersList(updatedList);
     saveVouchers(updatedList);
 
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        enqueueOfflineMutation({ entityType: 'VOUCHER', action: 'UPSERT', payload: activeVoucher, companyId: cId });
+      } else {
+        purchasesSvc.upsertVoucher(activeVoucher, cId).then((res) => {
+          if (res.success && res.data) {
+            setVouchersList((prev) => prev.map((v) => (v.id === res.data!.id ? res.data! : v)));
+          }
+        }).catch(console.error);
+      }
+    }
+
     // Trigger Audit Log
     triggerAuditLog(
       isNew ? "CREATE" : "UPDATE",

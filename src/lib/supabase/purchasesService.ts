@@ -118,7 +118,7 @@ export async function getVouchers(companyId: string): Promise<ReceiptVoucher[]> 
   const validCompanyId = ensureValidUuid(companyId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from('invoices') as any)
+  const { data, error } = await (supabase.from('vouchers') as any)
     .select('*')
     .eq('company_id', validCompanyId)
     .order('date', { ascending: false });
@@ -141,31 +141,55 @@ export async function upsertVoucher(
   const row = {
     id: ensureValidUuid(voucher.id),
     company_id: validCompanyId,
+    branch_id: ensureNullableUuid(voucher.branchId),
+    branch_name: voucher.branchName ?? '',
     voucher_number: voucher.voucherNumber,
-    reference_no: voucher.referenceNo,
-    voucher_date: voucher.date,
+    type: voucher.type ?? 'RECEIPT',
+    reference_no: voucher.referenceNo ?? '',
+    date: voucher.date,
     due_date: voucher.dueDate ?? null,
-    voucher_type: voucher.type,
-    status: voucher.status ?? 'ISSUED',
-    amount: voucher.amount ?? 0,
-    currency: voucher.currency ?? 'OMR',
-    payment_method: voucher.paymentMethod ?? 'CASH',
     received_from: voucher.receivedFrom ?? '',
     paid_to: voucher.paidTo ?? '',
+    payer_email: voucher.payerEmail ?? '',
+    payer_phone: voucher.payerPhone ?? '',
+    payer_address: voucher.payerAddress ?? '',
+    payer_tax_id: voucher.payerTaxId ?? '',
+    amount: voucher.amount ?? voucher.totalAmount ?? 0,
+    currency: voucher.currency ?? 'OMR',
+    amount_in_words: voucher.amountInWords ?? '',
+    is_custom_words: voucher.isCustomWords ?? false,
+    payment_method: voucher.paymentMethod ?? 'CASH',
+    check_number: voucher.checkNumber ?? '',
+    bank_name: voucher.bankName ?? '',
+    transaction_ref: voucher.transactionRef ?? '',
     category: voucher.category ?? '',
+    line_items: voucher.lineItems ?? [],
+    subtotal: voucher.subtotal ?? 0,
+    tax_rate: voucher.taxRate ?? 0,
+    tax_amount: voucher.taxAmount ?? 0,
+    discount_rate: voucher.discountRate ?? 0,
+    discount_amount: voucher.discountAmount ?? 0,
+    total_amount: voucher.totalAmount ?? voucher.amount ?? 0,
     notes: voucher.notes ?? '',
-    branch_id: voucher.branchId ?? null,
-    branch_name: voucher.branchName ?? '',
+    terms: voucher.terms ?? '',
+    custom_fields: voucher.customFields ?? [],
+    status: voucher.status ?? 'ISSUED',
+    prepared_by: voucher.preparedBy ?? '',
+    approved_by: voucher.approvedBy ?? '',
+    received_by: voucher.receivedBy ?? '',
     updated_at: new Date().toISOString(),
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from('invoices') as any)
+  const { data, error } = await (supabase.from('vouchers') as any)
     .upsert(row, { onConflict: 'id' })
     .select()
     .single();
 
-  if (error) return { success: false, error: error.message };
+  if (error) {
+    console.error('[PurchasesService] upsertVoucher:', error.message);
+    return { success: false, error: error.message };
+  }
   return { success: true, data: mapRowToVoucher(data) };
 }
 
@@ -174,7 +198,7 @@ export async function deleteVoucher(id: string): Promise<{ success: boolean; err
   const validId = ensureNullableUuid(id);
   if (!validId) return { success: true };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('invoices') as any).delete().eq('id', validId);
+  const { error } = await (supabase.from('vouchers') as any).delete().eq('id', validId);
   if (error) return { success: false, error: error.message };
   return { success: true };
 }
@@ -229,25 +253,33 @@ function mapRowToPurchaseInvoice(row: any): PurchaseInvoice {
 function mapRowToVoucher(row: any): ReceiptVoucher {
   return {
     id: row.id,
-    type: row.voucher_type ?? row.type ?? 'RECEIPT',
-    voucherNumber: row.voucher_number ?? row.invoice_number ?? '',
+    type: row.type ?? 'RECEIPT',
+    voucherNumber: row.voucher_number ?? '',
     referenceNo: row.reference_no ?? '',
-    date: row.voucher_date ?? row.invoice_date,
+    date: row.date,
     dueDate: row.due_date ?? '',
     branchId: row.branch_id ?? '',
     branchName: row.branch_name ?? '',
     receivedFrom: row.received_from ?? '',
     paidTo: row.paid_to ?? '',
+    payerEmail: row.payer_email ?? '',
+    payerPhone: row.payer_phone ?? '',
+    payerAddress: row.payer_address ?? '',
+    payerTaxId: row.payer_tax_id ?? '',
     amount: row.amount ?? row.total_amount ?? 0,
     currency: row.currency ?? 'OMR',
     amountInWords: row.amount_in_words ?? '',
-    isCustomWords: false,
+    isCustomWords: row.is_custom_words ?? false,
     paymentMethod: row.payment_method ?? 'CASH',
+    checkNumber: row.check_number ?? '',
+    bankName: row.bank_name ?? '',
+    transactionRef: row.transaction_ref ?? '',
     category: row.category ?? '',
     lineItems: row.line_items ?? [],
-    subtotal: row.subtotal ?? row.amount ?? 0,
+    subtotal: row.subtotal ?? 0,
     taxRate: row.tax_rate ?? 0,
     taxAmount: row.tax_amount ?? 0,
+    discountRate: row.discount_rate ?? 0,
     discountAmount: row.discount_amount ?? 0,
     totalAmount: row.total_amount ?? row.amount ?? 0,
     notes: row.notes ?? '',

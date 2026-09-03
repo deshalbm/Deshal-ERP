@@ -27,7 +27,7 @@ import * as purchasesSvc from '../lib/supabase/purchasesService';
 import * as spacesSvc from '../lib/supabase/spacesService';
 import * as auditSvc from '../lib/supabase/auditService';
 import * as requestsSvc from '../lib/supabase/requestsService';
-import { processOfflineSyncQueue } from '../lib/supabase/syncService';
+import { processOfflineSyncQueue, enqueueOfflineMutation } from '../lib/supabase/syncService';
 
 // Fallback local storage imports (used when Supabase is not configured)
 import {
@@ -413,7 +413,21 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
 
   const setVouchersList = useCallback((vouchers: ReceiptVoucher[]) => {
     setVouchersListState(vouchers);
-    if (!isSupabaseConfigured || !companyIdRef.current) saveVouchers(vouchers);
+    if (!isSupabaseConfigured || !companyIdRef.current) {
+      saveVouchers(vouchers);
+    } else {
+      const cId = companyIdRef.current;
+      saveVouchers(vouchers);
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        vouchers.forEach((v) => {
+          enqueueOfflineMutation({ entityType: 'VOUCHER', action: 'UPSERT', payload: v, companyId: cId });
+        });
+      } else {
+        vouchers.forEach((v) => {
+          purchasesSvc.upsertVoucher(v, cId).catch(console.error);
+        });
+      }
+    }
   }, []);
 
   const setPurchasesList = useCallback((purchases: PurchaseInvoice[]) => {
