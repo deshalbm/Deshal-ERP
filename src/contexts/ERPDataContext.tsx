@@ -398,7 +398,19 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
 
   const setAttendanceList = useCallback((records: AttendanceRecord[]) => {
     setAttendanceListState(records);
-    if (!isSupabaseConfigured || !companyIdRef.current) saveAttendanceRecords(records);
+    saveAttendanceRecords(records);
+    if (isSupabaseConfigured && companyIdRef.current) {
+      const cId = companyIdRef.current;
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        records.forEach((r) => {
+          enqueueOfflineMutation({ entityType: 'ATTENDANCE_RECORD', action: 'UPSERT', payload: r, companyId: cId });
+        });
+      } else {
+        records.forEach((r) => {
+          hrSvc.upsertAttendanceRecord(r, cId).catch(console.error);
+        });
+      }
+    }
   }, []);
 
   const setPayrollSlipsList = useCallback((slips: PayrollSlip[]) => {

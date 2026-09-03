@@ -639,6 +639,15 @@ export default function App() {
     const updatedLogs = [log, ...currentLogs];
     saveAttendanceMovementLogs(updatedLogs);
 
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        enqueueOfflineMutation({ entityType: 'ATTENDANCE_MOVEMENT_LOG', action: 'UPSERT', payload: log, companyId: cId });
+      } else {
+        hrSvc.addAttendanceMovementLog(log, cId).catch(console.error);
+      }
+    }
+
     // If CHECK_IN or CHECK_OUT, update attendanceList
     if (log.movementCategory === "CHECK_IN" || log.movementCategory === "CHECK_OUT") {
       const todayStr = new Date().toISOString().split("T")[0];

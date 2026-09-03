@@ -29,6 +29,7 @@ export interface OfflineSyncItem {
     | 'POS_ORDER'
     | 'CASHIER_SHIFT'
     | 'ATTENDANCE_RECORD'
+    | 'ATTENDANCE_MOVEMENT_LOG'
     | 'LEAVE_REQUEST'
     | 'PAYROLL_SLIP'
     | 'JOURNAL_ENTRY'
@@ -133,6 +134,11 @@ export async function processOfflineSyncQueue(): Promise<{ processedCount: numbe
         }
         case 'ATTENDANCE_RECORD': {
           const res = await hrSvc.upsertAttendanceRecord(payload, companyId);
+          ok = res.success;
+          break;
+        }
+        case 'ATTENDANCE_MOVEMENT_LOG': {
+          const res = await hrSvc.addAttendanceMovementLog(payload, companyId);
           ok = res.success;
           break;
         }

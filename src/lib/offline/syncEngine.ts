@@ -197,6 +197,8 @@ class SyncEngine {
           return (await posSvc.upsertCashierShift(payload, company_id)).success;
         case 'ATTENDANCE_RECORD':
           return (await hrSvc.upsertAttendanceRecord(payload, company_id)).success;
+        case 'ATTENDANCE_MOVEMENT_LOG':
+          return (await hrSvc.addAttendanceMovementLog(payload, company_id)).success;
         case 'LEAVE_REQUEST':
           return (await hrSvc.upsertLeaveRequest(payload, company_id)).success;
         case 'PAYROLL_SLIP':

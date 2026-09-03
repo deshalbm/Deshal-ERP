@@ -15,6 +15,7 @@ export interface OfflineOperation {
     | 'POS_ORDER'
     | 'CASHIER_SHIFT'
     | 'ATTENDANCE_RECORD'
+    | 'ATTENDANCE_MOVEMENT_LOG'
     | 'LEAVE_REQUEST'
     | 'PAYROLL_SLIP'
     | 'JOURNAL_ENTRY'

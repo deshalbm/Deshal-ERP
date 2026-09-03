@@ -46,6 +46,9 @@ import {
 } from "../utils/kioskSecurity";
 import { syncUserAccountFromEmployee } from "../utils/authManager";
 import { sendWelcomeCredentialsEmail } from "../lib/email/resendService";
+import * as hrSvc from "../lib/supabase/hrService";
+import { isSupabaseConfigured } from "../lib/supabase/client";
+import { enqueueOfflineMutation } from "../lib/supabase/syncService";
 import { EmployeeMovementDashboard } from "./kiosk/EmployeeMovementDashboard";
 import { AttendanceKioskModal } from "./kiosk/AttendanceKioskModal";
 import {
@@ -396,6 +399,15 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
     const updated = [newLog, ...movementLogsList];
     setMovementLogsList(updated);
     saveAttendanceMovementLogs(updated);
+
+    const cId = "00000000-0000-0000-0000-000000000001";
+    if (isSupabaseConfigured) {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        enqueueOfflineMutation({ entityType: 'ATTENDANCE_MOVEMENT_LOG', action: 'UPSERT', payload: newLog, companyId: cId });
+      } else {
+        hrSvc.addAttendanceMovementLog(newLog, cId).catch(console.error);
+      }
+    }
 
     // If check-in or check-out, synchronize with classic attendanceRecords list
     if (newLog.movementCategory === "CHECK_IN" || newLog.movementCategory === "CHECK_OUT") {

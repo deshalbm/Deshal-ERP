@@ -10,6 +10,7 @@ import type {
   LeaveRequest,
   AttendanceMovementLog,
 } from '../../types';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Attendance Records
@@ -21,14 +22,16 @@ export async function getAttendanceRecords(
 ): Promise<AttendanceRecord[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase.from('attendance_records') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('attendance_date', { ascending: false });
 
   if (employeeId) {
-    query = query.eq('employee_id', employeeId);
+    query = query.eq('employee_id', ensureValidUuid(employeeId));
   }
 
   const { data, error } = await query;
@@ -38,24 +41,49 @@ export async function getAttendanceRecords(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data ?? []).map((row: any): AttendanceRecord => ({
-    id: row.id,
-    employeeId: row.employee_id,
-    employeeName: row.employee_name ?? '',
-    employeeCode: row.employee_code ?? '',
-    jobTitle: row.job_title ?? '',
-    department: row.department ?? '',
-    date: row.attendance_date ?? row.date,
-    checkIn: row.check_in_time ?? row.check_in,
-    checkOut: row.check_out_time ?? row.check_out,
-    status: row.status ?? 'PRESENT',
-    workingHours: row.worked_hours ?? row.working_hours ?? 0,
-    overtimeHours: row.overtime_hours ?? 0,
-    lateMinutes: row.late_minutes ?? 0,
-    branchId: row.branch_id,
-    branchName: row.branch_name,
-    notes: row.notes ?? '',
-  }));
+  return (data ?? []).map((row: any): AttendanceRecord => {
+    let checkInStr: string | undefined = undefined;
+    if (row.check_in_at) {
+      checkInStr = typeof row.check_in_at === 'string' && row.check_in_at.includes('T')
+        ? row.check_in_at.split('T')[1].slice(0, 5)
+        : String(row.check_in_at);
+    } else if (row.check_in_time || row.check_in) {
+      checkInStr = row.check_in_time ?? row.check_in;
+    }
+
+    let checkOutStr: string | undefined = undefined;
+    if (row.check_out_at) {
+      checkOutStr = typeof row.check_out_at === 'string' && row.check_out_at.includes('T')
+        ? row.check_out_at.split('T')[1].slice(0, 5)
+        : String(row.check_out_at);
+    } else if (row.check_out_time || row.check_out) {
+      checkOutStr = row.check_out_time ?? row.check_out;
+    }
+
+    const totalMinutes = row.total_work_minutes ?? row.worked_hours ?? row.working_hours ?? 0;
+    const workingHours = typeof totalMinutes === 'number' && totalMinutes > 24
+      ? Math.round((totalMinutes / 60) * 100) / 100
+      : Number(totalMinutes) || 0;
+
+    return {
+      id: row.id,
+      employeeId: row.employee_id,
+      employeeName: row.employee_name ?? '',
+      employeeCode: row.employee_code ?? '',
+      jobTitle: row.job_title ?? '',
+      department: row.department ?? '',
+      date: row.attendance_date ?? row.date,
+      checkIn: checkInStr,
+      checkOut: checkOutStr,
+      status: row.status ?? 'PRESENT',
+      workingHours,
+      overtimeHours: row.overtime_hours ?? (row.overtime_minutes ? Math.round((row.overtime_minutes / 60) * 100) / 100 : 0),
+      lateMinutes: row.late_minutes ?? 0,
+      branchId: row.branch_id,
+      branchName: row.branch_name,
+      notes: row.notes ?? '',
+    };
+  });
 }
 
 export async function upsertAttendanceRecord(
@@ -64,31 +92,50 @@ export async function upsertAttendanceRecord(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const cId = ensureValidUuid(companyId);
+  const recId = ensureValidUuid(record.id);
+  const empId = ensureValidUuid(record.employeeId);
+  const branchId = ensureNullableUuid(record.branchId);
+
+  const dateStr = record.date || new Date().toISOString().split('T')[0];
+
+  const checkInIso = record.checkIn
+    ? (record.checkIn.includes('T') ? record.checkIn : `${dateStr}T${record.checkIn.length === 5 ? record.checkIn + ':00' : record.checkIn}Z`)
+    : null;
+
+  const checkOutIso = record.checkOut
+    ? (record.checkOut.includes('T') ? record.checkOut : `${dateStr}T${record.checkOut.length === 5 ? record.checkOut + ':00' : record.checkOut}Z`)
+    : null;
+
+  const workMinutes = Math.round((record.workingHours || 0) * 60);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('attendance_records') as any)
     .upsert(
       {
-        id: record.id,
-        company_id: companyId,
-        employee_id: record.employeeId,
-        employee_name: record.employeeName,
-        employee_code: record.employeeCode,
-        attendance_date: record.date,
-        check_in_time: record.checkIn ?? null,
-        check_out_time: record.checkOut ?? null,
-        status: record.status,
-        worked_hours: record.workingHours ?? 0,
-        overtime_hours: record.overtimeHours ?? 0,
-        late_minutes: record.lateMinutes ?? 0,
-        branch_id: record.branchId ?? null,
-        branch_name: record.branchName ?? '',
+        id: recId,
+        company_id: cId,
+        employee_id: empId,
+        branch_id: branchId,
+        attendance_date: dateStr,
+        check_in_at: checkInIso,
+        check_out_at: checkOutIso,
+        status: record.status || 'PRESENT',
+        total_work_minutes: workMinutes,
+        regular_work_minutes: workMinutes,
+        overtime_minutes: Math.round((record.overtimeHours || 0) * 60),
+        late_minutes: record.lateMinutes || 0,
+        source: 'KIOSK',
         notes: record.notes ?? '',
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'id' }
     );
 
-  if (error) return { success: false, error: error.message };
+  if (error) {
+    console.error('[HRService] upsertAttendanceRecord error:', error.message);
+    return { success: false, error: error.message };
+  }
   return { success: true };
 }
 
@@ -102,10 +149,12 @@ export async function getAttendanceMovementLogs(
 ): Promise<AttendanceMovementLog[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('attendance_movement_logs') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('timestamp', { ascending: false })
     .limit(limit);
 
@@ -124,15 +173,15 @@ export async function getAttendanceMovementLogs(
     jobTitle: row.job_title ?? '',
     branchId: row.branch_id ?? '',
     branchName: row.branch_name ?? '',
-    movementTypeCode: row.movement_type ?? '',
+    movementTypeCode: row.movement_type_code ?? row.movement_type ?? '',
     movementTypeNameAr: row.movement_type_name_ar ?? '',
     movementTypeNameEn: row.movement_type_name_en ?? '',
-    movementCategory: row.category ?? 'OFFICE',
+    movementCategory: row.movement_category ?? row.category ?? 'CHECK_IN',
     timestamp: row.timestamp ?? new Date().toISOString(),
     date: row.date ?? new Date().toISOString().split('T')[0],
-    time: row.time ?? new Date().toISOString().split('T')[1].slice(0, 5),
+    time: row.time ?? '08:00',
     photoUrl: row.photo_url ?? '',
-    deviceId: row.device_id ?? '',
+    deviceId: row.kiosk_device_id ?? row.device_id ?? '',
     deviceName: row.device_name ?? '',
     syncStatus: row.sync_status ?? 'SYNCED',
     notes: row.notes ?? '',
@@ -146,32 +195,32 @@ export async function addAttendanceMovementLog(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('attendance_movement_logs') as any).insert({
-    id: log.id,
-    company_id: companyId,
-    employee_id: log.employeeId,
-    employee_code: log.employeeCode,
-    employee_name: log.employeeName,
-    department: log.department,
-    job_title: log.jobTitle,
-    branch_id: log.branchId,
-    branch_name: log.branchName,
-    movement_type: log.movementTypeCode,
-    movement_type_name_ar: log.movementTypeNameAr,
-    movement_type_name_en: log.movementTypeNameEn,
-    category: log.movementCategory,
-    timestamp: log.timestamp,
-    date: log.date,
-    time: log.time,
-    photo_url: log.photoUrl,
-    device_id: log.deviceId,
-    device_name: log.deviceName,
-    sync_status: log.syncStatus,
-    notes: log.notes ?? '',
-  });
+  const cId = ensureValidUuid(companyId);
+  const logId = ensureValidUuid(log.id);
+  const empId = ensureValidUuid(log.employeeId);
+  const deviceId = ensureNullableUuid(log.deviceId);
 
-  if (error) return { success: false, error: error.message };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('attendance_movement_logs') as any).upsert({
+    id: logId,
+    company_id: cId,
+    employee_id: empId,
+    kiosk_device_id: deviceId,
+    movement_type_code: log.movementTypeCode || log.movementCategory || 'CHECK_IN',
+    movement_category: log.movementCategory || 'CHECK_IN',
+    timestamp: log.timestamp || new Date().toISOString(),
+    date: log.date || new Date().toISOString().split('T')[0],
+    time: log.time || '08:00:00',
+    photo_url: log.photoUrl || null,
+    reason: log.reason || null,
+    sync_status: log.syncStatus || 'SYNCED',
+    created_at: log.createdAt || new Date().toISOString(),
+  }, { onConflict: 'id' });
+
+  if (error) {
+    console.error('[HRService] addAttendanceMovementLog error:', error.message);
+    return { success: false, error: error.message };
+  }
   return { success: true };
 }
 
