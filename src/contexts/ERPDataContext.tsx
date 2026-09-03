@@ -60,9 +60,13 @@ import {
   loadCostCenters, saveCostCenters,
 } from '../utils/accountingStorage';
 import { loadAuditLogs, saveAuditLogs } from '../utils/auditLogger';
+import {
+  loadAttendanceMovementLogs,
+  saveAttendanceMovementLogs,
+} from '../utils/attendanceStorage';
 import type {
   Customer, Employee, InventoryItem, StockMovement, StockTransfer,
-  Supplier, Branch, AttendanceRecord, PayrollSlip, LeaveRequest,
+  Supplier, Branch, AttendanceRecord, AttendanceMovementLog, PayrollSlip, LeaveRequest,
   ReceiptVoucher, PurchaseInvoice, RentalSpace, SpaceBooking,
   LeaseContract, ConsultingService, MembershipPackage, TenantSubscription,
   ServiceBooking, Account, JournalEntry, FiscalPeriod, CostCenter,
@@ -92,6 +96,7 @@ export interface ERPDataContextType {
   stockMovementsList: StockMovement[];
   stockTransfersList: StockTransfer[];
   attendanceList: AttendanceRecord[];
+  movementLogsList: AttendanceMovementLog[];
   payrollSlipsList: PayrollSlip[];
   leaveRequestsList: LeaveRequest[];
   vouchersList: ReceiptVoucher[];
@@ -120,6 +125,7 @@ export interface ERPDataContextType {
   setStockMovementsList: (movements: StockMovement[]) => void;
   setStockTransfersList: (transfers: StockTransfer[]) => void;
   setAttendanceList: (records: AttendanceRecord[]) => void;
+  setMovementLogsList: (logs: AttendanceMovementLog[]) => void;
   setPayrollSlipsList: (slips: PayrollSlip[]) => void;
   setLeaveRequestsList: (requests: LeaveRequest[]) => void;
   setVouchersList: (vouchers: ReceiptVoucher[]) => void;
@@ -176,6 +182,12 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
   const [stockMovementsList, setStockMovementsListState] = useState<StockMovement[]>([]);
   const [stockTransfersList, setStockTransfersListState] = useState<StockTransfer[]>([]);
   const [attendanceList, setAttendanceListState] = useState<AttendanceRecord[]>([]);
+  const [movementLogsList, setMovementLogsListState] = useState<AttendanceMovementLog[]>(() => loadAttendanceMovementLogs());
+
+  // inside loadDataFromSupabase
+  // Promise.all includes hrSvc.getAttendanceMovementLogs(cId)
+  // setMovementLogsListState(movementLogs)
+
   const [payrollSlipsList, setPayrollSlipsListState] = useState<PayrollSlip[]>([]);
   const [leaveRequestsList, setLeaveRequestsListState] = useState<LeaveRequest[]>([]);
   const [vouchersList, setVouchersListState] = useState<ReceiptVoucher[]>([]);
@@ -265,7 +277,7 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
       // Load from Supabase in parallel
       const [
         customers, employees, inventory, suppliers, branches,
-        stockMovements, stockTransfers, attendance, payroll, leaves,
+        stockMovements, stockTransfers, attendance, movementLogs, payroll, leaves,
         vouchers, purchases, spaces, spaceBookings, leaseContracts,
         consultingServices, membershipPackages, tenantSubs, serviceBookings,
         accounts, journalEntries, fiscalPeriods, costCenters, auditLogs, requests,
@@ -278,6 +290,7 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
         inventorySvc.getStockMovements(cId),
         inventorySvc.getStockTransfers(cId),
         hrSvc.getAttendanceRecords(cId),
+        hrSvc.getAttendanceMovementLogs(cId),
         hrSvc.getPayrollSlips(cId),
         hrSvc.getLeaveRequests(cId),
         purchasesSvc.getVouchers(cId),
@@ -305,6 +318,8 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
       setStockMovementsListState(stockMovements);
       setStockTransfersListState(stockTransfers as StockTransfer[]);
       setAttendanceListState(attendance);
+      setMovementLogsListState(movementLogs);
+      saveAttendanceMovementLogs(movementLogs);
       setPayrollSlipsListState(payroll);
       setLeaveRequestsListState(leaves);
       setVouchersListState(vouchers);
@@ -411,6 +426,11 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
+  }, []);
+
+  const setMovementLogsList = useCallback((logs: AttendanceMovementLog[]) => {
+    setMovementLogsListState(logs);
+    saveAttendanceMovementLogs(logs);
   }, []);
 
   const setPayrollSlipsList = useCallback((slips: PayrollSlip[]) => {
@@ -609,14 +629,14 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
     authUser, authSession, companyId, isAuthLoading,
     isDataLoading,
     customersList, employeesList, inventoryList, suppliersList, branchesList,
-    stockMovementsList, stockTransfersList, attendanceList, payrollSlipsList,
+    stockMovementsList, stockTransfersList, attendanceList, movementLogsList, payrollSlipsList,
     leaveRequestsList, vouchersList, purchasesList, rentalSpacesList, spaceBookingsList,
     leaseContractsList, consultingServicesList, membershipPackagesList,
     tenantSubscriptionsList, serviceBookingsList, accountsList, journalEntriesList,
     fiscalPeriodsList, costCentersList, auditLogsList, companySettings, schedulesList,
     setCustomersList, setEmployeesList, setInventoryList, setSuppliersList,
     setBranchesList, setStockMovementsList, setStockTransfersList, setAttendanceList,
-    setPayrollSlipsList, setLeaveRequestsList, setVouchersList, setPurchasesList,
+    setMovementLogsList, setPayrollSlipsList, setLeaveRequestsList, setVouchersList, setPurchasesList,
     setRentalSpacesList, setSpaceBookingsList, setLeaseContractsList,
     setConsultingServicesList, setMembershipPackagesList, setTenantSubscriptionsList,
     setServiceBookingsList, setAccountsList, setJournalEntriesList,

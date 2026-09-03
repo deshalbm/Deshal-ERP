@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../utils/LanguageContext';
 import { formatDateToDDMMMMYYYY } from '../../utils/dateFormatter';
+import { ensureValidUuid } from '../../utils/uuid';
 
 export interface Employee360ModalProps {
   isOpen: boolean;
@@ -128,27 +129,41 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
 
   const currentEmployee =
     employee ||
-    (employeeId && employees ? employees.find((e) => e.id === employeeId) : employees?.[0]);
+    (employeeId && employees ? employees.find((e) => e.id === employeeId || ensureValidUuid(e.id) === ensureValidUuid(employeeId)) : employees?.[0]);
 
   if (!isOpen || !currentEmployee) return null;
 
+  const isEmpMatch = (itemEmpId?: string, itemEmpCode?: string, itemEmpName?: string) => {
+    if (!currentEmployee) return false;
+    if (itemEmpId && (itemEmpId === currentEmployee.id || ensureValidUuid(itemEmpId) === ensureValidUuid(currentEmployee.id))) {
+      return true;
+    }
+    if (itemEmpCode && currentEmployee.employeeCode && itemEmpCode.trim() === currentEmployee.employeeCode.trim()) {
+      return true;
+    }
+    if (itemEmpName && currentEmployee.fullName && itemEmpName.trim() === currentEmployee.fullName.trim()) {
+      return true;
+    }
+    return false;
+  };
+
   // Filtered employee specific items
-  const empContracts = (contracts || []).filter((c) => c?.employeeId === currentEmployee.id);
+  const empContracts = (contracts || []).filter((c) => isEmpMatch(c?.employeeId));
   const activeContract = empContracts.find((c) => c?.status === 'ACTIVE' || c?.status === 'EXPIRING_SOON') || empContracts[0];
-  const empAttendance = (attendanceRecords || []).filter((a) => a?.employeeId === currentEmployee.id);
-  const empMovements = (movementLogs || []).filter((m) => m?.employeeId === currentEmployee.id);
-  const empPayroll = (payrollSlips || []).filter((p) => p?.employeeId === currentEmployee.id);
-  const empLeaves = (leaveRequests || []).filter((l) => l?.employeeId === currentEmployee.id);
-  const empRequests = (employeeRequests || []).filter((r) => r?.employeeId === currentEmployee.id);
-  const empGoals = (goals || []).filter((g) => g?.employeeId === currentEmployee.id);
-  const empKpis = (kpis || []).filter((k) => k?.employeeId === currentEmployee.id);
-  const empReviews = (reviews || []).filter((r) => r?.employeeId === currentEmployee.id);
-  const empTrainings = (trainingRecords || []).filter((t) => t?.employeeId === currentEmployee.id);
-  const empCerts = (certificates || []).filter((c) => c?.employeeId === currentEmployee.id);
-  const empDisciplinary = (disciplinaryActions || []).filter((d) => d?.employeeId === currentEmployee.id);
-  const empRecognitions = (recognitions || []).filter((r) => r?.employeeId === currentEmployee.id);
-  const empCareer = (careerHistories || []).filter((h) => h?.employeeId === currentEmployee.id);
-  const empDocs = (documents || []).filter((d) => d?.employeeId === currentEmployee.id);
+  const empAttendance = (attendanceRecords || []).filter((a) => isEmpMatch(a?.employeeId, a?.employeeCode, a?.employeeName));
+  const empMovements = (movementLogs || []).filter((m) => isEmpMatch(m?.employeeId, m?.employeeCode, m?.employeeName));
+  const empPayroll = (payrollSlips || []).filter((p) => isEmpMatch(p?.employeeId, p?.employeeCode, p?.employeeName));
+  const empLeaves = (leaveRequests || []).filter((l) => isEmpMatch(l?.employeeId));
+  const empRequests = (employeeRequests || []).filter((r) => isEmpMatch(r?.employeeId));
+  const empGoals = (goals || []).filter((g) => isEmpMatch(g?.employeeId));
+  const empKpis = (kpis || []).filter((k) => isEmpMatch(k?.employeeId));
+  const empReviews = (reviews || []).filter((r) => isEmpMatch(r?.employeeId));
+  const empTrainings = (trainingRecords || []).filter((t) => isEmpMatch(t?.employeeId));
+  const empCerts = (certificates || []).filter((c) => isEmpMatch(c?.employeeId));
+  const empDisciplinary = (disciplinaryActions || []).filter((d) => isEmpMatch(d?.employeeId));
+  const empRecognitions = (recognitions || []).filter((r) => isEmpMatch(r?.employeeId));
+  const empCareer = (careerHistories || []).filter((h) => isEmpMatch(h?.employeeId));
+  const empDocs = (documents || []).filter((d) => isEmpMatch(d?.employeeId));
 
   // Quick calculations
   const totalLeavesTaken = empLeaves

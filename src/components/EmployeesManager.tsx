@@ -39,6 +39,8 @@ import {
   loadActiveKioskDeviceId,
   saveActiveKioskDeviceId
 } from "../utils/attendanceStorage";
+import { useERPData } from "../contexts/ERPDataContext";
+import { ensureValidUuid } from "../utils/uuid";
 import {
   loadEmployeePins,
   setEmployeePin,
@@ -370,10 +372,17 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
   // Kiosk & Employee Movements state
   const [kioskDevicesList, setKioskDevicesList] = useState<KioskDevice[]>(() => loadKioskDevices());
   const [movementTypesList, setMovementTypesList] = useState<MovementTypeConfig[]>(() => loadMovementTypes());
-  const [movementLogsList, setMovementLogsList] = useState<AttendanceMovementLog[]>(() => loadAttendanceMovementLogs());
+  const erpData = useERPData();
+  const [movementLogsList, setMovementLogsList] = useState<AttendanceMovementLog[]>(() => erpData?.movementLogsList || loadAttendanceMovementLogs());
   const [adjustmentsList, setAdjustmentsList] = useState<AttendanceAdjustment[]>(() => loadAttendanceAdjustments());
   const [activeKioskDeviceId, setActiveKioskDeviceId] = useState<string>(() => loadActiveKioskDeviceId());
   const [isKioskModalOpen, setIsKioskModalOpen] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (erpData?.movementLogsList && erpData.movementLogsList.length > 0) {
+      setMovementLogsList(erpData.movementLogsList);
+    }
+  }, [erpData?.movementLogsList]);
 
   const handleSaveKioskDevices = (devs: KioskDevice[]) => {
     setKioskDevicesList(devs);
@@ -388,6 +397,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
   const handleSaveMovementLogs = (logs: AttendanceMovementLog[]) => {
     setMovementLogsList(logs);
     saveAttendanceMovementLogs(logs);
+    if (erpData?.setMovementLogsList) erpData.setMovementLogsList(logs);
   };
 
   const handleSaveAdjustments = (adjs: AttendanceAdjustment[]) => {
@@ -399,8 +409,9 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
     const updated = [newLog, ...movementLogsList];
     setMovementLogsList(updated);
     saveAttendanceMovementLogs(updated);
+    if (erpData?.setMovementLogsList) erpData.setMovementLogsList(updated);
 
-    const cId = "00000000-0000-0000-0000-000000000001";
+    const cId = erpData?.companyId || "00000000-0000-0000-0000-000000000001";
     if (isSupabaseConfigured) {
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         enqueueOfflineMutation({ entityType: 'ATTENDANCE_MOVEMENT_LOG', action: 'UPSERT', payload: newLog, companyId: cId });
@@ -412,7 +423,10 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
     // If check-in or check-out, synchronize with classic attendanceRecords list
     if (newLog.movementCategory === "CHECK_IN" || newLog.movementCategory === "CHECK_OUT") {
       const todayStr = newLog.date;
-      const existingRec = attendanceRecords.find((r) => r.employeeId === newLog.employeeId && r.date === todayStr);
+      const targetEmpUuid = ensureValidUuid(newLog.employeeId);
+      const existingRec = attendanceRecords.find(
+        (r) => (r.employeeId === newLog.employeeId || ensureValidUuid(r.employeeId) === targetEmpUuid) && r.date === todayStr
+      );
       let updatedRecords: AttendanceRecord[];
       if (existingRec) {
         updatedRecords = attendanceRecords.map((r) =>

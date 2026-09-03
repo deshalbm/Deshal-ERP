@@ -478,6 +478,8 @@ export interface EmployeeLiveStatusInfo {
   checkedOutTime?: string;
 }
 
+import { ensureValidUuid } from "./uuid";
+
 /**
  * Calculates current real-time movement status of an employee based on today's logs
  */
@@ -487,10 +489,17 @@ export function calculateEmployeeCurrentStatus(
   targetDate?: string
 ): EmployeeLiveStatusInfo {
   const dateToUse = targetDate || new Date().toISOString().split("T")[0];
+  const targetEmpUuid = ensureValidUuid(employeeId);
   
   // Filter logs for this employee on target date, sorted chronologically
   const employeeTodayLogs = logs
-    .filter((l) => l.employeeId === employeeId && l.date === dateToUse)
+    .filter((l) => {
+      if (!l || l.date !== dateToUse) return false;
+      return (
+        l.employeeId === employeeId ||
+        ensureValidUuid(l.employeeId) === targetEmpUuid
+      );
+    })
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   if (employeeTodayLogs.length === 0) {
