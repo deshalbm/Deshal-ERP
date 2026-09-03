@@ -27,6 +27,7 @@ import * as purchasesSvc from '../lib/supabase/purchasesService';
 import * as spacesSvc from '../lib/supabase/spacesService';
 import * as auditSvc from '../lib/supabase/auditService';
 import * as requestsSvc from '../lib/supabase/requestsService';
+import { processOfflineSyncQueue } from '../lib/supabase/syncService';
 
 // Fallback local storage imports (used when Supabase is not configured)
 import {
@@ -224,6 +225,24 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
       unsubscribe();
+    };
+  }, []);
+
+  // ── Online / Offline Auto-Sync Listener ──────
+  useEffect(() => {
+    const handleOnline = async () => {
+      if (isSupabaseConfigured && companyIdRef.current) {
+        console.log('[ERPDataContext] Network online reconnected! Flushing offline queue to Supabase...');
+        const { processedCount } = await processOfflineSyncQueue();
+        if (processedCount > 0) {
+          loadAllData(companyIdRef.current);
+        }
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 
