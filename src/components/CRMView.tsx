@@ -405,6 +405,8 @@ export const CRMView: React.FC<CRMViewProps> = ({
       updatedAt: new Date().toISOString()
     };
     onSaveCustomer(customerToSave);
+    const targetCompanyId = (companySettings as any)?.companyId || "00000000-0000-0000-0000-000000000001";
+    upsertCustomer(customerToSave, targetCompanyId).catch(console.error);
     setIsAddEditModalOpen(false);
     if (selectedCustomerProfile && selectedCustomerProfile.id === customerToSave.id) {
       setSelectedCustomerProfile(customerToSave);

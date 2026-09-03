@@ -2,6 +2,18 @@ import React, { useState, useEffect, useCallback } from "react";
 import { onAuthStateChange, signOut as supabaseSignOut } from "./lib/supabase/authService";
 import type { SupabaseAuthUser } from "./lib/supabase/authService";
 import { isSupabaseConfigured } from "./lib/supabase/client";
+import * as customerSvc from "./lib/supabase/customerService";
+import * as employeeSvc from "./lib/supabase/employeeService";
+import * as inventorySvc from "./lib/supabase/inventoryService";
+import * as supplierSvc from "./lib/supabase/supplierService";
+import * as companySvc from "./lib/supabase/companyService";
+import * as hrSvc from "./lib/supabase/hrService";
+import * as accountingSvc from "./lib/supabase/accountingService";
+import * as purchasesSvc from "./lib/supabase/purchasesService";
+import * as spacesSvc from "./lib/supabase/spacesService";
+import * as auditSvc from "./lib/supabase/auditService";
+import { enqueueOfflineMutation } from "./lib/supabase/syncService";
+const DEFAULT_COMPANY_ID = "00000000-0000-0000-0000-000000000001";
 import {
   ReceiptVoucher,
   CompanySettings,
@@ -221,6 +233,69 @@ export default function App() {
   const [authSession, setAuthSession] = useState<AuthSession | null>(() => loadAuthSession());
   const [supabaseAuthUser, setSupabaseAuthUser] = useState<SupabaseAuthUser | null>(null);
   const [isSupabaseReady, setIsSupabaseReady] = useState(!isSupabaseConfigured);
+
+  // Load live data from Supabase PostgreSQL
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+      Promise.all([
+        customerSvc.getCustomers(cId),
+        employeeSvc.getEmployees(cId),
+        inventorySvc.getInventoryItems(cId),
+        supplierSvc.getSuppliers(cId),
+        companySvc.getBranches(cId),
+        inventorySvc.getStockMovements(cId),
+        inventorySvc.getStockTransfers(cId),
+        hrSvc.getAttendanceRecords(cId),
+        hrSvc.getPayrollSlips(cId),
+        hrSvc.getLeaveRequests(cId),
+        purchasesSvc.getVouchers(cId),
+        purchasesSvc.getPurchases(cId),
+        spacesSvc.getRentalSpaces(cId),
+        spacesSvc.getSpaceBookings(cId),
+        spacesSvc.getLeaseContracts(cId),
+        spacesSvc.getConsultingServices(cId),
+        spacesSvc.getMembershipPackages(cId),
+        spacesSvc.getTenantSubscriptions(cId),
+        spacesSvc.getServiceBookings(cId),
+        accountingSvc.getAccounts(cId),
+        accountingSvc.getJournalEntries(cId),
+        accountingSvc.getFiscalPeriods(cId),
+        auditSvc.getAuditLogs(cId),
+      ]).then(([
+        custs, emps, inv, supp, branch,
+        mvmts, trs, att, payroll, leaves,
+        vouch, purch, spaces, bookings, leases,
+        services, pkgs, subs, sBookings,
+        accts, jEntries, periods, logs
+      ]) => {
+        setCustomersList(custs);
+        setEmployeesList(emps);
+        setInventoryList(inv);
+        setSuppliersList(supp);
+        setBranchesList(branch);
+        setStockMovementsList(mvmts);
+        setStockTransfersList(trs as StockTransfer[]);
+        setAttendanceList(att);
+        setPayrollSlipsList(payroll);
+        setLeaveRequestsList(leaves);
+        setVouchersList(vouch);
+        setPurchasesList(purch);
+        setRentalSpacesList(spaces);
+        setSpaceBookingsList(bookings);
+        setLeaseContractsList(leases);
+        setConsultingServicesList(services);
+        setMembershipPackagesList(pkgs);
+        setTenantSubscriptionsList(subs);
+        setServiceBookingsList(sBookings);
+        setAccountsList(accts);
+        setJournalEntriesList(jEntries);
+        setFiscalPeriodsList(periods);
+        setAuditLogsList(logs);
+      }).catch(console.error);
+    }
+  }, [supabaseAuthUser]);
+
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState<boolean>(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
@@ -813,7 +888,22 @@ export default function App() {
       ? customersList.map((c) => (c.id === customer.id ? customer : c))
       : [customer, ...customersList];
     setCustomersList(updated);
-    saveCustomers(updated);
+
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        saveCustomers(updated);
+        enqueueOfflineMutation({ entityType: 'CUSTOMER', action: 'UPSERT', payload: customer, companyId: cId });
+      } else {
+        customerSvc.upsertCustomer(customer, cId).then((res) => {
+          if (res.success && res.data) {
+            setCustomersList((prev) => prev.map((c) => (c.id === res.data!.id ? res.data! : c)));
+          }
+        }).catch(console.error);
+      }
+    } else {
+      saveCustomers(updated);
+    }
 
     triggerAuditLog(
       exists ? "UPDATE" : "CREATE",

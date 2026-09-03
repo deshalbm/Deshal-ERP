@@ -194,45 +194,7 @@ const GENERATED_ITEMS = [
   { seq: 844, amount: 2500, date: "2026-08-16", ref: "INV-4452", desc: TARGET_DESCRIPTION }
 ];
 
-export const SAMPLE_VOUCHERS: ReceiptVoucher[] = GENERATED_ITEMS.map((item) => {
-  const seqNum = item.seq;
-  const num = seqNum.toString().padStart(4, "0");
-  const voucherNum = `RV-2026-${num}`;
-  const amountVal = item.amount;
-  return {
-    id: `rv-gen-${seqNum}`,
-    type: "RECEIPT",
-    voucherNumber: voucherNum,
-    referenceNo: item.ref,
-    date: item.date,
-    ...DEFAULT_CLIENT,
-    amount: amountVal,
-    subtotal: amountVal,
-    taxRate: 0,
-    taxAmount: 0,
-    discountAmount: 0,
-    totalAmount: amountVal,
-    amountInWords: numberToWords(amountVal, "OMR"),
-    isCustomWords: false,
-    transactionRef: `TXN-998823${seqNum.toString()}`,
-    lineItems: [
-      {
-        id: `li-${seqNum}`,
-        description: item.desc,
-        quantity: 1,
-        unitPrice: amountVal,
-        amount: amountVal
-      }
-    ],
-    notes: "تم استلام المبلغ بنجاح لحساب شركة ديشال لإدارة الأعمال والحلول التقنية.",
-    terms: "شاكرين لكم حسن تعاونكم واختياركم منظومة ديشال لإدارة الأعمال.",
-    customFields: [
-      { id: "cf-1", label: "الموقع", value: "مركز الدليل الشامل - صحار" }
-    ],
-    createdAt: `${item.date}T10:00:00Z`,
-    updatedAt: `${item.date}T10:00:00Z`
-  };
-});
+export const SAMPLE_VOUCHERS: ReceiptVoucher[] = [];
 
 const STORAGE_KEYS = {
   SETTINGS: "rv_studio_company_settings",
@@ -284,144 +246,7 @@ export function clearAllLocalStorage(): void {
   }
 }
 
-export const DEFAULT_CUSTOMERS: Customer[] = [
-  {
-    id: "cust-1",
-    name: "شركة الدليل الشامل",
-    contactPerson: "المهندس / مدير المشاريع",
-    phone: "+968 77627500",
-    email: "info@deshalbm.com",
-    address: "مبنى مدن - صحار - شمال الباطنة",
-    city: "صحار",
-    country: "سلطنة عمان",
-    taxId: "OM-TAX-7762",
-    crNumber: "CR-8839201",
-    type: "CORPORATE",
-    status: "ACTIVE",
-    notes: "عميل استراتيجي - تنفيذ أعمال كاميرات المراقبة، السيرفرات، الشبكات والشاشات التفاعلية الذكية.",
-    tags: ["كاميرات مراقبة", "شاشات تفاعلية", "شبكات وسيرفرات", "عقد رئيسي"],
-    creditLimit: 50000,
-    assignedProject: "مركز الدليل الشامل",
-    interactions: [
-      {
-        id: "act-1",
-        date: "2026-08-25T08:30:00Z",
-        type: "VOUCHER_ISSUED",
-        title: "إصدار سند استلام RV-2026-0833",
-        notes: "تم تحصيل دفعة بقيمة 2000.000 ر.ع. عن تركيب الكاميرات والشاشات التفاعلية.",
-        createdByName: "إدارة المالية"
-      },
-      {
-        id: "act-2",
-        date: "2026-08-20T11:00:00Z",
-        type: "MEETING",
-        title: "اجتماع متابعة مرحلة التركيبات الذكية",
-        notes: "مراجعة جدول تسليم الشاشات التفاعلية الذكية وكاميرات المراقبة في المركز الرئيسي.",
-        createdByName: "إدارة المشاريع"
-      },
-      {
-        id: "act-3",
-        date: "2026-08-10T14:15:00Z",
-        type: "WHATSAPP",
-        title: "تأكيد التحويل البنكي لحساب بنك ظفار",
-        notes: "تم استلام إشعار التحويل البنكي ومطابقته بالسندات المحررة.",
-        createdByName: "المحاسب"
-      }
-    ],
-    createdAt: "2026-07-01T09:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "cust-2",
-    name: "مؤسسة الأفق للحلول الذكية",
-    contactPerson: "سالم بن ناصر المعمري",
-    phone: "+968 91234567",
-    email: "contact@alofuq.om",
-    address: "شارع السلطان قابوس - غلا - مسقط",
-    city: "مسقط",
-    country: "سلطنة عمان",
-    taxId: "OM-TAX-4501",
-    crNumber: "CR-991204",
-    type: "CORPORATE",
-    status: "ACTIVE",
-    notes: "توريد وتركيب أنظمة المراقبة المركزية والربط الشبكي بين الفروع.",
-    tags: ["أنظمة ذكية", "دعم فني", "سنوي"],
-    creditLimit: 15000,
-    assignedProject: "فروع مسقط",
-    interactions: [
-      {
-        id: "act-201",
-        date: "2026-08-15T09:00:00Z",
-        type: "CALL",
-        title: "مكالمة متابعة الصيانة الدورية",
-        notes: "التأكيد على جدول الزيارات الشهرية لنقاط المراقبة.",
-        createdByName: "فريق الدعم الفني"
-      }
-    ],
-    createdAt: "2026-07-15T10:00:00Z",
-    updatedAt: "2026-08-15T12:00:00Z"
-  },
-  {
-    id: "cust-3",
-    name: "مجموعة الباطنة الدولية للتجارة",
-    contactPerson: "أحمد بن سعيد البلوشي",
-    phone: "+968 94567890",
-    email: "info@albatinah-group.om",
-    address: "المنطقة الصناعية - صحم",
-    city: "صحم",
-    country: "سلطنة عمان",
-    taxId: "OM-TAX-8891",
-    crNumber: "CR-339210",
-    type: "VIP",
-    status: "ACTIVE",
-    notes: "تجهيز المقر الإداري بالشبكات والشاشات التفاعلية وحلول الاجتماعات عن بعد.",
-    tags: ["VIP", "تجهيزات مكتبية", "كاميرات"],
-    creditLimit: 30000,
-    assignedProject: "المقر الإداري - صحم",
-    interactions: [
-      {
-        id: "act-301",
-        date: "2026-08-18T16:00:00Z",
-        type: "NOTE",
-        title: "طلب عرض سعر توسعة",
-        notes: "تم إرسال عرض سعر لتجهيز قاعة الاجتماعات الإضافية بشاشة تفاعلية 85 بوصة.",
-        createdByName: "المبيعات"
-      }
-    ],
-    createdAt: "2026-07-20T08:30:00Z",
-    updatedAt: "2026-08-18T16:00:00Z"
-  },
-  {
-    id: "cust-4",
-    name: "شركة النماء للتطوير العقاري",
-    contactPerson: "خالد بن راشد الشحي",
-    phone: "+968 92345678",
-    email: "namaa@omandevelop.com",
-    address: "الرميس - بركاء - جنوب الباطنة",
-    city: "بركاء",
-    country: "سلطنة عمان",
-    taxId: "OM-TAX-1029",
-    crNumber: "CR-554411",
-    type: "CORPORATE",
-    status: "LEAD",
-    notes: "مشروع مجمع تجاري جديد - قيد دراسة عروض الشبكات الأمنية والسنترال.",
-    tags: ["مشروع جديد", "محتمل", "شبكات"],
-    creditLimit: 0,
-    assignedProject: "مجمع النماء التجاري",
-    interactions: [
-      {
-        id: "act-401",
-        date: "2026-08-22T10:00:00Z",
-        type: "MEETING",
-        title: "عرض تقديمي للمشروع التجاري",
-        notes: "تقديم عرض فني لشاشات الإعلانات وكاميرات الذكاء الاصطناعي.",
-        createdByName: "تطوير الأعمال"
-      }
-    ],
-    createdAt: "2026-08-01T11:00:00Z",
-    updatedAt: "2026-08-22T10:30:00Z"
-  }
-];
+export const DEFAULT_CUSTOMERS: Customer[] = [];
 
 export function loadCustomers(): Customer[] {
   try {
@@ -643,160 +468,7 @@ export function saveVouchers(vouchers: ReceiptVoucher[]): void {
 // INVENTORY & STOCK LOGIC
 // -------------------------------------------------------------------
 
-export const DEFAULT_INVENTORY_ITEMS: InventoryItem[] = [
-  {
-    id: "item-1",
-    sku: "CAM-IP4K-DOME",
-    barcode: "629104882001",
-    name: "كاميرا مراقبة شبكية 4K IP Dome بدقة 8 ميجابكسل",
-    category: "كاميرات مراقبة وأمن",
-    warehouse: "المستودع الرئيسي - صحار",
-    location: "الرف A-01",
-    unit: "حبة",
-    quantity: 45,
-    minAlertQuantity: 10,
-    costPrice: 28.5,
-    sellingPrice: 48.0,
-    supplierName: "الشركة الخليجية للأنظمة الأمنية",
-    description: "كاميرا خارجية ليلية مقاومة للماء والغبار IP67 مع رؤية ليلية ملونة ColorVu وميكروفون مدمج.",
-    status: "IN_STOCK",
-    createdAt: "2026-07-01T08:00:00Z",
-    updatedAt: "2026-08-20T10:00:00Z"
-  },
-  {
-    id: "item-2",
-    sku: "SCR-TOUCH-85IN",
-    barcode: "629104882002",
-    name: "شاشة تفاعلية ذكية 85 بوصة 4K Ultra HD بنظام Android/Windows",
-    category: "شاشات تفاعلية وذكية",
-    warehouse: "المستودع الرئيسي - صحار",
-    location: "المنطقة B-04",
-    unit: "شاشة",
-    quantity: 8,
-    minAlertQuantity: 3,
-    costPrice: 650.0,
-    sellingPrice: 950.0,
-    supplierName: "شركة النخبة للشاشات التفاعلية",
-    description: "شاشة لمس ذكية للقاعات وغرف الاجتماعات والمدارس مزودة بـ 20 نقطة لمس متزامنة وكاميرا 4K ومصفوفة ميكروفونات.",
-    status: "IN_STOCK",
-    createdAt: "2026-07-05T09:00:00Z",
-    updatedAt: "2026-08-22T14:30:00Z"
-  },
-  {
-    id: "item-3",
-    sku: "NVR-32CH-4K",
-    barcode: "629104882003",
-    name: "جهاز تسجيل شبكي NVR 32 قناة 4K مع دعم الذكاء الاصطناعي",
-    category: "أجهزة تسجيل وسيرفرات",
-    warehouse: "المستودع الرئيسي - صحار",
-    location: "الرف A-03",
-    unit: "جهاز",
-    quantity: 12,
-    minAlertQuantity: 4,
-    costPrice: 115.0,
-    sellingPrice: 185.0,
-    supplierName: "الشركة الخليجية للأنظمة الأمنية",
-    description: "مسجل فيديو شبكي يدعم 4 أقراص صلبة حتى 40 تيرابايت وخاصية التعرف على الوجوه ولوحات المركبات.",
-    status: "IN_STOCK",
-    createdAt: "2026-07-10T11:00:00Z",
-    updatedAt: "2026-08-24T09:15:00Z"
-  },
-  {
-    id: "item-4",
-    sku: "SW-POE-24G",
-    barcode: "629104882004",
-    name: "سويتش شبكات 24 منفذ Gigabit PoE+ مع 4 منافذ SFP 10G",
-    category: "شبكات وربط سحابي",
-    warehouse: "المستودع الرئيسي - صحار",
-    location: "الرف C-02",
-    unit: "جهاز",
-    quantity: 18,
-    minAlertQuantity: 5,
-    costPrice: 75.0,
-    sellingPrice: 130.0,
-    supplierName: "مؤسسة الحلول الرقمية للشبكات",
-    description: "سويتش مدار يدعم توزيع الطاقة لكاميرات المراقبة ونقاط الواي فاي بقدرة إجمالية 370 واط.",
-    status: "IN_STOCK",
-    createdAt: "2026-07-12T10:00:00Z",
-    updatedAt: "2026-08-23T11:45:00Z"
-  },
-  {
-    id: "item-5",
-    sku: "CBL-CAT6-305M",
-    barcode: "629104882005",
-    name: "لفة كابل شبكة Cat6 نحاس نقي 100% خارجي 305 متر",
-    category: "كابلات وتمديدات",
-    warehouse: "مخزن المعدات والكابلات - صحار",
-    location: "الممر D-01",
-    unit: "لفة",
-    quantity: 6,
-    minAlertQuantity: 8,
-    costPrice: 32.0,
-    sellingPrice: 52.0,
-    supplierName: "مؤسسة الحلول الرقمية للشبكات",
-    description: "كابل بيانات مدرع عالي السرعة مخصص للمنشآت والمواقع الخارجية المقاومة للعوامل الجوية.",
-    status: "LOW_STOCK",
-    createdAt: "2026-07-15T08:30:00Z",
-    updatedAt: "2026-08-25T08:00:00Z"
-  },
-  {
-    id: "item-6",
-    sku: "RCK-42U-SRV",
-    barcode: "629104882006",
-    name: "كابينة خادم راك Rack Cabinet 42U مع وحدات تبريد وتوزيع طاقة",
-    category: "أجهزة تسجيل وسيرفرات",
-    warehouse: "المستودع الرئيسي - صحار",
-    location: "المنطقة E-02",
-    unit: "كابينة",
-    quantity: 3,
-    minAlertQuantity: 2,
-    costPrice: 180.0,
-    sellingPrice: 290.0,
-    supplierName: "شركة التوريدات الصناعية والتقنية",
-    description: "كابينة معدنية مدرعة قياس 600x1000 مع أبواب شبكية مهواة وأقفال أمان ذكية.",
-    status: "IN_STOCK",
-    createdAt: "2026-07-20T12:00:00Z",
-    updatedAt: "2026-08-21T16:00:00Z"
-  },
-  {
-    id: "item-7",
-    sku: "WIFI-AP-AX3000",
-    barcode: "629104882007",
-    name: "نقطة وصول لاسلكية داخلية Wi-Fi 6 Enterprise Access Point",
-    category: "شبكات وربط سحابي",
-    warehouse: "المستودع الرئيسي - صحار",
-    location: "الرف C-04",
-    unit: "حبة",
-    quantity: 2,
-    minAlertQuantity: 6,
-    costPrice: 38.0,
-    sellingPrice: 65.0,
-    supplierName: "مؤسسة الحلول الرقمية للشبكات",
-    description: "أكسس بوينت سقفية عالية التغطية تدعم حتى 256 مستخدم متزامن وسرعات تصل لـ 3000 ميجابت/ثانية.",
-    status: "LOW_STOCK",
-    createdAt: "2026-07-25T14:00:00Z",
-    updatedAt: "2026-08-25T09:00:00Z"
-  },
-  {
-    id: "item-8",
-    sku: "BIO-FACE-TIME",
-    barcode: "629104882008",
-    name: "جهاز بصمة حضور وانصراف بالوجه والبطاقة الذكية والتحكم بالأبواب",
-    category: "أنظمة دخول وأقفال ذكية",
-    warehouse: "المستودع الرئيسي - صحار",
-    location: "الرف A-05",
-    unit: "جهاز",
-    quantity: 15,
-    minAlertQuantity: 5,
-    costPrice: 42.0,
-    sellingPrice: 75.0,
-    supplierName: "الشركة الخليجية للأنظمة الأمنية",
-    description: "جهاز حضور ذكي يدعم حتى 3000 وجه مع شاشة لمس ملونة وربط سحابي فوري عبر الشبكة.",
-    status: "IN_STOCK",
-    createdAt: "2026-08-01T10:00:00Z",
-    updatedAt: "2026-08-24T12:00:00Z"
-  }
-];
+export const DEFAULT_INVENTORY_ITEMS: InventoryItem[] = [];
 
 export function loadInventory(): InventoryItem[] {
   try {
@@ -826,68 +498,21 @@ export function saveInventory(items: InventoryItem[]): void {
 // SUPPLIERS LOGIC (الموردون)
 // -------------------------------------------------------------------
 
-export const DEFAULT_SUPPLIERS: Supplier[] = [
-  {
-    id: "sup-1",
-    name: "الشركة الخليجية للأنظمة الأمنية",
-    contactPerson: "المهندس فيصل الهاشمي",
-    phone: "+968 91122334",
-    email: "sales@gulfsecurity-om.com",
-    address: "المنطقة التجارية - روي - مسقط",
-    city: "مسقط",
-    taxId: "OM-TAX-SUP-101",
-    crNumber: "CR-SUP-9901",
-    category: "كاميرات مراقبة وأنظمة أمنية",
-    notes: "موزع رئيسي معتمد لكاميرات المراقبة وأجهزة التسجيل ومستلزمات الأمن.",
-    createdAt: "2026-06-15T08:00:00Z",
-    updatedAt: "2026-08-20T10:00:00Z"
-  },
-  {
-    id: "sup-2",
-    name: "شركة النخبة للشاشات التفاعلية والتجهيزات",
-    contactPerson: "سالم بن عبد الله الكندي",
-    phone: "+968 93344556",
-    email: "info@elitedisplays-om.com",
-    address: "واحة المعرفة - الرسيل - مسقط",
-    city: "مسقط",
-    taxId: "OM-TAX-SUP-102",
-    crNumber: "CR-SUP-9902",
-    category: "شاشات تفاعلية وأجهزة عرض",
-    notes: "المورد الحصري للشاشات الذكية التفاعلية للمدارس والمراكز التدريبية.",
-    createdAt: "2026-06-20T09:30:00Z",
-    updatedAt: "2026-08-22T11:00:00Z"
-  },
-  {
-    id: "sup-3",
-    name: "مؤسسة الحلول الرقمية للشبكات والاتصالات",
-    contactPerson: "طارق بن سعيد المعمري",
-    phone: "+968 95566778",
-    email: "support@digitalsolutions-om.com",
-    address: "فلج القبائل - صحار - شمال الباطنة",
-    city: "صحار",
-    taxId: "OM-TAX-SUP-103",
-    crNumber: "CR-SUP-9903",
-    category: "شبكات، سيرفرات، كابلات",
-    notes: "توريد كابلات الشبكات المعتمدة وسويتشات PoE وأجهزة الراوتر والراك.",
-    createdAt: "2026-07-01T10:00:00Z",
-    updatedAt: "2026-08-23T15:00:00Z"
-  }
-];
+export const DEFAULT_SUPPLIERS: Supplier[] = [];
 
 export function loadSuppliers(): Supplier[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SUPPLIERS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load suppliers from localStorage:", e);
   }
-  saveSuppliers(DEFAULT_SUPPLIERS);
-  return DEFAULT_SUPPLIERS;
+  return [];
 }
 
 export function saveSuppliers(suppliers: Supplier[]): void {
@@ -902,163 +527,21 @@ export function saveSuppliers(suppliers: Supplier[]): void {
 // PURCHASES & INVOICES LOGIC (المشتريات)
 // -------------------------------------------------------------------
 
-export const DEFAULT_PURCHASES: PurchaseInvoice[] = [
-  {
-    id: "po-1",
-    purchaseNumber: "PO-2026-0101",
-    supplierInvoiceNo: "INV-GULF-7782",
-    supplierId: "sup-1",
-    supplierName: "الشركة الخليجية للأنظمة الأمنية",
-    supplierPhone: "+968 91122334",
-    supplierEmail: "sales@gulfsecurity-om.com",
-    supplierTaxId: "OM-TAX-SUP-101",
-    supplierAddress: "المنطقة التجارية - روي - مسقط",
-    date: "2026-08-10",
-    dueDate: "2026-09-10",
-    warehouse: "المستودع الرئيسي - صحار",
-    items: [
-      {
-        id: "pi-1",
-        itemId: "item-1",
-        sku: "CAM-IP4K-DOME",
-        name: "كاميرا مراقبة شبكية 4K IP Dome بدقة 8 ميجابكسل",
-        quantity: 50,
-        unitCost: 28.5,
-        amount: 1425.0,
-        unit: "حبة"
-      },
-      {
-        id: "pi-2",
-        itemId: "item-3",
-        sku: "NVR-32CH-4K",
-        name: "جهاز تسجيل شبكي NVR 32 قناة 4K مع دعم الذكاء الاصطناعي",
-        quantity: 10,
-        unitCost: 115.0,
-        amount: 1150.0,
-        unit: "جهاز"
-      }
-    ],
-    subtotal: 2575.0,
-    taxRate: 5,
-    taxAmount: 128.75,
-    discountAmount: 50.0,
-    shippingFee: 20.0,
-    totalAmount: 2673.75,
-    currency: "OMR",
-    paymentStatus: "PAID",
-    paymentMethod: "BANK_TRANSFER",
-    status: "RECEIVED",
-    notes: "توريد دفعة كاميرات ومسجلات لمشاريع المراقبة لمركز الدليل الشامل.",
-    autoUpdateStock: true,
-    createdAt: "2026-08-10T09:00:00Z",
-    updatedAt: "2026-08-10T14:00:00Z"
-  },
-  {
-    id: "po-2",
-    purchaseNumber: "PO-2026-0102",
-    supplierInvoiceNo: "INV-ELITE-3341",
-    supplierId: "sup-2",
-    supplierName: "شركة النخبة للشاشات التفاعلية والتجهيزات",
-    supplierPhone: "+968 93344556",
-    supplierEmail: "info@elitedisplays-om.com",
-    supplierTaxId: "OM-TAX-SUP-102",
-    supplierAddress: "واحة المعرفة - مسقط",
-    date: "2026-08-15",
-    dueDate: "2026-09-15",
-    warehouse: "المستودع الرئيسي - صحار",
-    items: [
-      {
-        id: "pi-3",
-        itemId: "item-2",
-        sku: "SCR-TOUCH-85IN",
-        name: "شاشة تفاعلية ذكية 85 بوصة 4K Ultra HD بنظام Android/Windows",
-        quantity: 5,
-        unitCost: 650.0,
-        amount: 3250.0,
-        unit: "شاشة"
-      }
-    ],
-    subtotal: 3250.0,
-    taxRate: 5,
-    taxAmount: 162.5,
-    discountAmount: 100.0,
-    shippingFee: 35.0,
-    totalAmount: 3347.5,
-    currency: "OMR",
-    paymentStatus: "PAID",
-    paymentMethod: "BANK_TRANSFER",
-    status: "RECEIVED",
-    notes: "شاشات تفاعلية 85 بوصة لقاعات التدريب والمؤتمرات.",
-    autoUpdateStock: true,
-    createdAt: "2026-08-15T11:30:00Z",
-    updatedAt: "2026-08-16T10:00:00Z"
-  },
-  {
-    id: "po-3",
-    purchaseNumber: "PO-2026-0103",
-    supplierInvoiceNo: "INV-DIGI-9921",
-    supplierId: "sup-3",
-    supplierName: "مؤسسة الحلول الرقمية للشبكات والاتصالات",
-    supplierPhone: "+968 95566778",
-    supplierEmail: "support@digitalsolutions-om.com",
-    supplierTaxId: "OM-TAX-SUP-103",
-    supplierAddress: "فلج القبائل - صحار",
-    date: "2026-08-22",
-    dueDate: "2026-09-05",
-    warehouse: "مخزن المعدات والكابلات - صحار",
-    items: [
-      {
-        id: "pi-4",
-        itemId: "item-4",
-        sku: "SW-POE-24G",
-        name: "سويتش شبكات 24 منفذ Gigabit PoE+ مع 4 منافذ SFP 10G",
-        quantity: 15,
-        unitCost: 75.0,
-        amount: 1125.0,
-        unit: "جهاز"
-      },
-      {
-        id: "pi-5",
-        itemId: "item-5",
-        sku: "CBL-CAT6-305M",
-        name: "لفة كابل شبكة Cat6 نحاس نقي 100% خارجي 305 متر",
-        quantity: 20,
-        unitCost: 32.0,
-        amount: 640.0,
-        unit: "لفة"
-      }
-    ],
-    subtotal: 1765.0,
-    taxRate: 5,
-    taxAmount: 88.25,
-    discountAmount: 30.0,
-    shippingFee: 0,
-    totalAmount: 1823.25,
-    currency: "OMR",
-    paymentStatus: "PARTIAL",
-    paymentMethod: "BANK_TRANSFER",
-    status: "ORDERED",
-    notes: "طلبية سويتشات وكابلات شبكات - قيد الشحن والاستلام.",
-    autoUpdateStock: false,
-    createdAt: "2026-08-22T08:00:00Z",
-    updatedAt: "2026-08-22T08:00:00Z"
-  }
-];
+export const DEFAULT_PURCHASES: PurchaseInvoice[] = [];
 
 export function loadPurchases(): PurchaseInvoice[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PURCHASES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load purchases from localStorage:", e);
   }
-  savePurchases(DEFAULT_PURCHASES);
-  return DEFAULT_PURCHASES;
+  return [];
 }
 
 export function savePurchases(purchases: PurchaseInvoice[]): void {
