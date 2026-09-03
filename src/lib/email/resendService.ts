@@ -19,84 +19,92 @@ export interface ResendResponse {
 }
 
 /**
- * Core function to send email via Resend API or local server endpoint proxy
+ * Core function to send email via server endpoint proxy (/api/send-email)
+ * This ensures RESEND_API_KEY stays securely inside server environment variables (.env)
  */
 export async function sendResendEmail(
   settings: ResendSettings,
   payload: SendEmailPayload
 ): Promise<ResendResponse> {
-  if (!settings.apiKey || !settings.apiKey.trim()) {
-    return {
-      success: false,
-      error: 'لم يتم ضبط مفتاح Resend API Key في الإعدادات.'
-    };
-  }
-
-  const fromAddress = settings.fromEmail && settings.fromEmail.includes('@')
+  const fromAddress = settings?.fromEmail && settings.fromEmail.includes('@')
     ? `${settings.fromName || 'نظام ديشال ERP'} <${settings.fromEmail}>`
-    : `${settings.fromName || 'نظام ديشال ERP'} <onboarding@resend.dev>`;
+    : undefined;
 
   const bodyData = {
+    apiKey: settings?.apiKey,
     from: fromAddress,
-    to: [payload.to],
+    to: payload.to,
     subject: payload.subject,
     html: payload.html,
     text: payload.text
   };
 
-  // 1. Try local server endpoint proxy if available (/api/send-email)
+  // 1. Primary Method: Send via Express Server Proxy Endpoint (/api/send-email)
   try {
     const serverRes = await fetch('/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        apiKey: settings.apiKey,
-        ...bodyData
-      })
-    });
-
-    if (serverRes.ok) {
-      const json = await serverRes.json();
-      if (json.id || json.success) {
-        return { success: true, messageId: json.id };
-      }
-    }
-  } catch {
-    // Fall back to direct Resend API call
-  }
-
-  // 2. Direct Resend API Call (https://api.resend.com/emails)
-  try {
-    const resendRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${settings.apiKey.trim()}`,
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify(bodyData)
     });
 
-    const data = await resendRes.json();
+    const json = await serverRes.json();
 
-    if (!resendRes.ok) {
-      return {
-        success: false,
-        error: data.message || data.error?.message || `خطأ استجابة من Resend (كود ${resendRes.status})`
-      };
+    if (serverRes.ok && (json.id || json.success)) {
+      return { success: true, messageId: json.id };
     }
 
-    return {
-      success: true,
-      messageId: data.id
-    };
+    if (json.error) {
+      return { success: false, error: json.error };
+    }
   } catch (err: any) {
-    return {
-      success: false,
-      error: err.message || 'حدث خطأ في شبكة الاتصال بـ Resend API.'
-    };
+    // If backend proxy is not reachable, check if client API key was explicitly passed
   }
+
+  // 2. Direct Resend API Fallback (Only if direct client API key is provided)
+  if (settings?.apiKey && settings.apiKey.trim()) {
+    try {
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${settings.apiKey.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: fromAddress || 'نظام ديشال ERP <onboarding@resend.dev>',
+          to: [payload.to],
+          subject: payload.subject,
+          html: payload.html,
+          text: payload.text
+        })
+      });
+
+      const data = await resendRes.json();
+
+      if (!resendRes.ok) {
+        return {
+          success: false,
+          error: data.message || data.error?.message || `خطأ استجابة من Resend (كود ${resendRes.status})`
+        };
+      }
+
+      return {
+        success: true,
+        messageId: data.id
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err.message || 'حدث خطأ في الاتصال بالسيرفر أو شبكة Resend API.'
+      };
+    }
+  }
+
+  return {
+    success: false,
+    error: 'تعذر إرسال البريد: يرجى ضبط مفتاح RESEND_API_KEY في ملف .env بالسيرفر.'
+  };
 }
 
 /**

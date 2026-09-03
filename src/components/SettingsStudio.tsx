@@ -1274,9 +1274,19 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   <span>مفتاح API وبيانات المرسل (Resend Credentials)</span>
                 </h3>
 
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+                    <Shield className="w-4 h-4 text-emerald-600" />
+                    <span>متاح افتراضياً عبر متغيرات البيئة بالسيرفر (.env)</span>
+                  </div>
+                  <p className="text-[11px] text-emerald-700 leading-relaxed">
+                    يتم قراءة مفتاح <code>RESEND_API_KEY</code> بأمان تام من ملف <code>.env</code> على جانب السيرفر لحماية أسرار النظام وعدم تسريب المفتاح للمتصفح.
+                  </p>
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    مفتاح Resend API Key (يبدأ بـ re_):
+                    مفتاح Resend API Key تخصيص اختياري (يبدأ بـ re_):
                   </label>
                   <input
                     type="password"

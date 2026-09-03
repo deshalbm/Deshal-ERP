@@ -30,19 +30,34 @@ async function startServer() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Resend Email proxy endpoint
+  // Resend Email Server Status endpoint
+  app.get("/api/resend/status", (_req, res) => {
+    res.json({
+      configured: !!process.env.RESEND_API_KEY,
+      fromEmail: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+      fromName: process.env.RESEND_FROM_NAME || "نظام ديشال ERP الإداري"
+    });
+  });
+
+  // Resend Email proxy endpoint (Uses server-side RESEND_API_KEY from .env for maximum security)
   app.post("/api/send-email", async (req, res) => {
     try {
       const { apiKey, from, to, subject, html, text } = req.body;
-      const key = apiKey || process.env.RESEND_API_KEY;
+      const key = process.env.RESEND_API_KEY || apiKey;
 
       if (!key) {
-        return res.status(400).json({ error: "Resend API key is missing" });
+        return res.status(400).json({
+          error: "لم يتم تعيين RESEND_API_KEY في ملف .env بالسيرفر."
+        });
       }
 
       if (!to || !subject || !html) {
         return res.status(400).json({ error: "Missing to, subject, or html body" });
       }
+
+      const defaultFromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+      const defaultFromName = process.env.RESEND_FROM_NAME || "نظام ديشال ERP الإداري";
+      const resolvedFrom = from || `${defaultFromName} <${defaultFromEmail}>`;
 
       const resendRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -51,7 +66,7 @@ async function startServer() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: from || "onboarding@resend.dev",
+          from: resolvedFrom,
           to: Array.isArray(to) ? to : [to],
           subject,
           html,
