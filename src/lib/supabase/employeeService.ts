@@ -5,6 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { Employee } from '../../types';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Read
@@ -13,10 +14,12 @@ import type { Employee } from '../../types';
 export async function getEmployees(companyId: string): Promise<Employee[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('employees') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('full_name', { ascending: true });
 
   if (error) {
@@ -30,10 +33,13 @@ export async function getEmployees(companyId: string): Promise<Employee[]> {
 export async function getEmployeeById(id: string): Promise<Employee | null> {
   if (!isSupabaseConfigured) return null;
 
+  const validId = ensureNullableUuid(id);
+  if (!validId) return null;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('employees') as any)
     .select('*')
-    .eq('id', id)
+    .eq('id', validId)
     .maybeSingle();
 
   if (error || !data) return null;
@@ -50,7 +56,8 @@ export async function upsertEmployee(
 ): Promise<{ success: boolean; data?: Employee; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
-  const row = mapEmployeeToRow(employee, companyId);
+  const validCompanyId = ensureValidUuid(companyId);
+  const row = mapEmployeeToRow(employee, validCompanyId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('employees') as any)
@@ -65,11 +72,14 @@ export async function upsertEmployee(
 export async function deleteEmployee(id: string): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validId = ensureNullableUuid(id);
+  if (!validId) return { success: true };
+
   // Soft delete — update status to INACTIVE
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('employees') as any)
     .update({ status: 'INACTIVE', updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', validId);
 
   if (error) return { success: false, error: error.message };
   return { success: true };
@@ -114,8 +124,8 @@ function mapRowToEmployee(row: any): Employee {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapEmployeeToRow(employee: Employee, companyId: string): Record<string, any> {
   return {
-    id: employee.id,
-    company_id: companyId,
+    id: ensureValidUuid(employee.id),
+    company_id: ensureValidUuid(companyId),
     employee_code: employee.employeeCode,
     full_name: employee.fullName,
     full_name_en: employee.fullNameEn,
@@ -125,7 +135,7 @@ function mapEmployeeToRow(employee: Employee, companyId: string): Record<string,
     role: employee.role,
     job_title: employee.jobTitle,
     department: employee.department,
-    branch_id: employee.branchId,
+    branch_id: ensureNullableUuid(employee.branchId),
     branch_name: employee.branchName,
     status: employee.status,
     hire_date: employee.hireDate || null,

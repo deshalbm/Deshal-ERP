@@ -18,6 +18,8 @@ import {
   Building
 } from "lucide-react";
 
+import { generateUuid, ensureValidUuid } from "../utils/uuid";
+
 interface TenantSubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -126,9 +128,9 @@ export const TenantSubscriptionModal: React.FC<TenantSubscriptionModalProps> = (
       `SUB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
 
     const saved: TenantSubscription = {
-      id: subscription?.id || `sub-${Date.now()}`,
+      id: subscription?.id ? ensureValidUuid(subscription.id) : generateUuid(),
       subscriptionNumber: subNumber,
-      customerId: customerId || `cust-${Date.now()}`,
+      customerId: customerId ? ensureValidUuid(customerId) : generateUuid(),
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
       customerEmail: customerEmail.trim() || undefined,

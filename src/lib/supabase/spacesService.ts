@@ -14,6 +14,7 @@ import type {
   TenantSubscription,
   ServiceBooking,
 } from '../../types';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Rental Spaces
@@ -22,10 +23,12 @@ import type {
 export async function getRentalSpaces(companyId: string): Promise<RentalSpace[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('spaces') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('name_ar', { ascending: true });
 
   if (error) { console.error('[SpacesService] getRentalSpaces:', error.message); return []; }
@@ -34,7 +37,7 @@ export async function getRentalSpaces(companyId: string): Promise<RentalSpace[]>
   return (data ?? []).map((row: any): RentalSpace => ({
     id: row.id,
     code: row.code ?? '',
-    name: row.name ?? '',
+    name: row.name_ar ?? row.name ?? '',
     nameEn: row.name_en ?? '',
     type: row.space_type ?? 'OFFICE',
     branchId: row.branch_id ?? '',
@@ -60,15 +63,17 @@ export async function upsertRentalSpace(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('spaces') as any).upsert({
-    id: space.id,
-    company_id: companyId,
+    id: ensureValidUuid(space.id),
+    company_id: validCompanyId,
     code: space.code,
-    name: space.name,
+    name_ar: space.name,
     name_en: space.nameEn,
     space_type: space.type,
-    branch_id: space.branchId,
+    branch_id: ensureNullableUuid(space.branchId),
     branch_name: space.branchName,
     capacity: space.capacity,
     floor_location: space.floorLocation,
@@ -142,17 +147,19 @@ export async function upsertSpaceBooking(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('space_bookings') as any).upsert({
-    id: booking.id,
-    company_id: companyId,
+    id: ensureValidUuid(booking.id),
+    company_id: validCompanyId,
     booking_number: booking.bookingNumber,
-    space_id: booking.spaceId,
+    space_id: ensureNullableUuid(booking.spaceId),
     space_name: booking.spaceName,
     space_type: booking.spaceType,
-    branch_id: booking.branchId,
+    branch_id: ensureNullableUuid(booking.branchId),
     branch_name: booking.branchName,
-    customer_id: booking.customerId,
+    customer_id: ensureNullableUuid(booking.customerId),
     customer_name: booking.customerName,
     customer_phone: booking.customerPhone,
     customer_email: booking.customerEmail,

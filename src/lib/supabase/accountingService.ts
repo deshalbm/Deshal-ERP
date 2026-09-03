@@ -12,6 +12,7 @@ import type {
   CostCenter,
   AccountingRevisionLog,
 } from '../../types/accounting';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Chart of Accounts
@@ -20,10 +21,12 @@ import type {
 export async function getAccounts(companyId: string): Promise<Account[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('chart_of_accounts') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('code', { ascending: true });
 
   if (error) {
@@ -40,18 +43,20 @@ export async function upsertAccount(
 ): Promise<{ success: boolean; data?: Account; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('chart_of_accounts') as any)
     .upsert(
       {
-        id: account.id,
-        company_id: companyId,
+        id: ensureValidUuid(account.id),
+        company_id: validCompanyId,
         code: account.code,
         name_ar: account.nameAr,
         name_en: account.nameEn,
         account_type: account.type,
         account_category: account.category,
-        parent_id: account.parentId ?? null,
+        parent_id: ensureNullableUuid(account.parentId),
         is_posting: account.isPosting ?? false,
         normal_balance: account.normalBalance ?? null,
         allow_manual_posting: account.allowManualPosting ?? true,
@@ -61,7 +66,7 @@ export async function upsertAccount(
         description: account.description ?? '',
         is_system: account.isSystem ?? false,
         is_active: account.isActive ?? true,
-        branch_id: account.branchId ?? null,
+        branch_id: ensureNullableUuid(account.branchId),
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'id' }

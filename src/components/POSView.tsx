@@ -42,6 +42,7 @@ import {
   HelpCircle,
   FileSpreadsheet
 } from "lucide-react";
+import { generateUuid } from "../utils/uuid";
 import {
   InventoryItem,
   StockMovement,
@@ -919,7 +920,7 @@ export const POSView: React.FC<POSViewProps> = ({
     if (!newCustName.trim()) return;
 
     const newCustomer: Customer = {
-      id: `cust-${Date.now()}`,
+      id: generateUuid(),
       name: newCustName.trim(),
       phone: newCustPhone.trim(),
       taxId: newCustTaxId.trim(),

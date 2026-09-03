@@ -56,6 +56,7 @@ import {
   LeaveStatus
 } from "../types";
 import { numberToWords } from "./numberToWords";
+import { generateUuid } from "./uuid";
 
 export const DEFAULT_WHATSAPP_SETTINGS: WhatsAppSettings = {
   enabled: true,
@@ -311,7 +312,7 @@ export function syncCustomerFromVoucher(voucher: Partial<ReceiptVoucher>, curren
 
   // Create new customer from voucher
   const newCustomer: Customer = {
-    id: `cust-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: generateUuid(),
     name: name,
     contactPerson: "",
     phone: voucher.payerPhone || "",

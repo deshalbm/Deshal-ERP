@@ -122,6 +122,7 @@ import {
 } from "./utils/auditLogger";
 import { exportToPdf } from "./utils/pdfGenerator";
 import { numberToWords } from "./utils/numberToWords";
+import { generateUuid } from "./utils/uuid";
 import { HeaderNavbar } from "./components/HeaderNavbar";
 import { VoucherForm } from "./components/VoucherForm";
 import { DocWizardView } from "./components/DocWizardView";
@@ -1488,7 +1489,7 @@ export default function App() {
       );
       if (!existingCust) {
         const newCust: Customer = {
-          id: `cust-${Date.now()}`,
+          id: generateUuid(),
           name: finalBooking.customerName,
           phone: finalBooking.customerPhone,
           email: finalBooking.customerEmail || "",
@@ -1787,7 +1788,7 @@ export default function App() {
       );
       if (!existingCust) {
         const newCust: Customer = {
-          id: `cust-${Date.now()}`,
+          id: generateUuid(),
           name: finalBooking.customerName,
           phone: finalBooking.customerPhone,
           email: finalBooking.customerEmail || "",
@@ -1917,7 +1918,7 @@ export default function App() {
       );
       if (!existingCust) {
         const newCust: Customer = {
-          id: `cust-${Date.now()}`,
+          id: generateUuid(),
           name: contract.tenantName,
           phone: contract.tenantPhone,
           email: contract.tenantEmail || "",

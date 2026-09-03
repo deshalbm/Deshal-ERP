@@ -6,6 +6,7 @@
 import { supabase, isSupabaseConfigured } from './client';
 import type { Customer } from '../../types';
 import { enqueueOperation } from '../offline/indexedDBQueue';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Read
@@ -14,10 +15,12 @@ import { enqueueOperation } from '../offline/indexedDBQueue';
 export async function getCustomers(companyId: string): Promise<Customer[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('customers') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -31,10 +34,13 @@ export async function getCustomers(companyId: string): Promise<Customer[]> {
 export async function getCustomerById(id: string): Promise<Customer | null> {
   if (!isSupabaseConfigured) return null;
 
+  const validId = ensureNullableUuid(id);
+  if (!validId) return null;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('customers') as any)
     .select('*')
-    .eq('id', id)
+    .eq('id', validId)
     .maybeSingle();
 
   if (error || !data) return null;
@@ -51,18 +57,22 @@ export async function upsertCustomer(
 ): Promise<{ success: boolean; data?: Customer; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
+  const validCustomerId = ensureValidUuid(customer.id);
+  const normalizedCustomer = { ...customer, id: validCustomerId };
+
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     await enqueueOperation({
       entity_type: 'CUSTOMER',
-      entity_id: customer.id,
+      entity_id: validCustomerId,
       action: 'UPSERT',
-      payload: customer,
-      company_id: companyId,
+      payload: normalizedCustomer,
+      company_id: validCompanyId,
     }).catch(console.error);
-    return { success: true, data: customer };
+    return { success: true, data: normalizedCustomer };
   }
 
-  const row = mapCustomerToRow(customer, companyId);
+  const row = mapCustomerToRow(normalizedCustomer, validCompanyId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('customers') as any)
@@ -73,12 +83,12 @@ export async function upsertCustomer(
   if (error) {
     await enqueueOperation({
       entity_type: 'CUSTOMER',
-      entity_id: customer.id,
+      entity_id: validCustomerId,
       action: 'UPSERT',
-      payload: customer,
-      company_id: companyId,
+      payload: normalizedCustomer,
+      company_id: validCompanyId,
     }).catch(console.error);
-    return { success: true, data: customer };
+    return { success: true, data: normalizedCustomer };
   }
   return { success: true, data: mapRowToCustomer(data) };
 }
@@ -86,25 +96,28 @@ export async function upsertCustomer(
 export async function deleteCustomer(id: string): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validId = ensureNullableUuid(id);
+  if (!validId) return { success: true };
+
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     await enqueueOperation({
       entity_type: 'CUSTOMER',
-      entity_id: id,
+      entity_id: validId,
       action: 'DELETE',
-      payload: { id },
+      payload: { id: validId },
       company_id: '00000000-0000-0000-0000-000000000001',
     }).catch(console.error);
     return { success: true };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('customers') as any).delete().eq('id', id);
+  const { error } = await (supabase.from('customers') as any).delete().eq('id', validId);
   if (error) {
     await enqueueOperation({
       entity_type: 'CUSTOMER',
-      entity_id: id,
+      entity_id: validId,
       action: 'DELETE',
-      payload: { id },
+      payload: { id: validId },
       company_id: '00000000-0000-0000-0000-000000000001',
     }).catch(console.error);
     return { success: true };
@@ -144,8 +157,8 @@ function mapRowToCustomer(row: any): Customer {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapCustomerToRow(customer: Customer, companyId: string): Record<string, any> {
   return {
-    id: customer.id,
-    company_id: companyId,
+    id: ensureValidUuid(customer.id),
+    company_id: ensureValidUuid(companyId),
     name: customer.name,
     contact_person: customer.contactPerson ?? '',
     email: customer.email,
@@ -155,7 +168,7 @@ function mapCustomerToRow(customer: Customer, companyId: string): Record<string,
     country: customer.country,
     tax_id: customer.taxId,
     cr_number: customer.crNumber,
-    branch_id: customer.branchId,
+    branch_id: ensureNullableUuid(customer.branchId),
     branch_name: customer.branchName,
     customer_type: customer.type,
     status: customer.status,

@@ -20,6 +20,7 @@ import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
 import { addCustomerInteraction } from "../lib/supabase/crmService";
 import { upsertCustomer } from "../lib/supabase/customerService";
+import { generateUuid } from "../utils/uuid";
 import {
   Users,
   UserPlus,
@@ -362,7 +363,7 @@ export const CRMView: React.FC<CRMViewProps> = ({
   // Handler: Open Add Modal
   const handleOpenAddModal = (presetTenant: boolean = false) => {
     setEditingCustomer({
-      id: `cust-${Date.now()}`,
+      id: generateUuid(),
       name: "",
       contactPerson: "",
       phone: "+968 ",

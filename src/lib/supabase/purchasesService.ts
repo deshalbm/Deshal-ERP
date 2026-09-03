@@ -5,6 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { PurchaseInvoice, ReceiptVoucher } from '../../types';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Purchase Invoices (mapped to purchase_orders)
@@ -13,10 +14,12 @@ import type { PurchaseInvoice, ReceiptVoucher } from '../../types';
 export async function getPurchases(companyId: string): Promise<PurchaseInvoice[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('purchase_orders') as any)
     .select('*, purchase_order_lines(*)')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('date', { ascending: false });
 
   if (error) {
@@ -33,10 +36,11 @@ export async function upsertPurchase(
 ): Promise<{ success: boolean; data?: PurchaseInvoice; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
   const row = {
-    id: purchase.id,
-    company_id: companyId,
-    supplier_id: purchase.supplierId ?? null,
+    id: ensureValidUuid(purchase.id),
+    company_id: validCompanyId,
+    supplier_id: ensureNullableUuid(purchase.supplierId),
     supplier_name: purchase.supplierName ?? '',
     order_number: purchase.purchaseNumber,
     order_date: purchase.date,
@@ -46,7 +50,7 @@ export async function upsertPurchase(
     tax_amount: purchase.taxAmount ?? 0,
     total_amount: purchase.totalAmount ?? 0,
     warehouse: purchase.warehouse ?? '',
-    branch_id: purchase.branchId ?? null,
+    branch_id: ensureNullableUuid(purchase.branchId),
     branch_name: purchase.branchName ?? '',
     notes: purchase.notes ?? '',
     updated_at: new Date().toISOString(),
@@ -63,9 +67,9 @@ export async function upsertPurchase(
   // Upsert lines if provided
   if (purchase.items && purchase.items.length > 0) {
     const lines = purchase.items.map((item) => ({
-      id: item.id,
+      id: ensureValidUuid(item.id),
       purchase_order_id: data.id,
-      product_id: item.itemId ?? null,
+      product_id: ensureNullableUuid(item.itemId),
       product_name: item.name ?? '',
       quantity: item.quantity,
       unit_price: item.unitCost,
@@ -85,10 +89,13 @@ export const upsertPurchaseInvoice = upsertPurchase;
 export async function deletePurchase(id: string): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validId = ensureNullableUuid(id);
+  if (!validId) return { success: true };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existing } = await (supabase.from('purchase_orders') as any)
     .select('status')
-    .eq('id', id)
+    .eq('id', validId)
     .maybeSingle();
 
   if (existing && existing.status !== 'DRAFT') {
@@ -96,7 +103,7 @@ export async function deletePurchase(id: string): Promise<{ success: boolean; er
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('purchase_orders') as any).delete().eq('id', id);
+  const { error } = await (supabase.from('purchase_orders') as any).delete().eq('id', validId);
   if (error) return { success: false, error: error.message };
   return { success: true };
 }
@@ -108,10 +115,12 @@ export async function deletePurchase(id: string): Promise<{ success: boolean; er
 export async function getVouchers(companyId: string): Promise<ReceiptVoucher[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('invoices') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('date', { ascending: false });
 
   if (error) {
@@ -128,9 +137,10 @@ export async function upsertVoucher(
 ): Promise<{ success: boolean; data?: ReceiptVoucher; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
   const row = {
-    id: voucher.id,
-    company_id: companyId,
+    id: ensureValidUuid(voucher.id),
+    company_id: validCompanyId,
     voucher_number: voucher.voucherNumber,
     reference_no: voucher.referenceNo,
     voucher_date: voucher.date,
@@ -161,8 +171,10 @@ export async function upsertVoucher(
 
 export async function deleteVoucher(id: string): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+  const validId = ensureNullableUuid(id);
+  if (!validId) return { success: true };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('invoices') as any).delete().eq('id', id);
+  const { error } = await (supabase.from('invoices') as any).delete().eq('id', validId);
   if (error) return { success: false, error: error.message };
   return { success: true };
 }

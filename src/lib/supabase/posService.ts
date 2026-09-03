@@ -10,6 +10,7 @@ import type {
   CashierShift,
   POSHeldCart,
 } from '../../types';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // POS Orders
@@ -18,10 +19,12 @@ import type {
 export async function getPOSOrders(companyId: string): Promise<POSOrder[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('pos_orders') as any)
     .select('*, pos_order_items(*)')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('order_date', { ascending: false });
 
   if (error) {
@@ -38,14 +41,16 @@ export async function upsertPOSOrder(
 ): Promise<{ success: boolean; data?: POSOrder; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   const row = {
-    id: order.id,
-    company_id: companyId,
-    branch_id: order.branchId ?? null,
+    id: ensureValidUuid(order.id),
+    company_id: validCompanyId,
+    branch_id: ensureNullableUuid(order.branchId),
     order_number: order.orderNumber,
-    cashier_id: order.cashierId ?? null,
+    cashier_id: ensureNullableUuid(order.cashierId),
     cashier_name: order.cashierName ?? '',
-    customer_id: order.customerId ?? null,
+    customer_id: ensureNullableUuid(order.customerId),
     customer_name: order.customerName ?? '',
     order_date: order.date ?? order.createdAt ?? new Date().toISOString(),
     status: order.status ?? 'COMPLETED',
@@ -56,7 +61,7 @@ export async function upsertPOSOrder(
     total_amount: order.totalAmount ?? 0,
     amount_tendered: order.cashReceived ?? 0,
     change_amount: order.changeDue ?? 0,
-    shift_id: order.shiftId ?? null,
+    shift_id: ensureNullableUuid(order.shiftId),
     notes: order.notes ?? '',
     updated_at: new Date().toISOString(),
   };
@@ -72,9 +77,9 @@ export async function upsertPOSOrder(
   // Upsert lines if provided
   if (order.items && order.items.length > 0) {
     const lines = order.items.map((item: POSOrderItem) => ({
-      id: item.id,
+      id: ensureValidUuid(item.id),
       pos_order_id: data.id,
-      product_id: item.itemId ?? null,
+      product_id: ensureNullableUuid(item.itemId),
       description: item.name ?? '',
       quantity: item.quantity,
       unit_price: item.unitPrice,
@@ -97,10 +102,12 @@ export async function upsertPOSOrder(
 export async function getCashierShifts(companyId: string): Promise<CashierShift[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('cashier_shifts') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('opened_at', { ascending: false });
 
   if (error) {
@@ -117,11 +124,13 @@ export async function upsertCashierShift(
 ): Promise<{ success: boolean; data?: CashierShift; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   const row = {
-    id: shift.id,
-    company_id: companyId,
-    branch_id: shift.branchId ?? null,
-    cashier_id: shift.cashierId ?? null,
+    id: ensureValidUuid(shift.id),
+    company_id: validCompanyId,
+    branch_id: ensureNullableUuid(shift.branchId),
+    cashier_id: ensureNullableUuid(shift.cashierId),
     cashier_name: shift.cashierName ?? '',
     shift_number: shift.shiftNumber,
     opened_at: shift.openedAt,

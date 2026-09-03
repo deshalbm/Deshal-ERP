@@ -10,6 +10,7 @@ import {
   Branch
 } from "../types";
 import { numberToWords } from "../utils/numberToWords";
+import { generateUuid } from "../utils/uuid";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
 import {
@@ -480,7 +481,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
                     type="button"
                     onClick={() => {
                       onQuickSaveCustomer({
-                        id: `cust-${Date.now()}`,
+                        id: generateUuid(),
                         name: voucher.receivedFrom.trim(),
                         contactPerson: "",
                         phone: voucher.payerPhone || "",

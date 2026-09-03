@@ -5,14 +5,17 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { EmployeeRequest } from '../../types/requests';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 export async function getEmployeeRequests(companyId: string): Promise<EmployeeRequest[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('requests') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -29,12 +32,14 @@ export async function upsertEmployeeRequest(
 ): Promise<{ success: boolean; data?: EmployeeRequest; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validCompanyId = ensureValidUuid(companyId);
+
   const row = {
-    id: request.id,
-    company_id: companyId,
+    id: ensureValidUuid(request.id),
+    company_id: validCompanyId,
     request_number: request.requestNumber,
-    submitted_by_employee_id: request.employeeId,
-    request_type_id: request.typeId,
+    submitted_by_employee_id: ensureValidUuid(request.employeeId),
+    request_type_id: ensureValidUuid(request.typeId),
     status: request.status,
     field_values: {
       employeeName: request.employeeName,
@@ -75,8 +80,11 @@ export async function upsertEmployeeRequest(
 export async function deleteEmployeeRequest(id: string): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
+  const validId = ensureNullableUuid(id);
+  if (!validId) return { success: true };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('requests') as any).delete().eq('id', id);
+  const { error } = await (supabase.from('requests') as any).delete().eq('id', validId);
   if (error) return { success: false, error: error.message };
   return { success: true };
 }
