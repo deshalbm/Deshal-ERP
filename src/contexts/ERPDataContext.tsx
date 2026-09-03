@@ -50,6 +50,7 @@ import {
   loadServiceBookings, saveServiceBookings,
   loadCompanySettings, saveCompanySettings,
   loadRecurringSchedules, saveRecurringSchedules,
+  clearAllLocalStorage,
 } from '../utils/storage';
 import {
   loadAccounts, saveAccounts,
@@ -239,6 +240,9 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
     setIsDataLoading(true);
 
     if (isSupabaseConfigured && cId) {
+      // Pure Supabase Mode: Clear all legacy local storage keys
+      clearAllLocalStorage();
+
       // Load from Supabase in parallel
       const [
         customers, employees, inventory, suppliers, branches,

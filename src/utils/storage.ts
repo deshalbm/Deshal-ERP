@@ -266,6 +266,24 @@ const STORAGE_KEYS = {
   LEAVE_REQUESTS: "deshal_hr_leave_requests"
 };
 
+export function clearAllLocalStorage(): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      Object.values(STORAGE_KEYS).forEach((key) => {
+        localStorage.removeItem(key);
+      });
+      // Also clear accounting storage keys
+      localStorage.removeItem("deshal_accounts");
+      localStorage.removeItem("deshal_journal_entries");
+      localStorage.removeItem("deshal_fiscal_periods");
+      localStorage.removeItem("deshal_cost_centers");
+      localStorage.removeItem("deshal_audit_logs");
+    }
+  } catch (e) {
+    console.warn("Failed to clear local storage keys:", e);
+  }
+}
+
 export const DEFAULT_CUSTOMERS: Customer[] = [
   {
     id: "cust-1",
