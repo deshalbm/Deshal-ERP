@@ -58,6 +58,67 @@ async function ensureEmployeeExists(
 }
 
 // ──────────────────────────────────────────────
+// Helper: Ensure Branch & Kiosk Device Record Exist in Supabase
+// ──────────────────────────────────────────────
+async function resolveValidBranchId(branchId: string | null | undefined): Promise<string | null> {
+  if (!isSupabaseConfigured || !branchId) return null;
+  const bId = ensureNullableUuid(branchId);
+  if (!bId) return null;
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase.from('branches') as any)
+      .select('id')
+      .eq('id', bId)
+      .maybeSingle();
+
+    return data ? data.id : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveValidKioskDeviceId(
+  deviceId: string | null | undefined,
+  companyId: string,
+  deviceName?: string,
+  branchId?: string | null
+): Promise<string | null> {
+  if (!isSupabaseConfigured || !deviceId) return null;
+  const dId = ensureNullableUuid(deviceId);
+  if (!dId) return null;
+  const cId = ensureValidUuid(companyId);
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase.from('kiosk_devices') as any)
+      .select('id')
+      .eq('id', dId)
+      .maybeSingle();
+
+    if (data) return data.id;
+
+    const validBranchId = await resolveValidBranchId(branchId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('kiosk_devices') as any).upsert({
+      id: dId,
+      company_id: cId,
+      branch_id: validBranchId,
+      device_code: `DEV-${dId.slice(0, 6)}`,
+      name: deviceName || 'كشك الحضور اللوحي',
+      location: 'الفرع الرئيسي',
+      is_active: true,
+      created_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+
+    if (!error) return dId;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────
 // Attendance Records
 // ──────────────────────────────────────────────
 
@@ -140,7 +201,7 @@ export async function upsertAttendanceRecord(
   const cId = ensureValidUuid(companyId);
   const recId = ensureValidUuid(record.id);
   const empId = ensureValidUuid(record.employeeId);
-  const branchId = ensureNullableUuid(record.branchId);
+  const validBranchId = await resolveValidBranchId(record.branchId);
 
   await ensureEmployeeExists(empId, cId, record.employeeCode, record.employeeName, record.jobTitle, record.department);
 
@@ -163,7 +224,7 @@ export async function upsertAttendanceRecord(
         id: recId,
         company_id: cId,
         employee_id: empId,
-        branch_id: branchId,
+        branch_id: validBranchId,
         attendance_date: dateStr,
         check_in_at: checkInIso,
         check_out_at: checkOutIso,
@@ -245,7 +306,7 @@ export async function addAttendanceMovementLog(
   const cId = ensureValidUuid(companyId);
   const logId = ensureValidUuid(log.id);
   const empId = ensureValidUuid(log.employeeId);
-  const deviceId = ensureNullableUuid(log.deviceId);
+  const validDeviceId = await resolveValidKioskDeviceId(log.deviceId, cId, log.deviceName, log.branchId);
 
   await ensureEmployeeExists(empId, cId, log.employeeCode, log.employeeName, log.jobTitle, log.department);
 
@@ -263,7 +324,7 @@ export async function addAttendanceMovementLog(
     id: logId,
     company_id: cId,
     employee_id: empId,
-    kiosk_device_id: deviceId,
+    kiosk_device_id: validDeviceId,
     movement_type_code: log.movementTypeCode || log.movementCategory || 'CHECK_IN',
     movement_category: log.movementCategory || 'CHECK_IN',
     timestamp: log.timestamp || new Date().toISOString(),
