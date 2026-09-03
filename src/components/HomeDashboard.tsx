@@ -56,7 +56,7 @@ interface HomeDashboardProps {
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
-  userName = "سعيد",
+  userName = "المستخدم",
   onUpdateUserName,
   companySettings = DEFAULT_COMPANY_SETTINGS,
   vouchers,

@@ -178,9 +178,13 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<"home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings" | "help">("home");
   const [userName, setUserName] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("rv_user_name") || "سعيد";
+      const activeSession = loadAuthSession();
+      if (activeSession?.user?.fullName) {
+        return activeSession.user.fullName;
+      }
+      return localStorage.getItem("rv_user_name") || "المستخدم";
     }
-    return "سعيد";
+    return "المستخدم";
   });
   const [companySettings, setCompanySettings] = useState<CompanySettings>(loadCompanySettings());
   const [designTheme, setDesignTheme] = useState<DesignTheme>(loadDesignTheme());
@@ -511,6 +515,9 @@ export default function App() {
     setActiveEmployeeId(session.user.employeeId);
     saveActiveEmployeeId(session.user.employeeId);
     setUserName(session.user.fullName);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("rv_user_name", session.user.fullName);
+    }
     if (session.employee.branchId) {
       setActiveBranchId(session.employee.branchId);
     }
