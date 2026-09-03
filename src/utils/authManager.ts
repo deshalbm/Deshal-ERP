@@ -166,25 +166,7 @@ export function loadAuthSession(): AuthSession | null {
     console.warn("Failed to parse auth session:", e);
   }
   
-  // Default: Return initial active session for Admin Said so app is ready
-  const users = loadUserAccounts();
-  const employees = loadEmployees();
-  const defaultUser = users[0] || DEFAULT_USER_ACCOUNTS[0];
-  const defaultEmp = employees.find((e) => e.id === defaultUser.employeeId) || DEFAULT_EMPLOYEES[0];
-  
-  const initialSession: AuthSession = {
-    user: defaultUser,
-    employee: defaultEmp,
-    token: `tok_${Math.random().toString(36).substring(2)}_${Date.now()}`,
-    loginMethod: "PASSWORD",
-    authenticatedAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    isLocked: false,
-    activeBranchId: defaultEmp.branchId || "branch-sohar"
-  };
-  
-  saveAuthSession(initialSession);
-  return initialSession;
+  return null;
 }
 
 export function saveAuthSession(session: AuthSession | null): void {

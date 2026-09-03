@@ -45,6 +45,8 @@ import {
 } from "../../utils/authManager";
 import { loadEmployees, DEFAULT_COMPANY_SETTINGS } from "../../utils/storage";
 import { useLanguage } from "../../utils/LanguageContext";
+import { signInWithEmail } from "../../lib/supabase/authService";
+import { isSupabaseConfigured } from "../../lib/supabase/client";
 
 interface LoginPageProps {
   companySettings?: CompanySettings;
@@ -113,11 +115,61 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     }
   }, []);
 
-  const handlePasswordLogin = (e?: React.FormEvent) => {
+  const handlePasswordLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
     setIsLoading(true);
+
+    if (isSupabaseConfigured) {
+      const supaRes = await signInWithEmail(email, password);
+      if (supaRes.success && supaRes.user) {
+        setIsLoading(false);
+        const emp: Employee = {
+          id: supaRes.user.id,
+          name: supaRes.user.fullName,
+          jobTitle: supaRes.user.role,
+          department: "Management",
+          email: supaRes.user.email,
+          phone: "",
+          nationalId: "",
+          hireDate: new Date().toISOString(),
+          basicSalary: 0,
+          allowances: 0,
+          deductions: 0,
+          netSalary: 0,
+          status: "ACTIVE",
+          branchId: supaRes.user.branchId || "branch-sohar",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        const uAcc: UserAccount = {
+          id: supaRes.user.id,
+          employeeId: supaRes.user.id,
+          email: supaRes.user.email,
+          fullName: supaRes.user.fullName,
+          fullNameEn: supaRes.user.fullNameEn,
+          role: supaRes.user.role as any,
+          passwordHash: "",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        const session: AuthSession = {
+          user: uAcc,
+          employee: emp,
+          token: supaRes.session?.access_token || `tok_supa_${Date.now()}`,
+          loginMethod: "PASSWORD",
+          authenticatedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          isLocked: false,
+          activeBranchId: supaRes.user.branchId || "branch-sohar"
+        };
+        saveAuthSession(session);
+        setSuccessMessage(t("loginSuccess"));
+        onLoginSuccess(session);
+        return;
+      }
+    }
 
     setTimeout(() => {
       const res = authenticateUser(email, password, false);
