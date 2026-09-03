@@ -45,6 +45,380 @@ export interface Database {
           updated_at?: string;
         };
       };
+      work_centers: {
+        Row: {
+          id: string;
+          company_id: string;
+          branch_id: string | null;
+          code: string;
+          name: string;
+          description: string | null;
+          hourly_cost: number;
+          capacity_per_hour: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          branch_id?: string | null;
+          code: string;
+          name: string;
+          description?: string | null;
+          hourly_cost?: number;
+          capacity_per_hour?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          branch_id?: string | null;
+          code?: string;
+          name?: string;
+          description?: string | null;
+          hourly_cost?: number;
+          capacity_per_hour?: number;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+      };
+      boms: {
+        Row: {
+          id: string;
+          company_id: string;
+          product_id: string;
+          code: string;
+          name: string;
+          description: string | null;
+          version: number;
+          output_quantity: number;
+          scrap_percentage: number;
+          status: 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+          is_default: boolean;
+          effective_from: string | null;
+          effective_to: string | null;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          product_id: string;
+          code: string;
+          name: string;
+          description?: string | null;
+          version?: number;
+          output_quantity?: number;
+          scrap_percentage?: number;
+          status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+          is_default?: boolean;
+          effective_from?: string | null;
+          effective_to?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          product_id?: string;
+          code?: string;
+          name?: string;
+          description?: string | null;
+          version?: number;
+          output_quantity?: number;
+          scrap_percentage?: number;
+          status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+          is_default?: boolean;
+          effective_from?: string | null;
+          effective_to?: string | null;
+          created_by?: string | null;
+          updated_at?: string;
+        };
+      };
+      bom_components: {
+        Row: {
+          id: string;
+          bom_id: string;
+          component_product_id: string;
+          quantity: number;
+          scrap_percentage: number;
+          sequence: number;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          bom_id: string;
+          component_product_id: string;
+          quantity: number;
+          scrap_percentage?: number;
+          sequence?: number;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          bom_id?: string;
+          component_product_id?: string;
+          quantity?: number;
+          scrap_percentage?: number;
+          sequence?: number;
+          notes?: string | null;
+          updated_at?: string;
+        };
+      };
+      production_routings: {
+        Row: {
+          id: string;
+          company_id: string;
+          bom_id: string;
+          work_center_id: string;
+          sequence: number;
+          operation_name: string;
+          description: string | null;
+          setup_minutes: number;
+          run_minutes_per_unit: number;
+          expected_cost_per_unit: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          bom_id: string;
+          work_center_id: string;
+          sequence?: number;
+          operation_name: string;
+          description?: string | null;
+          setup_minutes?: number;
+          run_minutes_per_unit?: number;
+          expected_cost_per_unit?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          bom_id?: string;
+          work_center_id?: string;
+          sequence?: number;
+          operation_name?: string;
+          description?: string | null;
+          setup_minutes?: number;
+          run_minutes_per_unit?: number;
+          expected_cost_per_unit?: number;
+          updated_at?: string;
+        };
+      };
+      work_orders: {
+        Row: {
+          id: string;
+          company_id: string;
+          branch_id: string | null;
+          project_id: string | null;
+          bom_id: string;
+          product_id: string;
+          source_warehouse_id: string;
+          destination_warehouse_id: string;
+          work_order_number: string;
+          status: 'DRAFT' | 'RELEASED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
+          planned_quantity: number;
+          completed_quantity: number;
+          rejected_quantity: number;
+          planned_start_date: string | null;
+          planned_end_date: string | null;
+          actual_start_at: string | null;
+          actual_completed_at: string | null;
+          material_cost: number;
+          labor_cost: number;
+          overhead_cost: number;
+          total_production_cost: number;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          branch_id?: string | null;
+          project_id?: string | null;
+          bom_id: string;
+          product_id: string;
+          source_warehouse_id: string;
+          destination_warehouse_id: string;
+          work_order_number: string;
+          status?: 'DRAFT' | 'RELEASED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
+          planned_quantity: number;
+          completed_quantity?: number;
+          rejected_quantity?: number;
+          planned_start_date?: string | null;
+          planned_end_date?: string | null;
+          actual_start_at?: string | null;
+          actual_completed_at?: string | null;
+          material_cost?: number;
+          labor_cost?: number;
+          overhead_cost?: number;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          branch_id?: string | null;
+          project_id?: string | null;
+          bom_id?: string;
+          product_id?: string;
+          source_warehouse_id?: string;
+          destination_warehouse_id?: string;
+          work_order_number?: string;
+          status?: 'DRAFT' | 'RELEASED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
+          planned_quantity?: number;
+          completed_quantity?: number;
+          rejected_quantity?: number;
+          planned_start_date?: string | null;
+          planned_end_date?: string | null;
+          actual_start_at?: string | null;
+          actual_completed_at?: string | null;
+          material_cost?: number;
+          labor_cost?: number;
+          overhead_cost?: number;
+          notes?: string | null;
+          created_by?: string | null;
+          updated_at?: string;
+        };
+      };
+      work_order_materials: {
+        Row: {
+          id: string;
+          work_order_id: string;
+          component_product_id: string;
+          required_quantity: number;
+          issued_quantity: number;
+          returned_quantity: number;
+          unit_cost: number;
+          total_cost: number;
+          inventory_transaction_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          work_order_id: string;
+          component_product_id: string;
+          required_quantity: number;
+          issued_quantity?: number;
+          returned_quantity?: number;
+          unit_cost?: number;
+          inventory_transaction_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          work_order_id?: string;
+          component_product_id?: string;
+          required_quantity?: number;
+          issued_quantity?: number;
+          returned_quantity?: number;
+          unit_cost?: number;
+          inventory_transaction_id?: string | null;
+          updated_at?: string;
+        };
+      };
+      work_order_operations: {
+        Row: {
+          id: string;
+          work_order_id: string;
+          routing_id: string | null;
+          work_center_id: string;
+          sequence: number;
+          operation_name: string;
+          status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED';
+          planned_minutes: number;
+          actual_minutes: number;
+          hourly_cost: number;
+          operation_cost: number;
+          started_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          work_order_id: string;
+          routing_id?: string | null;
+          work_center_id: string;
+          sequence: number;
+          operation_name: string;
+          status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED';
+          planned_minutes?: number;
+          actual_minutes?: number;
+          hourly_cost?: number;
+          started_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          work_order_id?: string;
+          routing_id?: string | null;
+          work_center_id?: string;
+          sequence?: number;
+          operation_name?: string;
+          status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED';
+          planned_minutes?: number;
+          actual_minutes?: number;
+          hourly_cost?: number;
+          started_at?: string | null;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+      };
+      production_outputs: {
+        Row: {
+          id: string;
+          work_order_id: string;
+          product_id: string;
+          warehouse_id: string;
+          quantity: number;
+          unit_cost: number;
+          inventory_transaction_id: string | null;
+          produced_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          work_order_id: string;
+          product_id: string;
+          warehouse_id: string;
+          quantity: number;
+          unit_cost?: number;
+          inventory_transaction_id?: string | null;
+          produced_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          work_order_id?: string;
+          product_id?: string;
+          warehouse_id?: string;
+          quantity?: number;
+          unit_cost?: number;
+          inventory_transaction_id?: string | null;
+          produced_at?: string;
+        };
+      };
       projects: {
         Row: {
           id: string;
@@ -637,6 +1011,35 @@ export interface Database {
       };
     };
     Views: {
+      v_work_order_costing: {
+        Row: {
+          work_order_id: string;
+          company_id: string;
+          work_order_number: string;
+          status: string;
+          product_id: string;
+          planned_quantity: number;
+          completed_quantity: number;
+          material_cost: number;
+          labor_cost: number;
+          overhead_cost: number;
+          total_production_cost: number;
+          actual_unit_cost: number;
+          production_health: 'ON_TARGET' | 'UNDER_PRODUCTION' | 'IN_PROGRESS' | 'PENDING';
+        };
+      };
+      v_bom_material_requirements: {
+        Row: {
+          bom_id: string;
+          company_id: string;
+          finished_product_id: string;
+          output_quantity: number;
+          component_product_id: string;
+          quantity: number;
+          scrap_percentage: number;
+          effective_component_quantity: number;
+        };
+      };
       v_project_profitability: {
         Row: {
           project_id: string;
