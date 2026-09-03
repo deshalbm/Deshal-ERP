@@ -89,8 +89,8 @@ When receiving deployment or build requests (`deploy`, `deploy to server`, `npm 
    - `npm run build`: Run local `npm run lint` & `npm run build` only. Do not deploy unless requested.
    - `deploy` / `build and deploy`: Run 5-phase deterministic pipeline (`BUILD` → `VERIFY` → `DEPLOY` → `HEALTH CHECK` → `AUDIT`).
 3. **Environment & Safety**:
-   - Production server: `/opt/deshal-erp`, domain `erp.deshalbm.com`, Traefik reverse proxy, Docker network `proxy`.
-   - Use existing SSH connection from local machine.
+   - Production server: `root@178.104.32.156` (`/opt/deshal-erp`), domain `erp.deshalbm.com`, Traefik reverse proxy, Docker network `proxy`.
+   - Use existing SSH connection from local machine (`ssh root@178.104.32.156`).
    - Recreate ONLY `deshal-erp` container (`docker compose up -d --build deshal-erp`).
    - NEVER touch Traefik, Evolution API, Portainer, Uptime Kuma, firewall, or DNS.
    - NEVER run `docker system prune` or delete Docker volumes.

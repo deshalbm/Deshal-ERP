@@ -8,14 +8,14 @@ description: Production deployment workflow for Deshal ERP. Use whenever user re
 This skill defines the deterministic, safe production build and deployment workflow for Deshal ERP.
 
 ## Target Production Environment
-- **Server Location**: Production server via existing SSH connection (`/opt/deshal-erp`)
+- **Server Location**: Production server `root@178.104.32.156` (`/opt/deshal-erp`)
 - **Domain**: `erp.deshalbm.com`
 - **Container Service**: `deshal-erp`
 - **Internal Port**: 3000 (Internal Docker container port, proxied by Traefik)
 - **Docker Network**: `proxy`
 - **Reverse Proxy**: Traefik
 - **Git Repository**: `https://github.com/deshalbm/Deshal-ERP.git`
-- **SSH Authentication**: Existing SSH configuration on local machine (do not request SSH credentials if existing configuration works).
+- **SSH Authentication**: Existing SSH connection to `root@178.104.32.156` (do not request SSH credentials if existing SSH configuration works).
 
 ---
 
