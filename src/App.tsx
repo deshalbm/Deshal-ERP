@@ -1140,7 +1140,13 @@ export default function App() {
 
   const handleSaveInventory = (items: InventoryItem[]) => {
     setInventoryList(items);
-    saveInventory(items);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveInventory(items);
+      Promise.all(items.map((item) => inventorySvc.upsertInventoryItem(item, cId))).catch(console.error);
+    } else {
+      saveInventory(items);
+    }
     triggerAuditLog(
       "UPDATE",
       "INVENTORY",
@@ -1153,7 +1159,13 @@ export default function App() {
 
   const handleSavePurchases = (purchases: PurchaseInvoice[]) => {
     setPurchasesList(purchases);
-    savePurchases(purchases);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      savePurchases(purchases);
+      Promise.all(purchases.map((p) => purchasesSvc.upsertPurchaseInvoice(p, cId))).catch(console.error);
+    } else {
+      savePurchases(purchases);
+    }
     triggerAuditLog(
       "UPDATE",
       "PURCHASES",
@@ -1166,7 +1178,13 @@ export default function App() {
 
   const handleSaveSuppliers = (suppliers: Supplier[]) => {
     setSuppliersList(suppliers);
-    saveSuppliers(suppliers);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveSuppliers(suppliers);
+      Promise.all(suppliers.map((s) => supplierSvc.upsertSupplier(s, cId))).catch(console.error);
+    } else {
+      saveSuppliers(suppliers);
+    }
   };
 
   const handleSaveMovements = (movements: StockMovement[]) => {
@@ -1204,7 +1222,13 @@ export default function App() {
 
   const handleSaveBranches = (branches: Branch[]) => {
     setBranchesList(branches);
-    saveBranches(branches);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveBranches(branches);
+      Promise.all(branches.map((b) => companySvc.upsertBranch(b, cId))).catch(console.error);
+    } else {
+      saveBranches(branches);
+    }
     triggerAuditLog(
       "UPDATE",
       "BRANCHES",
@@ -1230,7 +1254,13 @@ export default function App() {
 
   const handleSaveEmployees = (employees: Employee[]) => {
     setEmployeesList(employees);
-    saveEmployees(employees);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveEmployees(employees);
+      Promise.all(employees.map((emp) => employeeSvc.upsertEmployee(emp, cId))).catch(console.error);
+    } else {
+      saveEmployees(employees);
+    }
     triggerAuditLog(
       "UPDATE",
       "SETTINGS",
@@ -1243,7 +1273,13 @@ export default function App() {
 
   const handleSaveAttendance = (records: AttendanceRecord[]) => {
     setAttendanceList(records);
-    saveAttendanceRecords(records);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveAttendanceRecords(records);
+      Promise.all(records.map((r) => hrSvc.upsertAttendanceRecord(r, cId))).catch(console.error);
+    } else {
+      saveAttendanceRecords(records);
+    }
     triggerAuditLog(
       "UPDATE",
       "SETTINGS",
@@ -1256,7 +1292,13 @@ export default function App() {
 
   const handleSavePayrollSlips = (slips: PayrollSlip[]) => {
     setPayrollSlipsList(slips);
-    savePayrollSlips(slips);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      savePayrollSlips(slips);
+      Promise.all(slips.map((s) => hrSvc.upsertPayrollSlip(s, cId))).catch(console.error);
+    } else {
+      savePayrollSlips(slips);
+    }
     triggerAuditLog(
       "UPDATE",
       "SETTINGS",
@@ -1269,7 +1311,13 @@ export default function App() {
 
   const handleSaveLeaveRequests = (requests: LeaveRequest[]) => {
     setLeaveRequestsList(requests);
-    saveLeaveRequests(requests);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveLeaveRequests(requests);
+      Promise.all(requests.map((r) => hrSvc.upsertLeaveRequest(r, cId))).catch(console.error);
+    } else {
+      saveLeaveRequests(requests);
+    }
     triggerAuditLog(
       "UPDATE",
       "SETTINGS",
@@ -1292,7 +1340,13 @@ export default function App() {
 
   const handleSaveCustomersList = (list: Customer[]) => {
     setCustomersList(list);
-    saveCustomers(list);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveCustomers(list);
+      Promise.all(list.map((c) => customerSvc.upsertCustomer(c, cId))).catch(console.error);
+    } else {
+      saveCustomers(list);
+    }
   };
 
   const handleSaveSchedules = (schedules: RecurringSchedule[]) => {
@@ -1302,7 +1356,13 @@ export default function App() {
 
   const handleSaveRentalSpaces = (spaces: RentalSpace[]) => {
     setRentalSpacesList(spaces);
-    saveRentalSpaces(spaces);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveRentalSpaces(spaces);
+      Promise.all(spaces.map((s) => spacesSvc.upsertRentalSpace(s, cId))).catch(console.error);
+    } else {
+      saveRentalSpaces(spaces);
+    }
     triggerAuditLog(
       "UPDATE",
       "SETTINGS",
@@ -1315,7 +1375,13 @@ export default function App() {
 
   const handleSaveSpaceBookings = (bookings: SpaceBooking[]) => {
     setSpaceBookingsList(bookings);
-    saveSpaceBookings(bookings);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveSpaceBookings(bookings);
+      Promise.all(bookings.map((b) => spacesSvc.upsertSpaceBooking(b, cId))).catch(console.error);
+    } else {
+      saveSpaceBookings(bookings);
+    }
     triggerAuditLog(
       "UPDATE",
       "SETTINGS",
@@ -2087,12 +2153,24 @@ export default function App() {
 
   const handleSaveAccounts = (updated: Account[]) => {
     setAccountsList(updated);
-    saveAccounts(updated);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveAccounts(updated);
+      Promise.all(updated.map((acc) => accountingSvc.upsertAccount(acc, cId))).catch(console.error);
+    } else {
+      saveAccounts(updated);
+    }
   };
 
   const handleSaveJournalEntries = (updated: JournalEntry[]) => {
     setJournalEntriesList(updated);
-    saveJournalEntries(updated);
+    const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured) {
+      saveJournalEntries(updated);
+      Promise.all(updated.map((entry) => accountingSvc.saveJournalEntry(entry, cId))).catch(console.error);
+    } else {
+      saveJournalEntries(updated);
+    }
   };
 
   const handleSaveRevisionLogs = (updated: AccountingRevisionLog[]) => {

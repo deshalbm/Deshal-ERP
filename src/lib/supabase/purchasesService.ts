@@ -80,6 +80,8 @@ export async function upsertPurchase(
   return { success: true, data: mapRowToPurchaseInvoice(data) };
 }
 
+export const upsertPurchaseInvoice = upsertPurchase;
+
 export async function deletePurchase(id: string): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
