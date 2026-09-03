@@ -154,8 +154,29 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+
+    // Serve static assets from dist folder
+    app.use(
+      express.static(distPath, {
+        maxAge: "1y",
+        immutable: true,
+        index: false,
+        setHeaders: (res, filepath) => {
+          if (filepath.endsWith(".html")) {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          }
+        },
+      })
+    );
+
+    // Return explicit 404 for missing asset bundles to avoid text/html MIME type errors
+    app.get("/assets/*", (_req, res) => {
+      res.status(404).type("text/plain").send("Asset not found");
+    });
+
+    // SPA fallback route for client-side navigation
     app.get("*", (_req, res) => {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
