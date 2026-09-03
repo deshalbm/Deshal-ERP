@@ -26,6 +26,7 @@ import * as accountingSvc from '../lib/supabase/accountingService';
 import * as purchasesSvc from '../lib/supabase/purchasesService';
 import * as spacesSvc from '../lib/supabase/spacesService';
 import * as auditSvc from '../lib/supabase/auditService';
+import * as requestsSvc from '../lib/supabase/requestsService';
 
 // Fallback local storage imports (used when Supabase is not configured)
 import {
@@ -244,7 +245,7 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
         stockMovements, stockTransfers, attendance, payroll, leaves,
         vouchers, purchases, spaces, spaceBookings, leaseContracts,
         consultingServices, membershipPackages, tenantSubs, serviceBookings,
-        accounts, journalEntries, fiscalPeriods, costCenters, auditLogs,
+        accounts, journalEntries, fiscalPeriods, costCenters, auditLogs, requests,
       ] = await Promise.all([
         customerSvc.getCustomers(cId),
         employeeSvc.getEmployees(cId),
@@ -270,6 +271,7 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
         accountingSvc.getFiscalPeriods(cId),
         accountingSvc.getCostCenters(cId),
         auditSvc.getAuditLogs(cId),
+        requestsSvc.getEmployeeRequests(cId),
       ]);
 
       setCustomersListState(customers);

@@ -1386,6 +1386,14 @@ export function loadEmployeeRequests(): EmployeeRequest[] {
 export function saveEmployeeRequests(requests: EmployeeRequest[]): void {
   try {
     localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(requests));
+    
+    // Asynchronously sync to Supabase when configured
+    import('../lib/supabase/requestsService').then((svc) => {
+      const companyId = '00000000-0000-0000-0000-000000000001';
+      for (const req of requests) {
+        svc.upsertEmployeeRequest(req, companyId).catch(console.error);
+      }
+    }).catch(console.error);
   } catch (err) {
     console.error('Error saving employee requests:', err);
   }

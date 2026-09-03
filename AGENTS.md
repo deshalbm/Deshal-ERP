@@ -80,3 +80,20 @@ Documentation Reviewed
 +
 about.md Updated When Required
 
+
+## Production Deployment Workflow
+
+When receiving deployment or build requests (`deploy`, `deploy to server`, `npm run build`, `build and deploy`, `production deployment`):
+1. Load and strictly enforce `.agents/skills/deployment/SKILL.md`.
+2. **Command Rules**:
+   - `npm run build`: Run local `npm run lint` & `npm run build` only. Do not deploy unless requested.
+   - `deploy` / `build and deploy`: Run 5-phase deterministic pipeline (`BUILD` → `VERIFY` → `DEPLOY` → `HEALTH CHECK` → `AUDIT`).
+3. **Environment & Safety**:
+   - Production server: `/opt/deshal-erp`, domain `erp.deshalbm.com`, Traefik reverse proxy, Docker network `proxy`.
+   - Use existing SSH connection from local machine.
+   - Recreate ONLY `deshal-erp` container (`docker compose up -d --build deshal-erp`).
+   - NEVER touch Traefik, Evolution API, Portainer, Uptime Kuma, firewall, or DNS.
+   - NEVER run `docker system prune` or delete Docker volumes.
+   - **Database Safety**: NEVER automatically execute database migrations against production database. If a migration is required, STOP and report: `"Production database migration required — approval needed."`
+
+
