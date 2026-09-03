@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { onAuthStateChange, signOut as supabaseSignOut } from "./lib/supabase/authService";
+import type { SupabaseAuthUser } from "./lib/supabase/authService";
+import { isSupabaseConfigured } from "./lib/supabase/client";
 import {
   ReceiptVoucher,
   CompanySettings,
@@ -98,6 +101,7 @@ import {
   saveAuthSession,
   clearAuthSession
 } from "./utils/authManager";
+// Supabase-aware auth enhancement: listens to auth state changes when configured
 import {
   loadAuditLogs,
   saveAuditLogs,
@@ -215,6 +219,8 @@ export default function App() {
 
   // Authentication & Security Session State
   const [authSession, setAuthSession] = useState<AuthSession | null>(() => loadAuthSession());
+  const [supabaseAuthUser, setSupabaseAuthUser] = useState<SupabaseAuthUser | null>(null);
+  const [isSupabaseReady, setIsSupabaseReady] = useState(!isSupabaseConfigured);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState<boolean>(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
@@ -319,6 +325,74 @@ export default function App() {
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, []);
 
+  // Supabase Auth state listener — bridges Supabase sessions with existing app auth
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setIsSupabaseReady(true);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChange((user) => {
+      setSupabaseAuthUser(user);
+      setIsSupabaseReady(true);
+      // If Supabase has an active user and no local session, create a compatible session
+      if (user && !authSession) {
+        // Build a minimal AuthSession from Supabase profile for backward compatibility
+        const compatUser: any = {
+          id: user.id,
+          employeeId: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          fullNameEn: user.fullNameEn,
+          role: user.role,
+          passwordHash: '',
+          twoFactorEnabled: false,
+          failedLoginAttempts: 0,
+          isLocked: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const compatEmp: any = {
+          id: user.id,
+          employeeCode: 'EMP-SUPABASE',
+          fullName: user.fullName,
+          fullNameEn: user.fullNameEn,
+          email: user.email,
+          phone: '',
+          role: user.role,
+          jobTitle: user.role,
+          department: 'الإدارة العامة',
+          branchId: user.branchId || '',
+          status: 'ACTIVE',
+          hireDate: new Date().toISOString(),
+          basicSalary: 0,
+          allowances: 0,
+          currency: 'OMR',
+          permissions: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const compatSession: AuthSession = {
+          user: compatUser,
+          employee: compatEmp,
+          token: 'supabase-session-token',
+          loginMethod: 'PASSWORD',
+          authenticatedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+          isLocked: false,
+          activeBranchId: user.branchId || undefined,
+        };
+        setAuthSession(compatSession);
+        saveAuthSession(compatSession);
+      }
+    });
+
+    return unsubscribe;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+
   const breadcrumbsList = React.useMemo(() => {
     switch (activeTab) {
       case "home":
@@ -379,7 +453,13 @@ export default function App() {
     }
     clearAuthSession();
     setAuthSession(null);
+    setSupabaseAuthUser(null);
+    // Sign out from Supabase if configured
+    if (isSupabaseConfigured) {
+      supabaseSignOut().catch(console.error);
+    }
   };
+
 
   const handleLockScreen = () => {
     if (authSession) {

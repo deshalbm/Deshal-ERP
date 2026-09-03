@@ -72,6 +72,7 @@ import {
   loadActiveShift,
   DEFAULT_COMPANY_SETTINGS
 } from "../utils/storage";
+import { upsertPOSOrder, upsertCashierShift } from "../lib/supabase/posService";
 
 interface POSViewProps {
   inventory: InventoryItem[];
@@ -769,6 +770,13 @@ export const POSView: React.FC<POSViewProps> = ({
     const updatedOrders = [newOrder, ...posOrders];
     setPosOrders(updatedOrders);
     savePOSOrders(updatedOrders);
+
+    // Sync with Supabase asynchronously
+    const targetCompanyId = (companySettings as any)?.companyId || "00000000-0000-0000-0000-000000000001";
+    upsertPOSOrder(newOrder, targetCompanyId).catch(console.error);
+    if (activeShift) {
+      upsertCashierShift(activeShift, targetCompanyId).catch(console.error);
+    }
 
     // 7. Log Audit Activity
     onAuditLog(

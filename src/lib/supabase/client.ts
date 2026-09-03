@@ -1,9 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Client-side public environment keys
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Client-side public environment keys (supports Vite & Node.js tsx runner)
+const getEnvVar = (key: string): string => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const metaEnv = (import.meta as any)?.env;
+    if (metaEnv && metaEnv[key]) return metaEnv[key];
+  } catch {
+    // Ignore
+  }
+  return process.env[key] || '';
+};
+
+const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
+const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&

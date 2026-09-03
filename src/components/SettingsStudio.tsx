@@ -19,7 +19,8 @@ import {
   PenTool,
   CheckCircle2,
   MessageSquare,
-  Radio
+  Database,
+  Download
 } from "lucide-react";
 import { EmployeesManager } from "./EmployeesManager";
 import { ActivityLogsManager } from "./ActivityLogsManager";
@@ -27,6 +28,8 @@ import { DigitalSignaturePad } from "./DigitalSignaturePad";
 import { WhatsAppBaileysStudio } from "./WhatsAppBaileysStudio";
 import { AVAILABLE_CURRENCIES, fetchLiveExchangeRates } from "../utils/currencyConverter";
 import { DEFAULT_COMPANY_SETTINGS } from "../utils/storage";
+import { seedDemoDataToSupabase } from "../lib/supabase/seedDemoData";
+import { useERPData } from "../contexts/ERPDataContext";
 
 interface SettingsStudioProps {
   settings?: CompanySettings;
@@ -81,10 +84,19 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
     ...(settings || {})
   }));
   const [localTheme, setLocalTheme] = useState<DesignTheme>(theme);
-  const [activeTab, setActiveTab] = useState<"company" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "employees" | "logs">("company");
+  const [activeTab, setActiveTab] = useState<"company" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "employees" | "logs" | "demo">("company");
   const [showSavedNotification, setShowSavedNotification] = useState<boolean>(false);
   const [isUpdatingRates, setIsUpdatingRates] = useState<boolean>(false);
   const [ratesSuccessMessage, setRatesSuccessMessage] = useState<string>("");
+  const [isSeeding, setIsSeeding] = useState<boolean>(false);
+  const [seedStatusMessage, setSeedStatusMessage] = useState<string>("");
+  
+  let erpCtx: any = null;
+  try {
+    erpCtx = useERPData();
+  } catch {
+    erpCtx = null;
+  }
 
   const handleSettingsChange = (field: keyof CompanySettings, val: any) => {
     setLocalSettings({ ...localSettings, [field]: val });
@@ -315,6 +327,19 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
             <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 font-mono">
               {auditLogs.length}
             </span>
+          </button>
+
+          <button
+            id="tab-demo-data-btn"
+            onClick={() => setActiveTab("demo")}
+            className={`py-2.5 px-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === "demo"
+                ? "bg-amber-600 text-white shadow-sm font-bold"
+                : "text-amber-800 hover:text-amber-900 hover:bg-amber-100/50"
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-amber-500" />
+            <span>{language === "ar" ? "البيانات التوضيحية (Demo Data)" : "Demo Data Setup"}</span>
           </button>
         </div>
       </div>
@@ -1156,6 +1181,101 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
             logs={auditLogs}
             onClearLogs={onClearAuditLogs || (() => {})}
           />
+        </div>
+      )}
+
+      {/* Tab 8: Demo Data & Seeding Panel */}
+      {activeTab === "demo" && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Database className="w-5 h-5 text-amber-600" />
+                <span>إدارة البيانات التوضيحية (Demo Data Management)</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                يمكنك رفع أو شحن البيانات التوضيحية (العملاء، الموظفون، المنتجات، دليل الحسابات) إلى السحاب (Supabase) عند الطلب، أو تصديرها للاحتفاظ بها.
+              </p>
+            </div>
+          </div>
+
+          {seedStatusMessage && (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>{seedStatusMessage}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Card 1: Seed to Supabase */}
+            <div className="p-5 rounded-xl border border-amber-200 bg-amber-50/50 space-y-3">
+              <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                <Upload className="w-4 h-4 text-amber-600" />
+                <span>رفع/شحن البيانات التوضيحية إلى Supabase</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                يقوم بتعبئة قاعدة بيانات Supabase الحية بالبيانات الديمو (دليل الحسابات، الفروع، الموظفين، المنتجات، والعملاء) للشركة الحالية.
+              </p>
+              <button
+                disabled={isSeeding}
+                onClick={async () => {
+                  setIsSeeding(true);
+                  setSeedStatusMessage("جاري رفع وتعبئة البيانات التوضيحية لـ Supabase...");
+                  const targetCompanyId = erpCtx?.companyId || "00000000-0000-0000-0000-000000000001";
+                  const res = await seedDemoDataToSupabase(targetCompanyId);
+                  setIsSeeding(false);
+                  setSeedStatusMessage(res.message);
+                  if (res.success && erpCtx?.refreshAllData) {
+                    erpCtx.refreshAllData();
+                  }
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isSeeding ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>جاري الشحن...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    <span>شحن البيانات التوضيحية لـ Supabase الآن</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Card 2: Export Local Data as JSON */}
+            <div className="p-5 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                <Download className="w-4 h-4 text-indigo-600" />
+                <span>تصدير البيانات المحلية كملف ديمو (JSON)</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                تحميل نسخة احتياطية محلية بصيغة JSON تحتوي على كافة السجلات والبيانات التوضيحية للاحتفاظ بها واستخراجها في أي وقت.
+              </p>
+              <button
+                onClick={() => {
+                  const dump = {
+                    settings: localSettings,
+                    employees,
+                    branches,
+                    exportedAt: new Date().toISOString()
+                  };
+                  const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `deshal_demo_data_backup_${new Date().toISOString().split("T")[0]}.json`;
+                  a.click();
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>تصدير وتحميل ملف البيانات (.JSON)</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

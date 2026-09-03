@@ -18,6 +18,8 @@ import {
 } from "../types";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
+import { addCustomerInteraction } from "../lib/supabase/crmService";
+import { upsertCustomer } from "../lib/supabase/customerService";
 import {
   Users,
   UserPlus,
@@ -431,6 +433,12 @@ export const CRMView: React.FC<CRMViewProps> = ({
 
     onSaveCustomer(updatedCustomer);
     setSelectedCustomerProfile(updatedCustomer);
+
+    // Sync interaction and updated customer to Supabase
+    const targetCompanyId = (companySettings as any)?.companyId || "00000000-0000-0000-0000-000000000001";
+    addCustomerInteraction(selectedCustomerProfile.id, newActivity, targetCompanyId).catch(console.error);
+    upsertCustomer(updatedCustomer, targetCompanyId).catch(console.error);
+
     setNewInteractionTitle("");
     setNewInteractionNotes("");
   };
