@@ -4,6 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { registerServiceWorker } from './utils/pwaManager';
 import { LanguageProvider } from './utils/LanguageContext';
+import { ERPDataProvider } from './contexts/ERPDataContext';
 
 // Register Service Worker for PWA offline functionality & app installation
 registerServiceWorker();
@@ -11,7 +12,9 @@ registerServiceWorker();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <LanguageProvider>
-      <App />
+      <ERPDataProvider>
+        <App />
+      </ERPDataProvider>
     </LanguageProvider>
   </StrictMode>,
 );
