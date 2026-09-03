@@ -20,14 +20,19 @@ import {
   CheckCircle2,
   MessageSquare,
   Database,
-  Download
+  Download,
+  Mail,
+  Send,
+  Key,
+  AtSign
 } from "lucide-react";
 import { EmployeesManager } from "./EmployeesManager";
 import { ActivityLogsManager } from "./ActivityLogsManager";
 import { DigitalSignaturePad } from "./DigitalSignaturePad";
 import { WhatsAppBaileysStudio } from "./WhatsAppBaileysStudio";
 import { AVAILABLE_CURRENCIES, fetchLiveExchangeRates } from "../utils/currencyConverter";
-import { DEFAULT_COMPANY_SETTINGS } from "../utils/storage";
+import { DEFAULT_COMPANY_SETTINGS, DEFAULT_RESEND_SETTINGS } from "../utils/storage";
+import { sendTestEmail } from "../lib/email/resendService";
 import { seedDemoDataToSupabase } from "../lib/supabase/seedDemoData";
 import { useERPData } from "../contexts/ERPDataContext";
 
@@ -84,12 +89,39 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
     ...(settings || {})
   }));
   const [localTheme, setLocalTheme] = useState<DesignTheme>(theme);
-  const [activeTab, setActiveTab] = useState<"company" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "employees" | "logs" | "demo">("company");
+  const [activeTab, setActiveTab] = useState<"company" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "email" | "employees" | "logs" | "demo">("company");
   const [showSavedNotification, setShowSavedNotification] = useState<boolean>(false);
   const [isUpdatingRates, setIsUpdatingRates] = useState<boolean>(false);
   const [ratesSuccessMessage, setRatesSuccessMessage] = useState<string>("");
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
   const [seedStatusMessage, setSeedStatusMessage] = useState<string>("");
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState<boolean>(false);
+  const [testEmailTarget, setTestEmailTarget] = useState<string>("");
+  const [emailStatusMsg, setEmailStatusMsg] = useState<{ success?: boolean; text: string } | null>(null);
+
+  const handleSendTestEmail = async () => {
+    if (!testEmailTarget || !testEmailTarget.includes("@")) {
+      setEmailStatusMsg({ success: false, text: "يرجى كتابة عنوان بريد إلكتروني صحيح للاختبار." });
+      return;
+    }
+    setIsSendingTestEmail(true);
+    setEmailStatusMsg({ text: "جاري إرسال البريد الاختباري عبر Resend..." });
+    const resendSettings = localSettings.resendSettings || DEFAULT_RESEND_SETTINGS;
+    const res = await sendTestEmail(resendSettings, testEmailTarget);
+    setIsSendingTestEmail(false);
+    if (res.success) {
+      setEmailStatusMsg({ success: true, text: `تم إرسال البريد الاختباري بنجاح! رقم الرسالة: ${res.messageId || 'OK'}` });
+      const updatedResend = {
+        ...resendSettings,
+        lastTestedAt: new Date().toISOString(),
+        lastTestStatus: 'SUCCESS' as const,
+        lastTestMessage: 'تم اختبار الاتصال بنجاح'
+      };
+      setLocalSettings(prev => ({ ...prev, resendSettings: updatedResend }));
+    } else {
+      setEmailStatusMsg({ success: false, text: `فشل الإرسال: ${res.error || 'يرجى التحقق من API Key المباشر'}` });
+    }
+  };
   
   let erpCtx: any = null;
   try {
@@ -299,6 +331,19 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
             <MessageSquare className="w-3.5 h-3.5" />
             <span>{language === "ar" ? "واتساب Baileys API" : "WhatsApp API"}</span>
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          </button>
+
+          <button
+            id="tab-email-api-btn"
+            onClick={() => setActiveTab("email")}
+            className={`py-2.5 px-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === "email"
+                ? "bg-indigo-600 text-white shadow-sm font-bold"
+                : "text-indigo-700 hover:text-indigo-900 hover:bg-indigo-50/70"
+            }`}
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>{language === "ar" ? "بريد Resend API" : "Resend Email"}</span>
           </button>
 
           <button
@@ -1157,6 +1202,235 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
               onSaveSettings(updated);
             }}
           />
+        </div>
+      )}
+
+      {/* Tab: Resend Email Gateway & RBAC Permissions */}
+      {activeTab === "email" && (
+        <div className="space-y-6">
+          {/* Main Card */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-indigo-100 text-indigo-700 rounded-2xl">
+                  <Mail className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span>نظام البريد الإلكتروني وسجل الصلاحيات (Resend Email & RBAC)</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-indigo-100 text-indigo-800 font-mono">Resend.com API</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    ضبط إرسال رسائل الترحيب والدعوات، وإدارة الصلاحيات المنظمة للموظفين، المتعاونين والمراقبين.
+                  </p>
+                </div>
+              </div>
+
+              {/* Master Enable Toggle */}
+              <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+                <span className="text-xs font-bold text-slate-700">تفعيل نظام البريد:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentResend = localSettings.resendSettings || DEFAULT_RESEND_SETTINGS;
+                    handleSettingsChange("resendSettings", {
+                      ...currentResend,
+                      enabled: !currentResend.enabled
+                    });
+                  }}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                    localSettings.resendSettings?.enabled ? "bg-indigo-600" : "bg-slate-300"
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                      localSettings.resendSettings?.enabled ? (isRTL ? "-translate-x-5" : "translate-x-5") : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Email Status Feedback */}
+            {emailStatusMsg && (
+              <div className={`p-3.5 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                emailStatusMsg.success === true
+                  ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+                  : emailStatusMsg.success === false
+                  ? "bg-rose-50 border border-rose-200 text-rose-800"
+                  : "bg-indigo-50 border border-indigo-200 text-indigo-800 animate-pulse"
+              }`}>
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{emailStatusMsg.text}</span>
+              </div>
+            )}
+
+            {/* Inputs Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* API Credentials */}
+              <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  <Key className="w-4 h-4 text-indigo-600" />
+                  <span>مفتاح API وبيانات المرسل (Resend Credentials)</span>
+                </h3>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    مفتاح Resend API Key (يبدأ بـ re_):
+                  </label>
+                  <input
+                    type="password"
+                    value={localSettings.resendSettings?.apiKey || ""}
+                    onChange={(e) => {
+                      const currentResend = localSettings.resendSettings || DEFAULT_RESEND_SETTINGS;
+                      handleSettingsChange("resendSettings", {
+                        ...currentResend,
+                        apiKey: e.target.value
+                      });
+                    }}
+                    placeholder="re_123456789_abcdefg..."
+                    className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    بريد المرسل المعرف (From Email):
+                  </label>
+                  <input
+                    type="email"
+                    value={localSettings.resendSettings?.fromEmail || "onboarding@resend.dev"}
+                    onChange={(e) => {
+                      const currentResend = localSettings.resendSettings || DEFAULT_RESEND_SETTINGS;
+                      handleSettingsChange("resendSettings", {
+                        ...currentResend,
+                        fromEmail: e.target.value
+                      });
+                    }}
+                    placeholder="onboarding@resend.dev"
+                    className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 bg-white text-slate-900"
+                  />
+                  <span className="text-[10px] text-slate-500 block mt-1">
+                    للاختبار المجاني استخدم: onboarding@resend.dev
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    اسم المرسل الرسمي (From Name):
+                  </label>
+                  <input
+                    type="text"
+                    value={localSettings.resendSettings?.fromName || "نظام ديشال ERP الإداري"}
+                    onChange={(e) => {
+                      const currentResend = localSettings.resendSettings || DEFAULT_RESEND_SETTINGS;
+                      handleSettingsChange("resendSettings", {
+                        ...currentResend,
+                        fromName: e.target.value
+                      });
+                    }}
+                    placeholder="ديشال لإدارة الأعمال"
+                    className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-300 bg-white text-slate-900"
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-slate-200">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={localSettings.resendSettings?.autoSendWelcomeEmail ?? true}
+                      onChange={(e) => {
+                        const currentResend = localSettings.resendSettings || DEFAULT_RESEND_SETTINGS;
+                        handleSettingsChange("resendSettings", {
+                          ...currentResend,
+                          autoSendWelcomeEmail: e.target.checked
+                        });
+                      }}
+                      className="rounded accent-indigo-600 w-4 h-4"
+                    />
+                    <span>إرسال بريد ترحيبي تلقائياً يضم بيانات الدخول عند إضافة موظف/متعاون/مراقب جديد</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Test Email Box */}
+              <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <Send className="w-4 h-4 text-indigo-600" />
+                    <span>اختبار ربط واستجابة البريد (Send Test Email)</span>
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    أدخل بريدك الإلكتروني الشخصي لاختبار وصول الرسائل والتأكد من صحة المفتاح وإعدادات المرسل.
+                  </p>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      بريد الوجهة للاختبار:
+                    </label>
+                    <input
+                      type="email"
+                      value={testEmailTarget}
+                      onChange={(e) => setTestEmailTarget(e.target.value)}
+                      placeholder="yourname@gmail.com"
+                      className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 bg-white text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isSendingTestEmail}
+                  onClick={handleSendTestEmail}
+                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-4"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>{isSendingTestEmail ? "جاري الإرسال الاختباري..." : "إرسال رسالة تجريبية الآن"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Role & Permissions Governance Matrix */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-indigo-600" />
+                <span>دليل أدوار وصلاحيات النظام المنظمة (RBAC Permissions Matrix)</span>
+              </h3>
+              <span className="text-xs text-slate-500">حسب حوكمة نظام ديشال</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl border border-purple-200 bg-purple-50/40 space-y-1">
+                <span className="font-bold text-purple-950 block">👑 مدير النظام (ADMIN)</span>
+                <p className="text-[11px] text-purple-800 leading-relaxed">
+                  كامل الصلاحيات المطلقة: السندات، الحسابات، الإعدادات، الموظفين والمشتريات.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/40 space-y-1">
+                <span className="font-bold text-blue-950 block">🤝 متعاون خارجي (COLLABORATOR)</span>
+                <p className="text-[11px] text-blue-800 leading-relaxed">
+                  صلاحيات مقيدة ومخصصة للاستشاريين والمتعاونين لإدخال معاملات محددة والمراجعة.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/40 space-y-1">
+                <span className="font-bold text-amber-950 block">🔍 مراقب / مدقق (AUDITOR)</span>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  وضع التفتيش والاطلاع الكامل للقراءة فقط (Read-only) للتقارير والحسابات دون تعديل.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/40 space-y-1">
+                <span className="font-bold text-emerald-950 block">💼 المحاسب والمبيعات والمستودع</span>
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  صلاحيات تشغيلية مخصصة لكل قسم حسب المهام المسندة له.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

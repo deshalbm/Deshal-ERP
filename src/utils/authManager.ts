@@ -320,6 +320,44 @@ export function changeUserPin(userId: string, newPin: string): { success: boolea
   return { success: true };
 }
 
+// Automatically create or update UserAccount profile when adding/editing Employee
+export function syncUserAccountFromEmployee(employee: Employee, initialPassword?: string): UserAccount {
+  const users = loadUserAccounts();
+  const now = new Date().toISOString();
+  let existing = users.find((u) => u.employeeId === employee.id || u.email.toLowerCase() === employee.email.toLowerCase());
+
+  if (existing) {
+    existing.email = employee.email;
+    existing.fullName = employee.fullName;
+    existing.role = employee.role;
+    existing.branchId = employee.branchId;
+    existing.branchName = employee.branchName;
+    existing.updatedAt = now;
+    saveUserAccounts(users);
+    return existing;
+  } else {
+    const newUser: UserAccount = {
+      id: `usr-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      employeeId: employee.id,
+      email: employee.email,
+      fullName: employee.fullName,
+      role: employee.role,
+      branchId: employee.branchId,
+      branchName: employee.branchName,
+      passwordHash: initialPassword || `Emp@${Math.floor(1000 + Math.random() * 9000)}`,
+      pinCode: '1234',
+      twoFactorEnabled: false,
+      failedLoginAttempts: 0,
+      isLocked: false,
+      createdAt: now,
+      updatedAt: now
+    };
+    users.push(newUser);
+    saveUserAccounts(users);
+    return newUser;
+  }
+}
+
 // Toggle 2FA
 export function toggleUserTwoFactor(userId: string, enable: boolean): { success: boolean; user?: UserAccount } {
   const users = loadUserAccounts();

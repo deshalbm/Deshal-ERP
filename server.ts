@@ -30,6 +30,47 @@ async function startServer() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Resend Email proxy endpoint
+  app.post("/api/send-email", async (req, res) => {
+    try {
+      const { apiKey, from, to, subject, html, text } = req.body;
+      const key = apiKey || process.env.RESEND_API_KEY;
+
+      if (!key) {
+        return res.status(400).json({ error: "Resend API key is missing" });
+      }
+
+      if (!to || !subject || !html) {
+        return res.status(400).json({ error: "Missing to, subject, or html body" });
+      }
+
+      const resendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key.trim()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: from || "onboarding@resend.dev",
+          to: Array.isArray(to) ? to : [to],
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      const data = await resendRes.json();
+      if (!resendRes.ok) {
+        return res.status(resendRes.status).json(data);
+      }
+
+      return res.json({ success: true, ...data });
+    } catch (err: any) {
+      console.error("Resend send-email error:", err);
+      return res.status(500).json({ error: err?.message || "Failed to send email via Resend" });
+    }
+  });
+
   // AI Assistant endpoint: Parse natural language or raw invoice text into voucher JSON
   app.post("/api/ai/parse-voucher", async (req, res) => {
     try {

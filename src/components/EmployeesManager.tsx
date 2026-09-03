@@ -44,6 +44,8 @@ import {
   setEmployeePin,
   unlockEmployeePin
 } from "../utils/kioskSecurity";
+import { syncUserAccountFromEmployee } from "../utils/authManager";
+import { sendWelcomeCredentialsEmail } from "../lib/email/resendService";
 import { EmployeeMovementDashboard } from "./kiosk/EmployeeMovementDashboard";
 import { AttendanceKioskModal } from "./kiosk/AttendanceKioskModal";
 import {
@@ -186,6 +188,8 @@ const ROLE_LABELS: Record<EmployeeRole, { ar: string; en: string; color: string;
   SALES: { ar: "مسؤول مبيعات ومشاريع", en: "Sales Executive", color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
   STOREKEEPER: { ar: "أمين مستودعات ومخازن", en: "Storekeeper / Inventory", color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
   RECEPTIONIST: { ar: "استقبال وخدمة عملاء", en: "Customer Service", color: "text-teal-700", bg: "bg-teal-50 border-teal-200" },
+  COLLABORATOR: { ar: "متعاون خارجي / مستشار", en: "External Collaborator", color: "text-blue-800", bg: "bg-blue-50 border-blue-300" },
+  AUDITOR: { ar: "مراقب / مدقق حسابات", en: "Financial Auditor", color: "text-amber-800", bg: "bg-amber-50 border-amber-300" },
   CUSTOM: { ar: "صلاحيات مخصصة", en: "Custom Permissions", color: "text-slate-700", bg: "bg-slate-100 border-slate-300" }
 };
 
@@ -855,6 +859,27 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
         }
       } catch (err) {
         console.error("Failed to hash and save Kiosk PIN:", err);
+      }
+    }
+
+    // Automatically create or update login profile (UserAccount) with email
+    const targetEmp = updatedEmployees.find((e) => e.id === savedTargetId);
+    if (targetEmp) {
+      const userAccount = syncUserAccountFromEmployee(targetEmp);
+
+      // Automatically send welcome/invitation email via Resend if configured
+      const resend = companySettings?.resendSettings;
+      if (resend?.enabled && resend?.autoSendWelcomeEmail && targetEmp.email && targetEmp.email.includes("@")) {
+        sendWelcomeCredentialsEmail(
+          resend,
+          targetEmp,
+          {
+            email: targetEmp.email,
+            pinCode: formData.kioskPin.trim() || userAccount.pinCode || "1234",
+            tempPassword: userAccount.passwordHash || "Emp@1234"
+          },
+          companySettings?.companyName || "ديشال ERP"
+        ).catch((err) => console.error("Auto welcome email send error:", err));
       }
     }
 

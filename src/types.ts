@@ -349,6 +349,19 @@ export interface WhatsAppSettings {
   };
 }
 
+export interface ResendSettings {
+  enabled: boolean;
+  apiKey: string;
+  fromEmail: string;
+  fromName: string;
+  autoSendWelcomeEmail: boolean;
+  customWelcomeSubject?: string;
+  customWelcomeBody?: string;
+  lastTestedAt?: string;
+  lastTestStatus?: 'SUCCESS' | 'ERROR';
+  lastTestMessage?: string;
+}
+
 export interface CompanySettings {
   companyName: string;
   tagline: string;
@@ -380,6 +393,7 @@ export interface CompanySettings {
   showEquivalentInBaseCurrency?: boolean;
   supabaseSync?: SupabaseSyncSettings;
   whatsappSettings?: WhatsAppSettings;
+  resendSettings?: ResendSettings;
 }
 
 export type PageSizeFormat = 'A4' | 'A5' | 'LETTER' | 'THERMAL_80MM' | 'THERMAL_58MM';
@@ -427,6 +441,8 @@ export type EmployeeRole =
   | 'STOREKEEPER'
   | 'MANAGER'
   | 'RECEPTIONIST'
+  | 'COLLABORATOR'
+  | 'AUDITOR'
   | 'CUSTOM';
 
 export type EmployeeStatus = 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | 'SUSPENDED';
@@ -460,7 +476,10 @@ export type EmployeePermission =
   | 'attendance_devices'
   | 'movement_types_mgmt'
   | 'employee_pin_mgmt'
-  | 'attendance_settings';
+  | 'attendance_settings'
+  // Collaborator & Auditor Permissions
+  | 'auditor_read_only'
+  | 'collaborator_limited';
 
 export interface Employee {
   id: string;

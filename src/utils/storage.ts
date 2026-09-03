@@ -20,6 +20,7 @@ import {
   RecurringSchedule,
   RecurringScheduleExecution,
   WhatsAppSettings,
+  ResendSettings,
   WhatsAppMessageLog,
   RentalSpace,
   SpaceBooking,
@@ -74,6 +75,16 @@ export const DEFAULT_WHATSAPP_SETTINGS: WhatsAppSettings = {
   customFooterNotice: "شكراً لتعاملكم مع منظومة ديشال لإدارة الأعمال والحلول التقنية."
 };
 
+export const DEFAULT_RESEND_SETTINGS: ResendSettings = {
+  enabled: false,
+  apiKey: "",
+  fromEmail: "onboarding@resend.dev",
+  fromName: "نظام ديشال ERP الإداري",
+  autoSendWelcomeEmail: true,
+  customWelcomeSubject: "مرحباً بك في نظام ديشال ERP - بيانات حساب تسجيل الدخول الخاصة بك",
+  customWelcomeBody: "تمت إضافتك وتفعيل حساب الدخول الخاص بك بنجاح على منصة ديشال لإدارة الأعمال."
+};
+
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   companyName: "ديشال لإدارة الأعمال (Deshal ERP)",
   tagline: "Deshal Business Management & ERP Solutions",
@@ -107,7 +118,8 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
     { id: "cf-2", label: "الجهة / Dept", defaultValue: "شبكات وحلول تقنية", isRequired: false }
   ],
   qrCodeContent: "https://www.digititech.com/verify/receipt?rv=RV-2409-0822",
-  whatsappSettings: DEFAULT_WHATSAPP_SETTINGS
+  whatsappSettings: DEFAULT_WHATSAPP_SETTINGS,
+  resendSettings: DEFAULT_RESEND_SETTINGS
 };
 
 export const DEFAULT_DESIGN_THEME: DesignTheme = {
@@ -924,6 +936,21 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<EmployeeRole, EmployeePermission[]
     "manage_customers",
     "attendance_create"
   ],
+  COLLABORATOR: [
+    "create_vouchers",
+    "print_export_vouchers",
+    "manage_customers",
+    "view_reports",
+    "collaborator_limited"
+  ],
+  AUDITOR: [
+    "view_reports",
+    "view_salaries",
+    "attendance_view",
+    "attendance_reports",
+    "print_export_vouchers",
+    "auditor_read_only"
+  ],
   CUSTOM: [
     "create_vouchers",
     "print_export_vouchers",
@@ -937,6 +964,18 @@ export const PERMISSION_CONFIG: {
   category: "vouchers" | "inventory" | "purchases" | "crm" | "management" | "attendance";
   description: string;
 }[] = [
+  {
+    id: "auditor_read_only",
+    label: "صلاحية التفتيش الرقابي والمدقق (قراءة فقط)",
+    category: "management",
+    description: "إمكانية الوصول والاطلاع الكامل والتفتيش الرقابي دون تعديل البيانات"
+  },
+  {
+    id: "collaborator_limited",
+    label: "صلاحيات المتعاون الخارجي المقيدة",
+    category: "management",
+    description: "الوصول المخصص لإدخال المعاملات والمراجعة الاستشارية"
+  },
   {
     id: "create_vouchers",
     label: "إنشاء وتحرير السندات والفواتير",
