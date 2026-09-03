@@ -3,7 +3,7 @@ import { WifiOff, Wifi, RefreshCw, AlertTriangle, CheckCircle2 } from "lucide-re
 import { useSyncStatus } from "../hooks/useSyncStatus";
 
 export const OfflineIndicator: React.FC = () => {
-  const { isOnline, isSyncing, pendingCount, failedCount, triggerManualSync } = useSyncStatus();
+  const { isOnline, isSyncing, pendingCount, failedCount, triggerManualSync, clearStaleQueue } = useSyncStatus();
 
   // If online and no pending/failed operations, stay hidden
   if (isOnline && !isSyncing && pendingCount === 0 && failedCount === 0) {
@@ -35,6 +35,12 @@ export const OfflineIndicator: React.FC = () => {
           >
             إعادة المحاولة الآن
           </button>
+          <button
+            onClick={() => clearStaleQueue()}
+            className="mr-1 bg-red-800 text-white px-2 py-0.5 rounded text-[11px] hover:bg-red-900 transition-colors"
+          >
+            تفريع السجل
+          </button>
         </div>
       ) : pendingCount > 0 ? (
         <div className="flex items-center space-x-3 space-x-reverse bg-indigo-600 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold border border-indigo-500 backdrop-blur-md">
@@ -42,9 +48,15 @@ export const OfflineIndicator: React.FC = () => {
           <span>{pendingCount} عملية في الانتظار المباشر</span>
           <button
             onClick={() => triggerManualSync()}
-            className="mr-2 bg-white text-indigo-800 px-2 py-0.5 rounded text-[11px] hover:bg-slate-100 transition-colors"
+            className="mr-2 bg-white text-indigo-800 px-2 py-0.5 rounded text-[11px] hover:bg-slate-100 transition-colors text-nowrap"
           >
             مزامنة فورية
+          </button>
+          <button
+            onClick={() => clearStaleQueue()}
+            className="mr-1 bg-indigo-800 text-white px-2 py-0.5 rounded text-[11px] hover:bg-indigo-900 transition-colors text-nowrap"
+          >
+            تفريغ قائمة الانتظار
           </button>
         </div>
       ) : null}

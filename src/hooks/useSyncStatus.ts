@@ -5,8 +5,12 @@
 
 import { useState, useEffect } from 'react';
 import { syncEngine, SyncEngineStatus } from '../lib/offline/syncEngine';
+import { clearQueue } from '../lib/offline/indexedDBQueue';
 
-export function useSyncStatus(): SyncEngineStatus & { triggerManualSync: () => Promise<void> } {
+export function useSyncStatus(): SyncEngineStatus & {
+  triggerManualSync: () => Promise<void>;
+  clearStaleQueue: () => Promise<void>;
+} {
   const [status, setStatus] = useState<SyncEngineStatus>({
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     isSyncing: false,
@@ -27,8 +31,14 @@ export function useSyncStatus(): SyncEngineStatus & { triggerManualSync: () => P
     await syncEngine.triggerSync();
   };
 
+  const clearStaleQueue = async () => {
+    await clearQueue();
+    await syncEngine.triggerSync();
+  };
+
   return {
     ...status,
     triggerManualSync,
+    clearStaleQueue,
   };
 }

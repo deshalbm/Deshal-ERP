@@ -238,3 +238,21 @@ export async function getQueueStats(companyId?: string): Promise<{
     return { pendingCount: 0, failedCount: 0, syncedCount: 0, totalCount: 0 };
   }
 }
+
+/**
+ * Clears all operations from the offline queue
+ */
+export async function clearQueue(): Promise<void> {
+  try {
+    const db = await getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(QUEUE_STORE, 'readwrite');
+      const store = tx.objectStore(QUEUE_STORE);
+      const req = store.clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error('[IndexedDB] Failed to clear queue:', err);
+  }
+}

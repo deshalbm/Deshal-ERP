@@ -81,14 +81,8 @@ export async function upsertCustomer(
     .single();
 
   if (error) {
-    await enqueueOperation({
-      entity_type: 'CUSTOMER',
-      entity_id: validCustomerId,
-      action: 'UPSERT',
-      payload: normalizedCustomer,
-      company_id: validCompanyId,
-    }).catch(console.error);
-    return { success: true, data: normalizedCustomer };
+    console.error('[CustomerService] Supabase upsert error:', error.message);
+    return { success: false, error: error.message, data: normalizedCustomer };
   }
   return { success: true, data: mapRowToCustomer(data) };
 }
@@ -113,14 +107,8 @@ export async function deleteCustomer(id: string): Promise<{ success: boolean; er
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('customers') as any).delete().eq('id', validId);
   if (error) {
-    await enqueueOperation({
-      entity_type: 'CUSTOMER',
-      entity_id: validId,
-      action: 'DELETE',
-      payload: { id: validId },
-      company_id: '00000000-0000-0000-0000-000000000001',
-    }).catch(console.error);
-    return { success: true };
+    console.error('[CustomerService] Supabase delete error:', error.message);
+    return { success: false, error: error.message };
   }
   return { success: true };
 }
