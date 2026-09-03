@@ -1095,173 +1095,21 @@ export const PERMISSION_CONFIG: {
   }
 ];
 
-export const DEFAULT_EMPLOYEES: Employee[] = [
-  {
-    id: "emp-1",
-    employeeCode: "EMP-001",
-    fullName: "سعيد بن راشد الشحي",
-    fullNameEn: "Said Rashid Al-Shehhi",
-    civilId: "109847291",
-    email: "said@digititech.com",
-    phone: "+968 99482019",
-    role: "ADMIN",
-    jobTitle: "المدير التنفيذي العام",
-    department: "الإدارة العليا",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    status: "ACTIVE",
-    hireDate: "2023-01-15",
-    contractType: "FULL_TIME",
-    basicSalary: 1200,
-    allowances: 300,
-    maxSalaryCap: 2000,
-    maxBonusCap: 500,
-    preferredBonusTreasury: "الخزينة النقدية الرئيسية",
-    currency: "OMR",
-    bankName: "بنك مسقط",
-    bankIban: "OM4500010000000012345678901",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    permissions: ROLE_DEFAULT_PERMISSIONS.ADMIN,
-    notes: "المسؤول العام عن كافة فروع الشركة والمفوض بالتوقيع والاعتماد المالي.",
-    createdAt: "2023-01-15T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "emp-2",
-    employeeCode: "EMP-002",
-    fullName: "فاطمة بنت ناصر البلوشي",
-    fullNameEn: "Fatima Nasser Al-Balushi",
-    civilId: "118274910",
-    email: "fatima.acc@digititech.com",
-    phone: "+968 98112233",
-    role: "ACCOUNTANT",
-    jobTitle: "رئيسة قسم المحاسبة والمالية",
-    department: "المالية والمحاسبة",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    status: "ACTIVE",
-    hireDate: "2023-06-01",
-    contractType: "FULL_TIME",
-    basicSalary: 850,
-    allowances: 150,
-    maxSalaryCap: 1400,
-    maxBonusCap: 300,
-    preferredBonusTreasury: "حساب بنك مسقط الجاري",
-    currency: "OMR",
-    bankName: "بنك ظفار",
-    bankIban: "OM960111000000001041112233001",
-    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-    permissions: ROLE_DEFAULT_PERMISSIONS.ACCOUNTANT,
-    notes: "مسؤولة مراجعة السندات والفواتير الضريبية والإقرارات الدورية.",
-    createdAt: "2023-06-01T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "emp-3",
-    employeeCode: "EMP-003",
-    fullName: "أحمد بن سالم المعمري",
-    fullNameEn: "Ahmed Salem Al-Maamari",
-    civilId: "129847112",
-    email: "ahmed.store@digititech.com",
-    phone: "+968 97654321",
-    role: "STOREKEEPER",
-    jobTitle: "مسؤول المستودعات والمخازن",
-    department: "المستودعات واللوجستيات",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    status: "ACTIVE",
-    hireDate: "2024-02-10",
-    contractType: "FULL_TIME",
-    basicSalary: 600,
-    allowances: 100,
-    maxSalaryCap: 1000,
-    maxBonusCap: 250,
-    preferredBonusTreasury: "الخزينة النقدية الرئيسية",
-    currency: "OMR",
-    bankName: "بنك مسقط",
-    bankIban: "OM4500010000000098765432101",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-    permissions: ROLE_DEFAULT_PERMISSIONS.STOREKEEPER,
-    notes: "مسؤول مراقبة جرد الكاميرات، الشاشات، كابلات الشبكة وعمليات التحويل المخزني.",
-    createdAt: "2024-02-10T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "emp-4",
-    employeeCode: "EMP-004",
-    fullName: "محمد بن علي الكندي",
-    fullNameEn: "Mohammed Ali Al-Kindi",
-    civilId: "138491029",
-    email: "m.kindi@digititech.com",
-    phone: "+968 96541230",
-    role: "SALES",
-    jobTitle: "مسؤول المبيعات وحلول المشاريع",
-    department: "المبيعات والمشاريع",
-    branchId: "branch-muscat",
-    branchName: "فرع مسقط - غلا",
-    status: "ACTIVE",
-    hireDate: "2024-05-15",
-    contractType: "FULL_TIME",
-    basicSalary: 700,
-    allowances: 200,
-    maxSalaryCap: 1300,
-    maxBonusCap: 400,
-    preferredBonusTreasury: "حساب بنك مسقط الجاري",
-    currency: "OMR",
-    bankName: "البنك الوطني العماني",
-    bankIban: "OM7300020000000055443322101",
-    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-    permissions: ROLE_DEFAULT_PERMISSIONS.SALES,
-    notes: "مسؤول إعداد عروض الأسعار والتعاقدات مع الشركات والمؤسسات بفرع مسقط.",
-    createdAt: "2024-05-15T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "emp-5",
-    employeeCode: "EMP-005",
-    fullName: "مريم بنت حمد المقبالي",
-    fullNameEn: "Maryam Hamad Al-Muqbali",
-    civilId: "149201948",
-    email: "maryam@digititech.com",
-    phone: "+968 95438210",
-    role: "RECEPTIONIST",
-    jobTitle: "موظفة خدمة عملاء واستقبال",
-    department: "خدمة العملاء",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    status: "ACTIVE",
-    hireDate: "2025-01-10",
-    contractType: "FULL_TIME",
-    basicSalary: 550,
-    allowances: 100,
-    maxSalaryCap: 850,
-    maxBonusCap: 150,
-    preferredBonusTreasury: "الخزينة النقدية الرئيسية",
-    currency: "OMR",
-    bankName: "بنك صحار الدولي",
-    bankIban: "OM2200040000000077889911201",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    permissions: ROLE_DEFAULT_PERMISSIONS.RECEPTIONIST,
-    notes: "استقبال العملاء، تسجيل السندات السريعة، وتوجيه الاستفسارات.",
-    createdAt: "2025-01-10T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  }
-];
+export const DEFAULT_EMPLOYEES: Employee[] = [];
 
 export function loadEmployees(): Employee[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.EMPLOYEES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load employees from localStorage:", e);
   }
-  saveEmployees(DEFAULT_EMPLOYEES);
-  return DEFAULT_EMPLOYEES;
+  return [];
 }
 
 export function saveEmployees(employees: Employee[]): void {

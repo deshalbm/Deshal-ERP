@@ -19,107 +19,7 @@ export const AUTH_STORAGE_KEYS = {
 };
 
 // Initial default user accounts linked to system employees
-export const DEFAULT_USER_ACCOUNTS: UserAccount[] = [
-  {
-    id: "usr-1",
-    employeeId: "emp-1",
-    email: "said@digititech.com",
-    fullName: "سعيد بن راشد الشحي",
-    fullNameEn: "Said Rashid Al-Shehhi",
-    role: "ADMIN",
-    passwordHash: "Admin@2026", // Plain/salted representation for offline ERP demo
-    pinCode: "1234",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    twoFactorEnabled: false,
-    twoFactorSecret: "JBSWY3DPEHPK3PXP",
-    twoFactorBackupCodes: ["9382-1029", "4820-9182", "5510-3849", "2910-4820", "8492-0194"],
-    failedLoginAttempts: 0,
-    isLocked: false,
-    phone: "+968 99482019",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    createdAt: "2023-01-15T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "usr-2",
-    employeeId: "emp-2",
-    email: "fatima.acc@digititech.com",
-    fullName: "فاطمة بنت ناصر البلوشي",
-    fullNameEn: "Fatima Nasser Al-Balushi",
-    role: "ACCOUNTANT",
-    passwordHash: "Acc@2026",
-    pinCode: "2026",
-    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-    twoFactorEnabled: false,
-    twoFactorSecret: "HXDMVJECJJWSRB3HW",
-    twoFactorBackupCodes: ["3920-1940", "5920-4820", "8593-1029", "4829-1049"],
-    failedLoginAttempts: 0,
-    isLocked: false,
-    phone: "+968 98112233",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    createdAt: "2023-06-01T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "usr-3",
-    employeeId: "emp-3",
-    email: "ahmed.store@digititech.com",
-    fullName: "أحمد بن سالم المعمري",
-    fullNameEn: "Ahmed Salem Al-Maamari",
-    role: "STOREKEEPER",
-    passwordHash: "Store@2026",
-    pinCode: "3030",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-    twoFactorEnabled: false,
-    failedLoginAttempts: 0,
-    isLocked: false,
-    phone: "+968 97654321",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    createdAt: "2024-02-10T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "usr-4",
-    employeeId: "emp-4",
-    email: "m.kindi@digititech.com",
-    fullName: "محمد بن علي الكندي",
-    fullNameEn: "Mohammed Ali Al-Kindi",
-    role: "SALES",
-    passwordHash: "Sales@2026",
-    pinCode: "4040",
-    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-    twoFactorEnabled: false,
-    failedLoginAttempts: 0,
-    isLocked: false,
-    phone: "+968 96541230",
-    branchId: "branch-muscat",
-    branchName: "فرع مسقط - غلا",
-    createdAt: "2024-05-15T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  },
-  {
-    id: "usr-5",
-    employeeId: "emp-5",
-    email: "maryam@digititech.com",
-    fullName: "مريم بنت حمد المقبالي",
-    fullNameEn: "Maryam Hamad Al-Muqbali",
-    role: "RECEPTIONIST",
-    passwordHash: "User@2026",
-    pinCode: "5050",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    twoFactorEnabled: false,
-    failedLoginAttempts: 0,
-    isLocked: false,
-    phone: "+968 95438210",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    createdAt: "2025-01-10T08:00:00Z",
-    updatedAt: "2026-08-25T10:00:00Z"
-  }
-];
+export const DEFAULT_USER_ACCOUNTS: UserAccount[] = [];
 
 // Helper to load accounts
 export function loadUserAccounts(): UserAccount[] {
@@ -127,15 +27,14 @@ export function loadUserAccounts(): UserAccount[] {
     const raw = localStorage.getItem(AUTH_STORAGE_KEYS.USERS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load user accounts from storage:", e);
   }
-  saveUserAccounts(DEFAULT_USER_ACCOUNTS);
-  return DEFAULT_USER_ACCOUNTS;
+  return [];
 }
 
 export function saveUserAccounts(accounts: UserAccount[]): void {

@@ -45,7 +45,7 @@ import {
 } from "../../utils/authManager";
 import { loadEmployees, DEFAULT_COMPANY_SETTINGS } from "../../utils/storage";
 import { useLanguage } from "../../utils/LanguageContext";
-import { signInWithEmail } from "../../lib/supabase/authService";
+import { signInWithEmail, signUpWithEmail } from "../../lib/supabase/authService";
 import { isSupabaseConfigured } from "../../lib/supabase/client";
 
 interface LoginPageProps {
@@ -54,7 +54,7 @@ interface LoginPageProps {
   onAuditLog?: (action: any, module: any, entityId: string, entityName: string, descAr: string, descEn: string, details?: string) => void;
 }
 
-type LoginTab = "password" | "magic_link" | "quick_staff";
+type LoginTab = "password" | "magic_link" | "quick_staff" | "register";
 
 export const LoginPage: React.FC<LoginPageProps> = ({
   companySettings = DEFAULT_COMPANY_SETTINGS,
@@ -65,8 +65,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [activeTab, setActiveTab] = useState<LoginTab>("password");
 
   // Form States
-  const [email, setEmail] = useState<string>("said@digititech.com");
-  const [password, setPassword] = useState<string>("Admin@2026");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [registerFullName, setRegisterFullName] = useState<string>("");
+  const [registerCompanyName, setRegisterCompanyName] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -80,14 +82,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [staffPinInput, setStaffPinInput] = useState<string>("");
 
   // Magic Link States
-  const [magicLinkEmail, setMagicLinkEmail] = useState<string>("said@digititech.com");
+  const [magicLinkEmail, setMagicLinkEmail] = useState<string>("");
   const [generatedMagicLink, setGeneratedMagicLink] = useState<{ token: string; linkUrl: string } | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
   // Forgot Password / Reset States
   const [showResetModal, setShowResetModal] = useState<boolean>(false);
   const [resetStep, setResetStep] = useState<1 | 2 | 3>(1);
-  const [resetEmail, setResetEmail] = useState<string>("said@digititech.com");
+  const [resetEmail, setResetEmail] = useState<string>("");
   const [resetOtpCode, setResetOtpCode] = useState<string>("");
   const [generatedOtpDisplay, setGeneratedOtpDisplay] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -209,6 +211,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
       onLoginSuccess(res.session);
     }, 450);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim() || !registerFullName.trim()) {
+      setErrorMessage("يرجى إدخال كافة البيانات المطلوبة: الاسم والبريد وكلمة المرور.");
+      return;
+    }
+    setIsLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const res = await signUpWithEmail(email, password, registerFullName, registerCompanyName);
+    setIsLoading(false);
+
+    if (!res.success || !res.user) {
+      setErrorMessage(res.error || "فشل إنشاء الحساب الجديد");
+      return;
+    }
+
+    setSuccessMessage("تم إنشاء وتأكيد الحساب بنجاح! يمكنك الآن تسجيل الدخول كمسؤول.");
+    setActiveTab("password");
   };
 
   const handleSendMagicLink = (e?: React.FormEvent) => {
@@ -590,6 +614,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
               <button
                 type="button"
+                onClick={() => { setActiveTab("register"); setErrorMessage(""); setSuccessMessage(""); }}
+                className={`flex-1 flex items-center justify-center space-x-1.5 rtl:space-x-reverse py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "register"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5 text-indigo-300" />
+                <span>انضمام / إنشاء حساب</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => { setActiveTab("magic_link"); setErrorMessage(""); setSuccessMessage(""); }}
                 className={`flex-1 flex items-center justify-center space-x-1.5 rtl:space-x-reverse py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "magic_link"
@@ -599,19 +636,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>{t("magicLinkLogin")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setActiveTab("quick_staff"); setErrorMessage(""); setSuccessMessage(""); }}
-                className={`flex-1 flex items-center justify-center space-x-1.5 rtl:space-x-reverse py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "quick_staff"
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                }`}
-              >
-                <Users className="w-3.5 h-3.5 text-emerald-300" />
-                <span>{t("staffQuickLogin")}</span>
               </button>
             </div>
 
@@ -648,7 +672,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="said@digititech.com"
+                      placeholder="user@company.com"
                       className="w-full bg-slate-950/60 border border-slate-700/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-white text-sm rounded-xl ps-10 pe-4 py-2.5 outline-none transition-all placeholder:text-slate-500"
                     />
                   </div>
@@ -705,9 +729,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     />
                     <span>{t("rememberMe")}</span>
                   </label>
-                  <span className="text-[11px] text-slate-400">
-                    {language === "ar" ? "قفل تلقائي بعد 5 محاولات" : "Auto-lock after 5 attempts"}
-                  </span>
                 </div>
 
                 <button
@@ -720,6 +741,110 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   ) : (
                     <>
                       <span>{t("login")}</span>
+                      {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+
+            {/* ========================================================================= */}
+            {/* TAB: REGISTER ADMIN ACCOUNT */}
+            {/* ========================================================================= */}
+            {activeTab === "register" && (
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    الاسم الكامل للمسؤول
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={registerFullName}
+                      onChange={(e) => setRegisterFullName(e.target.value)}
+                      placeholder="أحمد بن عبدالله البلوشي"
+                      className="w-full bg-slate-950/60 border border-slate-700/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-white text-sm rounded-xl ps-10 pe-4 py-2.5 outline-none transition-all placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    اسم الشركة / المؤسسة
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Building2 className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={registerCompanyName}
+                      onChange={(e) => setRegisterCompanyName(e.target.value)}
+                      placeholder="شركة ديشال التجارية"
+                      className="w-full bg-slate-950/60 border border-slate-700/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-white text-sm rounded-xl ps-10 pe-4 py-2.5 outline-none transition-all placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    البريد الإلكتروني الرسمي
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="admin@mycompany.com"
+                      className="w-full bg-slate-950/60 border border-slate-700/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-white text-sm rounded-xl ps-10 pe-4 py-2.5 outline-none transition-all placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    كلمة المرور
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-slate-950/60 border border-slate-700/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-white text-sm rounded-xl ps-10 pe-10 py-2.5 outline-none transition-all placeholder:text-slate-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 end-0 pe-3 flex items-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all cursor-pointer disabled:opacity-50 mt-2"
+                >
+                  {isLoading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <span>إنشاء حساب مدير جديد</span>
                       {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                     </>
                   )}

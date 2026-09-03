@@ -70,6 +70,71 @@ export async function signInWithEmail(
 }
 
 // ──────────────────────────────────────────────
+// Sign Up
+// ──────────────────────────────────────────────
+
+/**
+ * Sign up a new user account via Supabase Auth and create profile.
+ */
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  fullName: string,
+  companyName?: string
+): Promise<AuthResult> {
+  if (!isSupabaseConfigured) {
+    return { success: false, error: 'Supabase غير مضبوط.' };
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim().toLowerCase(),
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        company_name: companyName || 'مجموعة ديشال التجارية',
+      },
+    },
+  });
+
+  if (error || !data.user) {
+    return { success: false, error: mapAuthError(error) };
+  }
+
+  const companyId = '00000000-0000-0000-0000-000000000001';
+
+  // Create profile record in public.profiles table
+  const { error: profileError } = await supabase.from('profiles').upsert({
+    id: data.user.id,
+    email: data.user.email,
+    full_name: fullName,
+    full_name_en: fullName,
+    role: 'ADMIN',
+    company_id: companyId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+
+  if (profileError) {
+    console.warn('[AuthService] Profile upsert warning:', profileError.message);
+  }
+
+  const profile: SupabaseAuthUser = {
+    id: data.user.id,
+    email: data.user.email ?? '',
+    role: 'ADMIN',
+    fullName: fullName,
+    fullNameEn: fullName,
+    companyId: companyId,
+    branchId: null,
+    avatarUrl: null,
+    pinCode: null,
+  };
+
+  return { success: true, user: profile, session: data.session || undefined };
+}
+
+// ──────────────────────────────────────────────
 // Sign Out
 // ──────────────────────────────────────────────
 
