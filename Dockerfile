@@ -20,6 +20,13 @@ RUN npm ci || npm install
 # Copy complete application source code
 COPY . .
 
+# Build args for client-side Vite environment variables
+ARG VITE_SUPABASE_URL=https://iewceykescyycodllftl.supabase.co
+ARG VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlld2NleWtlc2N5eWNvZGxsZnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDI5NzgsImV4cCI6MjEwMzkxODk3OH0.aeRmCHcTrslO9UCoYLljwLuAhrhX9gShNr4Lgw2x3Zc
+
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Build Vite static bundle & Express server bundle (fails build if compilation fails)
 RUN npm run build
 

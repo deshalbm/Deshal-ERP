@@ -7,6 +7,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-https://iewceykescyycodllftl.supabase.co}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlld2NleWtlc2N5eWNvZGxsZnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDI5NzgsImV4cCI6MjEwMzkxODk3OH0.aeRmCHcTrslO9UCoYLljwLuAhrhX9gShNr4Lgw2x3Zc}
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
