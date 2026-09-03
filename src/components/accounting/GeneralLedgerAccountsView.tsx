@@ -114,7 +114,7 @@ export const GeneralLedgerAccountsView: React.FC<GeneralLedgerAccountsViewProps>
   onSaveJournalEntries,
   onSaveRevisionLogs,
   onSaveFiscalPeriods,
-  currentUserName = 'سعيد الشحي (المحاسب المسؤول)',
+  currentUserName = 'المحاسب المسؤول',
   activeBranchId = 'all'
 }) => {
   const { t, isRTL } = useLanguage();

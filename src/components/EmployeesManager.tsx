@@ -2791,7 +2791,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder="سعيد بن راشد الشحي"
+                    placeholder="محمد بن عبد الله الشحي"
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium"
                   />
                 </div>

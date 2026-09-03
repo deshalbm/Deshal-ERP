@@ -479,43 +479,32 @@ export function loadActiveSessions(): ActiveSession[] {
     const raw = localStorage.getItem(AUTH_STORAGE_KEYS.ACTIVE_SESSIONS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {
     console.warn("Failed to load active sessions:", e);
   }
 
-  const defaultSessions: ActiveSession[] = [
-    {
-      id: "sess-curr",
-      userId: "usr-1",
-      userName: "سعيد بن راشد الشحي",
-      userRole: "ADMIN",
+  const currentSession = loadAuthSession();
+  if (currentSession) {
+    const active: ActiveSession = {
+      id: `sess_${Date.now()}`,
+      userId: currentSession.user.id,
+      userName: currentSession.user.fullName,
+      userRole: currentSession.user.role,
       deviceType: "Desktop",
-      browser: "Chrome 124 (macOS Sonoma)",
-      os: "macOS",
-      ipAddress: "185.190.142.12 (Sohar, Oman)",
-      location: "صحار، سلطنة عمان",
+      browser: "Chrome Browser",
+      os: "Desktop OS",
+      ipAddress: "127.0.0.1",
+      location: "سلطنة عمان",
       lastActive: "نشط الآن (هذا الجهاز)",
       isCurrent: true
-    },
-    {
-      id: "sess-mobile",
-      userId: "usr-1",
-      userName: "سعيد بن راشد الشحي",
-      userRole: "ADMIN",
-      deviceType: "Mobile",
-      browser: "Deshal ERP PWA App (iPhone 15 Pro)",
-      os: "iOS 17.5",
-      ipAddress: "82.178.44.19 (Muscat, Oman)",
-      location: "مسقط، سلطنة عمان",
-      lastActive: "منذ 42 دقيقة",
-      isCurrent: false
-    }
-  ];
+    };
+    saveActiveSessions([active]);
+    return [active];
+  }
 
-  saveActiveSessions(defaultSessions);
-  return defaultSessions;
+  return [];
 }
 
 export function saveActiveSessions(sessions: ActiveSession[]): void {

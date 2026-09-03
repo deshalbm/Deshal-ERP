@@ -178,7 +178,7 @@ export function saveEmployeePins(pins: Record<string, EmployeePinRecord>): void 
 /**
  * Initialize default seeded PINs for initial demo employees if not present
  * Seed PINs:
- * - EMP-001 (سعيد الشحي - Admin): "1234"
+ * - EMP-001 (مدير النظام - Admin): "1234"
  * - EMP-002 (فاطمة البلوشي - Accountant): "2233"
  * - EMP-003 (أحمد المعمري - Storekeeper): "3344"
  * - EMP-004 (محمد الكندي - Sales): "4455"

@@ -439,7 +439,7 @@ export const EmployeeMovementDashboard: React.FC<EmployeeMovementDashboardProps>
       originalTime: adjustmentTargetLog?.time || "--:--",
       newTime: adjustmentFormData.newTime,
       reason: adjustmentFormData.reason.trim(),
-      requestedBy: "سعيد بن راشد الشحي",
+      requestedBy: "مدير النظام",
       status: "PENDING",
       createdAt: new Date().toISOString()
     };
@@ -474,7 +474,7 @@ export const EmployeeMovementDashboard: React.FC<EmployeeMovementDashboardProps>
         ? {
             ...adj,
             status,
-            approvedBy: "سعيد بن راشد الشحي",
+            approvedBy: "مدير النظام",
             reviewedAt: new Date().toISOString(),
             reviewNotes: status === "APPROVED" ? "تم الاعتماد والتعديل في السجل الرسمي" : "تم رفض الطلب لعدم كفاية المبررات"
           }

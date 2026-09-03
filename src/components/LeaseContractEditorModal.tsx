@@ -89,7 +89,7 @@ export const LeaseContractEditorModal: React.FC<LeaseContractEditorModalProps> =
     contractToEdit?.lessorTaxNumber || companySettings.taxId || "OM-94288394-B"
   );
   const [lessorRepresentative, setLessorRepresentative] = useState<string>(
-    contractToEdit?.lessorRepresentative || companySettings.authorizedSignatoryName || "سعيد الشحي"
+    contractToEdit?.lessorRepresentative || companySettings.authorizedSignatoryName || "المفوض بالتوقيع"
   );
   const [lessorRepresentativeTitle, setLessorRepresentativeTitle] = useState<string>(
     contractToEdit?.lessorRepresentativeTitle || companySettings.authorizedSignatoryTitle || "المدير العام"

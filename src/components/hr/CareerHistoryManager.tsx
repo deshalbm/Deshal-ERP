@@ -52,7 +52,7 @@ export const CareerHistoryManager: React.FC<CareerHistoryManagerProps> = ({
     newValue: '',
     reason: '',
     approvedBy: 'emp-1',
-    approvedByName: 'سعيد بن راشد الشحي'
+    approvedByName: 'إدارة الموارد البشرية'
   });
 
   const handleOpenNew = () => {
@@ -68,7 +68,7 @@ export const CareerHistoryManager: React.FC<CareerHistoryManagerProps> = ({
       newValue: '',
       reason: 'نظراً للتميز في الأداء وتحقيق المستهدفات.',
       approvedBy: 'emp-1',
-      approvedByName: 'سعيد بن راشد الشحي',
+      approvedByName: 'إدارة الموارد البشرية',
       createdAt: new Date().toISOString()
     });
     setIsModalOpen(true);
@@ -89,7 +89,7 @@ export const CareerHistoryManager: React.FC<CareerHistoryManagerProps> = ({
       newValue: formData.newValue || '',
       reason: formData.reason || '',
       approvedBy: formData.approvedBy || 'emp-1',
-      approvedByName: formData.approvedByName || 'سعيد بن راشد الشحي',
+      approvedByName: formData.approvedByName || 'إدارة الموارد البشرية',
       createdAt: new Date().toISOString()
     };
 

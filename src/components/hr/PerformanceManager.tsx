@@ -85,7 +85,7 @@ export const PerformanceManager: React.FC<PerformanceManagerProps> = ({
       jobTitle: emp ? emp.jobTitle : '',
       department: emp ? emp.department : '',
       reviewerId: 'emp-1',
-      reviewerName: 'سعيد بن راشد الشحي',
+      reviewerName: 'المشرف المباشر',
       reviewerRole: 'المدير التنفيذي العام',
       reviewCycle: 'SEMI_ANNUAL',
       reviewPeriod: 'النصف الثاني 2026',

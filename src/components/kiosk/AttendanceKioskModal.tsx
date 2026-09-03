@@ -786,7 +786,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono">
                     <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                      <span className="text-slate-400 block text-[10px]">سعيد الشحي (مدير)</span>
+                      <span className="text-slate-400 block text-[10px]">مدير النظام (أدمن)</span>
                       <strong className="text-amber-300">1234</strong>
                     </div>
                     <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">

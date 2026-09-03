@@ -563,40 +563,42 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </div>
 
           {/* Quick Switch Employee helper cards */}
-          <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-indigo-400" />
-                <span>{language === "ar" ? "حسابات تجريبية سريعة المفعول:" : "Quick Demo Accounts:"}</span>
-              </span>
-              <span className="text-[10px] text-indigo-400 font-medium">{language === "ar" ? "انقر للتعيين" : "Click to load"}</span>
-            </div>
+          {usersList.length > 0 && (
+            <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>{language === "ar" ? "حسابات سريعة المفعول:" : "Quick Accounts:"}</span>
+                </span>
+                <span className="text-[10px] text-indigo-400 font-medium">{language === "ar" ? "انقر للتعيين" : "Click to load"}</span>
+              </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {usersList.slice(0, 4).map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => fillQuickCredentials(u)}
-                  className={`flex items-center space-x-2 rtl:space-x-reverse px-2.5 py-1.5 rounded-xl border text-left rtl:text-right transition-all cursor-pointer shrink-0 ${
-                    email === u.email
-                      ? "bg-indigo-600/30 border-indigo-500 text-white shadow-sm"
-                      : "bg-slate-800/50 border-slate-700/60 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
-                  }`}
-                >
-                  <img
-                    src={u.avatarUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
-                    alt={u.fullName}
-                    className="w-6 h-6 rounded-full object-cover border border-slate-600"
-                  />
-                  <div className="text-[11px] leading-tight">
-                    <p className="font-bold truncate max-w-[90px]">{language === "ar" ? u.fullName.split(" ")[0] : u.fullNameEn?.split(" ")[0] || u.fullName.split(" ")[0]}</p>
-                    <p className="text-[9px] text-indigo-300">{u.role}</p>
-                  </div>
-                </button>
-              ))}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {usersList.slice(0, 4).map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => fillQuickCredentials(u)}
+                    className={`flex items-center space-x-2 rtl:space-x-reverse px-2.5 py-1.5 rounded-xl border text-left rtl:text-right transition-all cursor-pointer shrink-0 ${
+                      email === u.email
+                        ? "bg-indigo-600/30 border-indigo-500 text-white shadow-sm"
+                        : "bg-slate-800/50 border-slate-700/60 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
+                    }`}
+                  >
+                    <img
+                      src={u.avatarUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
+                      alt={u.fullName}
+                      className="w-6 h-6 rounded-full object-cover border border-slate-600"
+                    />
+                    <div className="text-[11px] leading-tight">
+                      <p className="font-bold truncate max-w-[90px]">{language === "ar" ? u.fullName.split(" ")[0] : u.fullNameEn?.split(" ")[0] || u.fullName.split(" ")[0]}</p>
+                      <p className="text-[9px] text-indigo-300">{u.role}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Right / Login Card Form Column */}

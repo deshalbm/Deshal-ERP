@@ -567,10 +567,10 @@ export default function App() {
 
   const getActiveEmployee = () => {
     return employeesList.find((e) => e.id === activeEmployeeId) || employeesList[0] || {
-      id: "emp-1",
-      nameAr: "سعيد بن راشد الشحي",
-      nameEn: "Said Rashid Al-Shehhi",
-      role: "المدير التنفيذي العام"
+      id: "emp-curr",
+      nameAr: userName || "المستخدم",
+      nameEn: "User",
+      role: "مدير النظام"
     };
   };
 
