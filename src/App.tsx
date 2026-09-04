@@ -866,6 +866,55 @@ export default function App() {
     handleCreateNewVoucher(actionType);
   };
 
+  const handleQuickCreateAction = (actionId: string) => {
+    const act = (actionId || "").toLowerCase().trim();
+    switch (act) {
+      case "receipt":
+        handleSelectAction("RECEIPT");
+        break;
+      case "tax-invoice":
+      case "tax_invoice":
+        handleSelectAction("TAX_INVOICE");
+        break;
+      case "payment":
+        handleSelectAction("PAYMENT");
+        break;
+      case "quotation":
+        handleSelectAction("QUOTATION");
+        break;
+      case "petty-cash":
+      case "petty_cash":
+        handleSelectAction("PETTY_CASH");
+        break;
+      case "journal-entry":
+      case "journal_entry":
+        handleNavigateWithHistory("accounting");
+        break;
+      case "customer":
+      case "crm":
+        handleNavigateWithHistory("crm");
+        break;
+      case "supplier":
+      case "purchases":
+        handleNavigateWithHistory("purchases");
+        break;
+      case "inventory-item":
+      case "inventory":
+        handleNavigateWithHistory("inventory");
+        break;
+      case "employee":
+      case "employees":
+        handleNavigateWithHistory("employees");
+        break;
+      case "space-booking":
+      case "spaces":
+        handleNavigateWithHistory("spaces");
+        break;
+      default:
+        handleNavigateWithHistory("home");
+    }
+  };
+
   const handleSaveActiveVoucher = () => {
     const existingIndex = vouchersList.findIndex((v) => v.id === activeVoucher.id);
     let updatedList: ReceiptVoucher[];
@@ -2699,11 +2748,23 @@ export default function App() {
       <CommandPaletteModal
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
-        onSelectTab={handleNavigateWithHistory}
-        onSelectAction={(action) => {
-          handleSelectAction(action);
+        onNavigateTab={handleNavigateWithHistory}
+        onQuickCreate={(actId) => {
+          handleQuickCreateAction(actId);
           setIsCommandPaletteOpen(false);
         }}
+        onSelectVoucher={(v) => {
+          setActiveVoucher(v);
+          handleNavigateWithHistory("preview");
+        }}
+        vouchers={vouchersList}
+        customers={customersList}
+        suppliers={suppliersList}
+        inventory={inventoryList}
+        accounts={accountsList}
+        journalEntries={journalEntriesList}
+        employees={employeesList}
+        purchases={purchasesList}
         onOpenAiAssistant={() => setIsAiModalOpen(true)}
         onOpenAttendanceKiosk={() => setIsGlobalKioskModalOpen(true)}
         onOpenOnboarding={() => setIsOnboardingOpen(true)}
@@ -2713,18 +2774,7 @@ export default function App() {
       <QuickCreateModal
         isOpen={isQuickCreateOpen}
         onClose={() => setIsQuickCreateOpen(false)}
-        onSelectVoucherType={(action) => {
-          handleSelectAction(action);
-          setIsQuickCreateOpen(false);
-        }}
-        onNavigateTab={handleNavigateWithHistory}
-        onQuickCreateCustomer={() => handleNavigateWithHistory("crm")}
-        onQuickCreateProduct={() => handleNavigateWithHistory("inventory")}
-        onQuickCreateEmployee={() => handleNavigateWithHistory("employees")}
-        onQuickCreateSpaceBooking={() => {
-          setSelectedSpaceForBooking(rentalSpacesList[0] || null);
-          setIsBookingModalOpen(true);
-        }}
+        onSelectAction={handleQuickCreateAction}
       />
 
       {/* Contextual Page Help Drawer */}

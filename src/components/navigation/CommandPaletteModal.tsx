@@ -20,7 +20,8 @@ import {
   Clock,
   BookOpen,
   Calendar,
-  CheckCircle2
+  CheckCircle2,
+  BookCheck
 } from 'lucide-react';
 import {
   ReceiptVoucher,
@@ -28,6 +29,7 @@ import {
   Supplier,
   InventoryItem,
   Account,
+  JournalEntry,
   Employee,
   PurchaseInvoice
 } from '../../types';
@@ -38,20 +40,25 @@ export interface CommandPaletteModalProps {
   onClose: () => void;
   onNavigateTab: (tab: any) => void;
   onQuickCreate: (type: string) => void;
+  onSelectVoucher?: (voucher: ReceiptVoucher) => void;
   vouchers?: ReceiptVoucher[];
   customers?: Customer[];
   suppliers?: Supplier[];
   inventory?: InventoryItem[];
   accounts?: Account[];
+  journalEntries?: JournalEntry[];
   employees?: Employee[];
   purchases?: PurchaseInvoice[];
   recentSearches?: string[];
   onSaveRecentSearch?: (query: string) => void;
+  onOpenAiAssistant?: () => void;
+  onOpenAttendanceKiosk?: () => void;
+  onOpenOnboarding?: () => void;
 }
 
 interface SearchResultItem {
   id: string;
-  category: 'pages' | 'actions' | 'customers' | 'suppliers' | 'vouchers' | 'inventory' | 'accounts' | 'employees';
+  category: 'pages' | 'actions' | 'customers' | 'suppliers' | 'vouchers' | 'inventory' | 'accounts' | 'journalEntries' | 'employees' | 'purchases';
   categoryLabelAr: string;
   categoryLabelEn: string;
   title: string;
@@ -67,15 +74,20 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   onClose,
   onNavigateTab,
   onQuickCreate,
+  onSelectVoucher,
   vouchers = [],
   customers = [],
   suppliers = [],
   inventory = [],
   accounts = [],
+  journalEntries = [],
   employees = [],
-  purchases = []
+  purchases = [],
+  onOpenAiAssistant,
+  onOpenAttendanceKiosk,
+  onOpenOnboarding
 }) => {
-  const { isRTL, language } = useLanguage();
+  const { isRTL } = useLanguage();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -128,7 +140,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         categoryLabelAr: 'الشاشات الرئيسية',
         categoryLabelEn: 'Core Pages',
         title: isRTL ? 'المحاسبة ودفتر الأستاذ العام' : 'General Ledger & Accounting',
-        subtitle: isRTL ? 'دليل الحسابات، ميزان المراجعة، والتسويات' : 'Chart of Accounts, Trial Balance',
+        subtitle: isRTL ? 'دليل الحسابات، ميزان المراجعة، القيود المحاسبية' : 'Chart of Accounts, Journal Entries',
         icon: BookOpen,
         iconColor: 'text-indigo-700',
         onSelect: () => {
@@ -142,7 +154,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         categoryLabelAr: 'الشاشات الرئيسية',
         categoryLabelEn: 'Core Pages',
         title: isRTL ? 'العملاء وإدارة العلاقات (CRM)' : 'CRM & Customers Directory',
-        subtitle: isRTL ? 'دليل العملاء وكشوف الحسابات' : 'Customer profiles and balances',
+        subtitle: isRTL ? 'دليل العملاء وكشوف الحسابات والشركات' : 'Customer profiles, contacts & balances',
         icon: Users,
         iconColor: 'text-blue-600',
         onSelect: () => {
@@ -156,7 +168,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         categoryLabelAr: 'الشاشات الرئيسية',
         categoryLabelEn: 'Core Pages',
         title: isRTL ? 'المخزون والمستودعات' : 'Inventory & Stock Management',
-        subtitle: isRTL ? 'بطاقات الأصناف والكميات' : 'Stock items and quantities',
+        subtitle: isRTL ? 'بطاقات الأصناف والكميات والباركود' : 'Stock items, barcodes and SKU tracking',
         icon: Boxes,
         iconColor: 'text-amber-600',
         onSelect: () => {
@@ -170,7 +182,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         categoryLabelAr: 'الشاشات الرئيسية',
         categoryLabelEn: 'Core Pages',
         title: isRTL ? 'المشتريات وإدارة الموردين' : 'Purchases & Suppliers',
-        subtitle: isRTL ? 'فواتير الشراء وسندات الصرف' : 'Purchase Invoices & Bills',
+        subtitle: isRTL ? 'فواتير الشراء، الموردين وسندات الصرف' : 'Purchase Invoices & Vendors',
         icon: Truck,
         iconColor: 'text-purple-600',
         onSelect: () => {
@@ -198,7 +210,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         categoryLabelAr: 'الشاشات الرئيسية',
         categoryLabelEn: 'Core Pages',
         title: isRTL ? 'المساحات التأجيرية والعقود' : 'Rental Spaces & Leases',
-        subtitle: isRTL ? 'عقود الإيجار والوحدات' : 'Lease contracts and spaces',
+        subtitle: isRTL ? 'عقود الإيجار وحجز القاعات والمكاتب' : 'Lease contracts and meeting spaces',
         icon: Building2,
         iconColor: 'text-cyan-600',
         onSelect: () => {
@@ -288,12 +300,12 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         category: 'actions',
         categoryLabelAr: 'إجراءات سريعة',
         categoryLabelEn: 'Quick Actions',
-        title: isRTL ? 'إضافة عميل جديد' : 'Add New Customer',
+        title: isRTL ? 'إضافة عميل جديد (CRM)' : 'Add New Customer (CRM)',
         subtitle: isRTL ? 'تسجيل عميل جديد في دليل العملاء' : 'Register customer profile',
         icon: Users,
         iconColor: 'text-indigo-600',
         onSelect: () => {
-          onNavigateTab('crm');
+          onQuickCreate('customer');
           onClose();
         }
       },
@@ -307,12 +319,12 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         icon: Layers,
         iconColor: 'text-purple-600',
         onSelect: () => {
-          onNavigateTab('accounting');
+          onQuickCreate('journal-entry');
           onClose();
         }
       }
     ],
-    [isRTL, onQuickCreate, onNavigateTab, onClose]
+    [isRTL, onQuickCreate, onClose]
   );
 
   // Dynamic search results across records
@@ -339,18 +351,20 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
     // Search Customers
     customers.forEach((c) => {
-      if (
-        c.name.toLowerCase().includes(q) ||
-        (c.phone && c.phone.includes(q)) ||
-        (c.email && c.email.toLowerCase().includes(q))
-      ) {
+      const matchName = (c.name || '').toLowerCase().includes(q);
+      const matchPhone = c.phone ? c.phone.includes(q) : false;
+      const matchEmail = c.email ? c.email.toLowerCase().includes(q) : false;
+      const matchCity = c.city ? c.city.toLowerCase().includes(q) : false;
+      const matchContact = c.contactPerson ? c.contactPerson.toLowerCase().includes(q) : false;
+
+      if (matchName || matchPhone || matchEmail || matchCity || matchContact) {
         results.push({
           id: `cust-${c.id}`,
           category: 'customers',
           categoryLabelAr: 'دليل العملاء',
           categoryLabelEn: 'Customers',
           title: c.name,
-          subtitle: `${c.phone || ''} ${c.email ? '• ' + c.email : ''}`,
+          subtitle: `${c.phone || ''} ${c.city ? '• ' + c.city : ''} ${c.email ? '• ' + c.email : ''}`,
           badge: isRTL ? 'عميل' : 'Customer',
           icon: Users,
           iconColor: 'text-blue-600',
@@ -364,18 +378,19 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
     // Search Suppliers
     suppliers.forEach((s) => {
-      if (
-        s.name.toLowerCase().includes(q) ||
-        (s.phone && s.phone.includes(q)) ||
-        (s.company && s.company.toLowerCase().includes(q))
-      ) {
+      const matchName = (s.name || '').toLowerCase().includes(q);
+      const matchPhone = s.phone ? s.phone.includes(q) : false;
+      const matchEmail = s.email ? s.email.toLowerCase().includes(q) : false;
+      const matchContact = s.contactPerson ? s.contactPerson.toLowerCase().includes(q) : false;
+
+      if (matchName || matchPhone || matchEmail || matchContact) {
         results.push({
           id: `supp-${s.id}`,
           category: 'suppliers',
           categoryLabelAr: 'الموردين',
           categoryLabelEn: 'Suppliers',
           title: s.name,
-          subtitle: `${s.company || ''} ${s.phone ? '• ' + s.phone : ''}`,
+          subtitle: `${s.contactPerson ? s.contactPerson + ' • ' : ''}${s.phone || ''} ${s.email ? '• ' + s.email : ''}`,
           badge: isRTL ? 'مورد' : 'Supplier',
           icon: Truck,
           iconColor: 'text-purple-600',
@@ -388,44 +403,49 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     });
 
     // Search Vouchers
-    vouchers.slice(0, 100).forEach((v) => {
-      if (
-        v.voucherNumber.toLowerCase().includes(q) ||
-        v.receivedFrom.toLowerCase().includes(q) ||
-        (v.notes && v.notes.toLowerCase().includes(q))
-      ) {
+    vouchers.slice(0, 150).forEach((v) => {
+      const matchNum = (v.voucherNumber || '').toLowerCase().includes(q);
+      const matchParty = (v.receivedFrom || '').toLowerCase().includes(q);
+      const matchRef = v.referenceNo ? v.referenceNo.toLowerCase().includes(q) : false;
+      const matchNotes = v.notes ? v.notes.toLowerCase().includes(q) : false;
+
+      if (matchNum || matchParty || matchRef || matchNotes) {
         results.push({
           id: `vouch-${v.id}`,
           category: 'vouchers',
           categoryLabelAr: 'السندات والفواتير',
           categoryLabelEn: 'Vouchers & Invoices',
-          title: `${v.voucherNumber} - ${v.receivedFrom}`,
-          subtitle: `${v.totalAmount.toLocaleString()} ${v.currency} • ${v.date}`,
+          title: `${v.voucherNumber} - ${v.receivedFrom || 'مستند مالي'}`,
+          subtitle: `${v.totalAmount ? v.totalAmount.toLocaleString() : 0} ${v.currency || 'OMR'} • ${v.date || ''}`,
           badge: v.type,
           icon: FileText,
           iconColor: 'text-emerald-600',
           onSelect: () => {
-            onNavigateTab('history');
+            if (onSelectVoucher) {
+              onSelectVoucher(v);
+            } else {
+              onNavigateTab('preview');
+            }
             onClose();
           }
         });
       }
     });
 
-    // Search Inventory
+    // Search Inventory Items
     inventory.forEach((inv) => {
-      if (
-        inv.nameAr.toLowerCase().includes(q) ||
-        (inv.nameEn && inv.nameEn.toLowerCase().includes(q)) ||
-        (inv.sku && inv.sku.toLowerCase().includes(q)) ||
-        (inv.barcode && inv.barcode.includes(q))
-      ) {
+      const matchName = (inv.name || '').toLowerCase().includes(q);
+      const matchSku = inv.sku ? inv.sku.toLowerCase().includes(q) : false;
+      const matchBarcode = inv.barcode ? inv.barcode.includes(q) : false;
+      const matchCategory = inv.category ? inv.category.toLowerCase().includes(q) : false;
+
+      if (matchName || matchSku || matchBarcode || matchCategory) {
         results.push({
           id: `inv-${inv.id}`,
           category: 'inventory',
           categoryLabelAr: 'المخزون والأصناف',
           categoryLabelEn: 'Inventory Items',
-          title: isRTL ? inv.nameAr : inv.nameEn || inv.nameAr,
+          title: inv.name,
           subtitle: `SKU: ${inv.sku} • ${isRTL ? 'الكمية:' : 'Qty:'} ${inv.quantity} • ${inv.sellingPrice} OMR`,
           badge: inv.category,
           icon: Boxes,
@@ -440,18 +460,18 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
     // Search Chart of Accounts
     accounts.forEach((acc) => {
-      if (
-        acc.code.includes(q) ||
-        acc.nameAr.toLowerCase().includes(q) ||
-        (acc.nameEn && acc.nameEn.toLowerCase().includes(q))
-      ) {
+      const matchCode = (acc.code || '').includes(q);
+      const matchNameAr = (acc.nameAr || '').toLowerCase().includes(q);
+      const matchNameEn = acc.nameEn ? acc.nameEn.toLowerCase().includes(q) : false;
+
+      if (matchCode || matchNameAr || matchNameEn) {
         results.push({
           id: `acc-${acc.id}`,
           category: 'accounts',
           categoryLabelAr: 'دليل الحسابات',
           categoryLabelEn: 'Chart of Accounts',
           title: `${acc.code} - ${isRTL ? acc.nameAr : acc.nameEn || acc.nameAr}`,
-          subtitle: `${acc.category} • ${isRTL ? 'الرصيد:' : 'Balance:'} ${acc.currentBalance.toLocaleString()}`,
+          subtitle: `${acc.category || ''} • ${isRTL ? 'الرصيد:' : 'Balance:'} ${(acc.currentBalance || 0).toLocaleString()} ${acc.currency || 'OMR'}`,
           badge: acc.type,
           icon: Layers,
           iconColor: 'text-indigo-600',
@@ -463,21 +483,48 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       }
     });
 
+    // Search Journal Entries (القيود اليومية)
+    journalEntries.forEach((je) => {
+      const matchEntryNum = (je.entryNumber || '').toLowerCase().includes(q);
+      const matchDescAr = (je.descriptionAr || '').toLowerCase().includes(q);
+      const matchDescEn = je.descriptionEn ? je.descriptionEn.toLowerCase().includes(q) : false;
+      const matchRef = je.referenceNumber ? je.referenceNumber.toLowerCase().includes(q) : false;
+
+      if (matchEntryNum || matchDescAr || matchDescEn || matchRef) {
+        results.push({
+          id: `je-${je.id}`,
+          category: 'journalEntries',
+          categoryLabelAr: 'القيود المحاسبية',
+          categoryLabelEn: 'Journal Entries',
+          title: `${je.entryNumber} - ${isRTL ? je.descriptionAr : je.descriptionEn || je.descriptionAr}`,
+          subtitle: `${je.date} • ${isRTL ? 'الإجمالي:' : 'Total:'} ${(je.totalDebit || 0).toLocaleString()} ${je.currency || 'OMR'}`,
+          badge: je.status,
+          icon: BookCheck,
+          iconColor: 'text-purple-600',
+          onSelect: () => {
+            onNavigateTab('accounting');
+            onClose();
+          }
+        });
+      }
+    });
+
     // Search Employees
     employees.forEach((emp) => {
-      if (
-        emp.name.toLowerCase().includes(q) ||
-        emp.jobTitle.toLowerCase().includes(q) ||
-        (emp.employeeCode && emp.employeeCode.includes(q)) ||
-        (emp.phone && emp.phone.includes(q))
-      ) {
+      const matchName = (emp.fullName || '').toLowerCase().includes(q);
+      const matchNameEn = emp.fullNameEn ? emp.fullNameEn.toLowerCase().includes(q) : false;
+      const matchJob = (emp.jobTitle || '').toLowerCase().includes(q);
+      const matchCode = emp.employeeCode ? emp.employeeCode.toLowerCase().includes(q) : false;
+      const matchPhone = emp.phone ? emp.phone.includes(q) : false;
+
+      if (matchName || matchNameEn || matchJob || matchCode || matchPhone) {
         results.push({
           id: `emp-${emp.id}`,
           category: 'employees',
           categoryLabelAr: 'الموظفين',
           categoryLabelEn: 'Employees',
-          title: `${emp.name} (${emp.jobTitle})`,
-          subtitle: `${emp.employeeCode ? 'Code: ' + emp.employeeCode + ' • ' : ''}${emp.phone || ''}`,
+          title: `${emp.fullName} (${emp.jobTitle})`,
+          subtitle: `${emp.employeeCode ? 'Code: ' + emp.employeeCode + ' • ' : ''}${emp.phone || ''} ${emp.department ? '• ' + emp.department : ''}`,
           badge: emp.department,
           icon: Users,
           iconColor: 'text-teal-600',
@@ -489,8 +536,33 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       }
     });
 
+    // Search Purchases
+    purchases.forEach((p) => {
+      const matchNum = (p.purchaseNumber || '').toLowerCase().includes(q);
+      const matchSupplier = (p.supplierName || '').toLowerCase().includes(q);
+      const matchInvoiceNo = p.supplierInvoiceNo ? p.supplierInvoiceNo.toLowerCase().includes(q) : false;
+
+      if (matchNum || matchSupplier || matchInvoiceNo) {
+        results.push({
+          id: `pur-${p.id}`,
+          category: 'purchases',
+          categoryLabelAr: 'فواتير المشتريات',
+          categoryLabelEn: 'Purchase Orders',
+          title: `${p.purchaseNumber} - ${p.supplierName}`,
+          subtitle: `${(p.totalAmount || 0).toLocaleString()} ${p.currency || 'OMR'} • ${p.date}`,
+          badge: p.paymentStatus,
+          icon: Truck,
+          iconColor: 'text-indigo-600',
+          onSelect: () => {
+            onNavigateTab('purchases');
+            onClose();
+          }
+        });
+      }
+    });
+
     return results;
-  }, [query, staticActions, staticPages, customers, suppliers, vouchers, inventory, accounts, employees, isRTL, onNavigateTab, onClose]);
+  }, [query, staticActions, staticPages, customers, suppliers, vouchers, inventory, accounts, journalEntries, employees, purchases, isRTL, onNavigateTab, onSelectVoucher, onClose]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -545,8 +617,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
             }}
             placeholder={
               isRTL
-                ? 'ابحث عن عميل، مورد، فاتورة، قيد، حساب، موظف، أو أمر سريع... (Ctrl + K)'
-                : 'Search customers, invoices, vouchers, ledger, employees, or command... (Ctrl + K)'
+                ? 'ابحث عن عميل، مورد، فاتورة، قيد محاسبي، حساب، موظف، أصناف، أو أمر سريع... (Ctrl + K)'
+                : 'Search customers, suppliers, invoices, journal entries, accounts, employees, items... (Ctrl + K)'
             }
             className="w-full bg-transparent text-sm sm:text-base text-slate-900 placeholder:text-slate-400 focus:outline-hidden font-medium"
           />
