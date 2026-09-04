@@ -32,7 +32,7 @@ import { DigitalSignaturePad } from "./DigitalSignaturePad";
 import { WhatsAppBaileysStudio } from "./WhatsAppBaileysStudio";
 import { AVAILABLE_CURRENCIES, fetchLiveExchangeRates } from "../utils/currencyConverter";
 import { DEFAULT_COMPANY_SETTINGS, DEFAULT_RESEND_SETTINGS } from "../utils/storage";
-import { sendTestEmail } from "../lib/email/resendService";
+import { sendTestEmail, fetchEmailLogs } from "../lib/email/emailService";
 import { seedDemoDataToSupabase } from "../lib/supabase/seedDemoData";
 import { useERPData } from "../contexts/ERPDataContext";
 
@@ -98,6 +98,15 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
   const [isSendingTestEmail, setIsSendingTestEmail] = useState<boolean>(false);
   const [testEmailTarget, setTestEmailTarget] = useState<string>("");
   const [emailStatusMsg, setEmailStatusMsg] = useState<{ success?: boolean; text: string } | null>(null);
+  const [emailAuditLogs, setEmailAuditLogs] = useState<any[]>([]);
+  const [isLoadingEmailLogs, setIsLoadingEmailLogs] = useState<boolean>(false);
+
+  const loadLogs = async () => {
+    setIsLoadingEmailLogs(true);
+    const logs = await fetchEmailLogs();
+    setEmailAuditLogs(logs);
+    setIsLoadingEmailLogs(false);
+  };
 
   const handleSendTestEmail = async () => {
     if (!testEmailTarget || !testEmailTarget.includes("@")) {
@@ -105,21 +114,15 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
       return;
     }
     setIsSendingTestEmail(true);
-    setEmailStatusMsg({ text: "جاري إرسال البريد الاختباري عبر Resend..." });
-    const resendSettings = localSettings.resendSettings || DEFAULT_RESEND_SETTINGS;
-    const res = await sendTestEmail(resendSettings, testEmailTarget);
+    setEmailStatusMsg({ text: "جاري إرسال البريد الاختباري عبر السيرفر..." });
+    const res = await sendTestEmail(testEmailTarget, localSettings.companyName);
     setIsSendingTestEmail(false);
     if (res.success) {
       setEmailStatusMsg({ success: true, text: `تم إرسال البريد الاختباري بنجاح! رقم الرسالة: ${res.messageId || 'OK'}` });
-      const updatedResend = {
-        ...resendSettings,
-        lastTestedAt: new Date().toISOString(),
-        lastTestStatus: 'SUCCESS' as const,
-        lastTestMessage: 'تم اختبار الاتصال بنجاح'
-      };
-      setLocalSettings(prev => ({ ...prev, resendSettings: updatedResend }));
+      await loadLogs();
     } else {
-      setEmailStatusMsg({ success: false, text: `فشل الإرسال: ${res.error || 'يرجى التحقق من API Key المباشر'}` });
+      setEmailStatusMsg({ success: false, text: `فشل الإرسال: ${res.error || 'خطأ في خادم البريد'}` });
+      await loadLogs();
     }
   };
   
@@ -1274,33 +1277,14 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   <span>مفتاح API وبيانات المرسل (Resend Credentials)</span>
                 </h3>
 
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs space-y-1">
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs space-y-1.5">
                   <div className="flex items-center gap-1.5 font-bold text-emerald-800">
-                    <Shield className="w-4 h-4 text-emerald-600" />
-                    <span>متاح افتراضياً عبر متغيرات البيئة بالسيرفر (.env)</span>
+                    <Shield className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>مؤمن بالكامل على الخادم (Server Secret Protected)</span>
                   </div>
                   <p className="text-[11px] text-emerald-700 leading-relaxed">
-                    يتم قراءة مفتاح <code>RESEND_API_KEY</code> بأمان تام من ملف <code>.env</code> على جانب السيرفر لحماية أسرار النظام وعدم تسريب المفتاح للمتصفح.
+                    يتم قراءة واستخدام مفتاح <code>RESEND_API_KEY</code> بحماية كاملة داخل <strong>Supabase Edge Function</strong> أو بيئة السيرفر عبر <code>.env</code>. لا يتم إظهار أو حفظ أي مفاتيح سرية داخل المتصفح.
                   </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    مفتاح Resend API Key تخصيص اختياري (يبدأ بـ re_):
-                  </label>
-                  <input
-                    type="password"
-                    value={localSettings.resendSettings?.apiKey || ""}
-                    onChange={(e) => {
-                      const currentResend = localSettings.resendSettings || DEFAULT_RESEND_SETTINGS;
-                      handleSettingsChange("resendSettings", {
-                        ...currentResend,
-                        apiKey: e.target.value
-                      });
-                    }}
-                    placeholder="re_123456789_abcdefg..."
-                    className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-indigo-500"
-                  />
                 </div>
 
                 <div>
@@ -1320,9 +1304,6 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                     placeholder="onboarding@resend.dev"
                     className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 bg-white text-slate-900"
                   />
-                  <span className="text-[10px] text-slate-500 block mt-1">
-                    للاختبار المجاني استخدم: onboarding@resend.dev
-                  </span>
                 </div>
 
                 <div>
@@ -1388,17 +1369,77 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  disabled={isSendingTestEmail}
-                  onClick={handleSendTestEmail}
-                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-4"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>{isSendingTestEmail ? "جاري الإرسال الاختباري..." : "إرسال رسالة تجريبية الآن"}</span>
-                </button>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    disabled={isSendingTestEmail}
+                    onClick={handleSendTestEmail}
+                    className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{isSendingTestEmail ? "جاري الإرسال الاختباري..." : "إرسال رسالة تجريبية الآن"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={loadLogs}
+                    className="w-full py-1.5 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingEmailLogs ? 'animate-spin' : ''}`} />
+                    <span>تحديث سجلات البريد في الداتابيز</span>
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Email Audit Logs Table */}
+            {emailAuditLogs.length > 0 && (
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-indigo-600" />
+                    <span>سجلات البريد الإلكتروني الموثقة (Email Audit Logs)</span>
+                  </h4>
+                  <span className="text-[11px] font-mono text-slate-500">{emailAuditLogs.length} رسالة مسجلة</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-200/60 text-slate-700 font-bold border-b border-slate-300">
+                        <th className="p-2 rounded-r-lg">النوع</th>
+                        <th className="p-2">المستلم</th>
+                        <th className="p-2">الحالة</th>
+                        <th className="p-2">تاريخ الإرسال</th>
+                        <th className="p-2 rounded-l-lg">ملاحظات / الأخطاء</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {emailAuditLogs.slice(0, 10).map((log, idx) => (
+                        <tr key={log.id || idx} className="hover:bg-slate-100/50">
+                          <td className="p-2 font-mono font-bold text-indigo-950">{log.email_type}</td>
+                          <td className="p-2 font-mono dir-ltr text-right">{log.recipient}</td>
+                          <td className="p-2">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              log.status === 'SENT' ? 'bg-emerald-100 text-emerald-800' :
+                              log.status === 'FAILED' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {log.status}
+                            </span>
+                          </td>
+                          <td className="p-2 text-slate-500 text-[11px]">
+                            {log.created_at ? new Date(log.created_at).toLocaleString('ar-OM') : '-'}
+                          </td>
+                          <td className="p-2 text-slate-600 text-[11px] truncate max-w-[200px]">
+                            {log.error_message || log.provider_message_id || 'ناجح'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Role & Permissions Governance Matrix */}

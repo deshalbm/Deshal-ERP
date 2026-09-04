@@ -32,32 +32,43 @@ async function startServer() {
 
   // Resend Email Server Status endpoint
   app.get("/api/resend/status", (_req, res) => {
+    const enabled = (process.env.EMAIL_ENABLED ?? "true").toLowerCase() !== "false";
     res.json({
       configured: !!process.env.RESEND_API_KEY,
-      fromEmail: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
-      fromName: process.env.RESEND_FROM_NAME || "نظام ديشال ERP الإداري"
+      enabled,
+      fromEmail: process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "Deshal ERP <onboarding@resend.dev>",
     });
   });
 
-  // Resend Email proxy endpoint (Uses server-side RESEND_API_KEY from .env for maximum security)
+  // Resend Email proxy endpoint (STRICT: Uses ONLY server-side RESEND_API_KEY from process.env)
   app.post("/api/send-email", async (req, res) => {
     try {
-      const { apiKey, from, to, subject, html, text } = req.body;
-      const key = process.env.RESEND_API_KEY || apiKey;
+      const { type, to, subject, html, text, recipientEmail } = req.body;
+      const key = process.env.RESEND_API_KEY;
+      const emailEnabled = (process.env.EMAIL_ENABLED ?? "true").toLowerCase() !== "false";
+      const targetRecipient = to || recipientEmail;
 
-      if (!key) {
-        return res.status(400).json({
-          error: "لم يتم تعيين RESEND_API_KEY في ملف .env بالسيرفر."
+      if (!targetRecipient) {
+        return res.status(400).json({ error: "Missing recipient email address (to/recipientEmail)" });
+      }
+
+      if (!emailEnabled) {
+        console.log(`[EMAIL_DISABLED] Express Server mock email to ${targetRecipient}`);
+        return res.json({
+          success: true,
+          mock: true,
+          message: "تم محاكاة إرسال البريد بنجاح (EMAIL_ENABLED=false)",
         });
       }
 
-      if (!to || !subject || !html) {
-        return res.status(400).json({ error: "Missing to, subject, or html body" });
+      if (!key) {
+        return res.status(500).json({
+          error: "لم يتم تعيين مفتاح RESEND_API_KEY في ملفات البيئة بالسيرفر (.env)",
+        });
       }
 
-      const defaultFromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-      const defaultFromName = process.env.RESEND_FROM_NAME || "نظام ديشال ERP الإداري";
-      const resolvedFrom = from || `${defaultFromName} <${defaultFromEmail}>`;
+      const defaultFrom = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "Deshal ERP <onboarding@resend.dev>";
+      const finalSubject = subject || `إشعار من نظام ديشال ERP [${type || 'إداري'}]`;
 
       const resendRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -66,22 +77,23 @@ async function startServer() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: resolvedFrom,
-          to: Array.isArray(to) ? to : [to],
-          subject,
-          html,
+          from: defaultFrom,
+          to: Array.isArray(targetRecipient) ? targetRecipient : [targetRecipient],
+          subject: finalSubject,
+          html: html || `<p>${text || finalSubject}</p>`,
           text,
         }),
       });
 
       const data = await resendRes.json();
       if (!resendRes.ok) {
-        return res.status(resendRes.status).json(data);
+        const errorMsg = data.message || data.error?.message || "فشل الاتصال بـ Resend API";
+        return res.status(resendRes.status).json({ error: errorMsg });
       }
 
       return res.json({ success: true, ...data });
     } catch (err: any) {
-      console.error("Resend send-email error:", err);
+      console.error("Resend send-email server error:", err);
       return res.status(500).json({ error: err?.message || "Failed to send email via Resend" });
     }
   });

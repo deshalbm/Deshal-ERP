@@ -351,15 +351,29 @@ export interface WhatsAppSettings {
 
 export interface ResendSettings {
   enabled: boolean;
-  apiKey: string;
   fromEmail: string;
   fromName: string;
+  replyToEmail?: string;
   autoSendWelcomeEmail: boolean;
   customWelcomeSubject?: string;
-  customWelcomeBody?: string;
   lastTestedAt?: string;
   lastTestStatus?: 'SUCCESS' | 'ERROR';
   lastTestMessage?: string;
+}
+
+export interface EmailLogEntry {
+  id: string;
+  company_id?: string;
+  recipient: string;
+  email_type: 'WELCOME_USER' | 'INVOICE_CREATED' | 'REQUEST_APPROVAL' | 'BOOKING_CONFIRMATION' | 'GENERAL_NOTIFICATION' | 'PASSWORD_RESET' | 'TEST_EMAIL';
+  related_entity_type?: string;
+  related_entity_id?: string;
+  status: 'PENDING' | 'SENT' | 'FAILED' | 'DELIVERED' | 'BOUNCED';
+  provider_message_id?: string;
+  error_message?: string;
+  metadata?: Record<string, any>;
+  sent_at?: string;
+  created_at: string;
 }
 
 export interface CompanySettings {

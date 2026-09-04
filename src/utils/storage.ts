@@ -76,13 +76,11 @@ export const DEFAULT_WHATSAPP_SETTINGS: WhatsAppSettings = {
 };
 
 export const DEFAULT_RESEND_SETTINGS: ResendSettings = {
-  enabled: false,
-  apiKey: "",
+  enabled: true,
   fromEmail: "onboarding@resend.dev",
   fromName: "نظام ديشال ERP الإداري",
   autoSendWelcomeEmail: true,
   customWelcomeSubject: "مرحباً بك في نظام ديشال ERP - بيانات حساب تسجيل الدخول الخاصة بك",
-  customWelcomeBody: "تمت إضافتك وتفعيل حساب الدخول الخاص بك بنجاح على منصة ديشال لإدارة الأعمال."
 };
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
