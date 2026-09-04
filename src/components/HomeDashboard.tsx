@@ -90,6 +90,23 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [nameInput, setNameInput] = useState<string>(userName);
   const [workspaceRole, setWorkspaceRole] = useState<"all" | "accounting" | "sales" | "inventory" | "hr">("all");
 
+  // Live ticking clock state
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const seconds = currentTime.getSeconds();
+  const minutes = currentTime.getMinutes();
+  const hours = currentTime.getHours();
+
+  const secondDeg = seconds * 6;
+  const minuteDeg = (minutes + seconds / 60) * 6;
+  const hourDeg = ((hours % 12) + minutes / 60) * 30;
+
   // Get active session user for user-scoped DB persistence
   const session = loadAuthSession();
   const userId = session?.user?.id || "default_user";
@@ -837,16 +854,69 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             </p>
           </div>
 
-          {/* Quick Date / Live Status Badge */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-2xl flex flex-col items-center justify-center text-center shrink-0 min-w-[160px]">
-            <Calendar className="w-5 h-5 text-indigo-200 mb-1" />
-            <span className="text-xs text-indigo-200 font-medium">{t("date")}</span>
-            <span className="text-sm font-bold text-white font-mono mt-0.5">
-              {formatDateToDDMMMMYYYY(new Date().toISOString().split("T")[0])}
-            </span>
-            <span className="mt-2 text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-              {t("pwaReady")}
-            </span>
+          {/* Analog Clock & Live Date Display */}
+          <div className="bg-white/10 backdrop-blur-md border border-white/15 p-3 sm:p-4 rounded-2xl flex items-center gap-3.5 shrink-0 shadow-lg">
+            {/* Analog Clock Dial */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-950/70 border-2 border-indigo-300/30 flex items-center justify-center shadow-inner shrink-0">
+              {/* Dial Hour Markers */}
+              <div className="absolute top-1.5 text-[8px] font-extrabold text-indigo-200/80">12</div>
+              <div className="absolute right-1.5 text-[8px] font-extrabold text-indigo-200/80">3</div>
+              <div className="absolute bottom-1.5 text-[8px] font-extrabold text-indigo-200/80">6</div>
+              <div className="absolute left-1.5 text-[8px] font-extrabold text-indigo-200/80">9</div>
+
+              {/* Center Dot */}
+              <div className="absolute w-2 h-2 bg-amber-400 rounded-full z-20 shadow-md ring-2 ring-amber-400/30" />
+
+              {/* Hour Hand */}
+              <div
+                className="absolute bottom-1/2 left-1/2 w-1 bg-indigo-100 rounded-full origin-bottom z-10 transition-transform duration-200 shadow"
+                style={{
+                  height: "26%",
+                  transform: `translateX(-50%) rotate(${hourDeg}deg)`
+                }}
+              />
+
+              {/* Minute Hand */}
+              <div
+                className="absolute bottom-1/2 left-1/2 w-0.5 bg-cyan-300 rounded-full origin-bottom z-10 transition-transform duration-200 shadow"
+                style={{
+                  height: "36%",
+                  transform: `translateX(-50%) rotate(${minuteDeg}deg)`
+                }}
+              />
+
+              {/* Second Hand */}
+              <div
+                className="absolute bottom-1/2 left-1/2 w-[1.5px] bg-rose-400 rounded-full origin-bottom z-15 shadow"
+                style={{
+                  height: "44%",
+                  transform: `translateX(-50%) rotate(${secondDeg}deg)`
+                }}
+              />
+            </div>
+
+            {/* Digital Time & Date Info */}
+            <div className="flex flex-col text-start">
+              <div className="flex items-center gap-1.5 text-xs text-indigo-200 font-semibold">
+                <Clock className="w-3.5 h-3.5 text-amber-300" />
+                <span>{currentTime.toLocaleDateString(isRTL ? "ar-OM" : "en-US", { weekday: "long" })}</span>
+              </div>
+
+              {/* Digital Time Readout */}
+              <span className="text-base sm:text-lg font-extrabold text-white font-mono tracking-wider my-0.5">
+                {currentTime.toLocaleTimeString(isRTL ? "ar-OM" : "en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit"
+                })}
+              </span>
+
+              {/* Full Date */}
+              <div className="flex items-center gap-1 text-xs text-indigo-100/90 font-medium">
+                <Calendar className="w-3 h-3 text-indigo-300" />
+                <span>{formatDateToDDMMMMYYYY(currentTime.toISOString().split("T")[0])}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
