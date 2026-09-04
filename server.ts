@@ -36,7 +36,7 @@ async function startServer() {
     res.json({
       configured: !!process.env.RESEND_API_KEY,
       enabled,
-      fromEmail: process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "Deshal ERP <onboarding@resend.dev>",
+      fromEmail: process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "Deshal ERP <app@portal.deshalbm.com>",
     });
   });
 
@@ -67,7 +67,7 @@ async function startServer() {
         });
       }
 
-      const defaultFrom = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "Deshal ERP <onboarding@resend.dev>";
+      const defaultFrom = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "Deshal ERP <app@portal.deshalbm.com>";
       const finalSubject = subject || `إشعار من نظام ديشال ERP [${type || 'إداري'}]`;
 
       const resendRes = await fetch("https://api.resend.com/emails", {

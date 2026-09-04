@@ -34,7 +34,7 @@ serve(async (req: Request) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? supabaseAnonKey;
     const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
-    const defaultFrom = Deno.env.get("EMAIL_FROM") || "Deshal ERP <onboarding@resend.dev>";
+    const defaultFrom = Deno.env.get("EMAIL_FROM") || "Deshal ERP <app@portal.deshalbm.com>";
     const emailEnabled = (Deno.env.get("EMAIL_ENABLED") ?? "true").toLowerCase() !== "false";
 
     // 1. Verify User Authentication (JWT)
