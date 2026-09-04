@@ -1009,6 +1009,31 @@ export interface Database {
           amount?: number;
         };
       };
+      user_workspace_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          user_email: string | null;
+          config: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          user_email?: string | null;
+          config: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          user_email?: string | null;
+          config?: Json;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       v_work_order_costing: {

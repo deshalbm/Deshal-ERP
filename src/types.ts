@@ -1594,3 +1594,47 @@ export * from './types/requests';
 // DESHAL CORE ACCOUNTING & GENERAL LEDGER SUITE
 // ----------------------------------------------------
 export * from './types/accounting';
+
+// ----------------------------------------------------
+// WORKSPACE CUSTOMIZATION & USER PREFERENCES TYPES
+// ----------------------------------------------------
+export type QuickLauncherId =
+  | 'pos'
+  | 'accounting'
+  | 'spaces'
+  | 'doc-wizard'
+  | 'inventory'
+  | 'purchases'
+  | 'branches'
+  | 'schedules'
+  | 'crm'
+  | 'employees'
+  | 'requests'
+  | 'settings';
+
+export type QuickActionId =
+  | 'RECEIPT'
+  | 'TAX_INVOICE'
+  | 'QUOTATION'
+  | 'PAYMENT'
+  | 'PETTY_CASH';
+
+export type ReportWidgetId =
+  | 'kpi_collections'
+  | 'kpi_payments'
+  | 'kpi_purchases'
+  | 'kpi_inventory'
+  | 'smart_alerts'
+  | 'visual_analytics'
+  | 'recent_vouchers'
+  | 'customer_directory';
+
+export interface WorkspaceConfig {
+  userId?: string;
+  userEmail?: string;
+  quickLaunchers: QuickLauncherId[];
+  quickActions: QuickActionId[];
+  reportWidgets: ReportWidgetId[];
+  updatedAt?: string;
+}
+

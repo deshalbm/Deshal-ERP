@@ -74,6 +74,7 @@ export interface TranslationDictionary {
   tabBranches: string;
   tabSettings: string;
   tabEmployees: string;
+  tabRequests: string;
 
   // Voucher Types
   voucherType: string;
@@ -705,6 +706,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     tabBranches: "الفروع والمناقلات",
     tabSettings: "الإعدادات والهوية",
     tabEmployees: "الموظفون والصلاحيات",
+    tabRequests: "طلبات الموافقات",
 
     // Voucher Types
     voucherType: "نوع السند المالي",
@@ -1335,6 +1337,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     tabBranches: "Branches & Transfers",
     tabSettings: "Settings & Brand",
     tabEmployees: "Staff & Permissions",
+    tabRequests: "Approval Requests",
 
     // Voucher Types
     voucherType: "Voucher Document Type",
