@@ -15,19 +15,24 @@ import {
 
 interface DigitalSignaturePadProps {
   initialSignatureUrl?: string;
+  initialSignature?: string;
   signatoryName?: string;
   signatoryTitle?: string;
   onSaveSignature: (signatureDataUrl: string) => void;
-  onClose: () => void;
+  onClearSignature?: () => void;
+  onClose?: () => void;
 }
 
 export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
   initialSignatureUrl = "",
+  initialSignature = "",
   signatoryName = "",
   signatoryTitle = "",
   onSaveSignature,
+  onClearSignature,
   onClose
 }) => {
+  const effectiveInitialUrl = initialSignatureUrl || initialSignature || "";
   const { language, t, isRTL } = useLanguage();
   const [activeTab, setActiveTab] = useState<"draw" | "upload" | "presets">("draw");
   const [strokeColor, setStrokeColor] = useState<string>("#0f172a");
@@ -35,7 +40,7 @@ export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [history, setHistory] = useState<ImageData[]>([]);
   const [hasDrawn, setHasDrawn] = useState<boolean>(false);
-  const [uploadedPreview, setUploadedPreview] = useState<string>(initialSignatureUrl);
+  const [uploadedPreview, setUploadedPreview] = useState<string>(effectiveInitialUrl);
   const [selectedPreset, setSelectedPreset] = useState<string>("");
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -260,8 +265,11 @@ export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
       finalUrl = selectedPreset;
     }
 
-    if (finalUrl) {
-      onSaveSignature(finalUrl);
+    const resultUrl = finalUrl || uploadedPreview || effectiveInitialUrl;
+    if (resultUrl) {
+      onSaveSignature(resultUrl);
+    }
+    if (onClose) {
       onClose();
     }
   };
@@ -288,7 +296,7 @@ export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => onClose && onClose()}
             className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -567,7 +575,7 @@ export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
         <div className="p-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onClose && onClose()}
             className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
           >
             {t("cancel")}

@@ -110,6 +110,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
   }));
   const [localTheme, setLocalTheme] = useState<DesignTheme>(theme);
   const [activeTab, setActiveTab] = useState<"company" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "email" | "employees" | "kiosk_devices" | "logs" | "demo">("company");
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState<boolean>(false);
   
   // Kiosk Devices Management State
   const safeKioskDevices = kioskDevices || loadKioskDevices();
@@ -897,20 +898,79 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
               </div>
             </div>
 
-            {/* Interactive Digital Signature Studio (Canvas Drawing, Styles, Upload) */}
-            <div className="space-y-4">
+            {/* Interactive Digital Signature Studio Trigger Card */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-700">
+                {t("authorizedSignatureLabel")}
+              </label>
+
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  {localSettings.signatureImageUrl ? (
+                    <div className="p-2 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-center">
+                      <img
+                        src={localSettings.signatureImageUrl}
+                        alt="Signature Preview"
+                        className="h-12 max-w-[180px] object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center shrink-0">
+                      <PenTool className="w-6 h-6" />
+                    </div>
+                  )}
+
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800">
+                      {localSettings.authorizedSignatoryName || "المدير المالي / المخول بالتوقيع"}
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      {localSettings.signatureImageUrl
+                        ? "توقيع رقمي معتمد ومدرج بالسندات والفواتير"
+                        : "لم يتم رسم أو إدراج التوقيع الرقمي بعد"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsSignatureModalOpen(true)}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <PenTool className="w-4 h-4" />
+                    <span>
+                      {localSettings.signatureImageUrl ? "تعديل أو رسم التوقيع" : "رسم/إعداد التوقيع الرقمي"}
+                    </span>
+                  </button>
+
+                  {localSettings.signatureImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => handleSettingsChange("signatureImageUrl", "")}
+                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                      title="حذف التوقيع"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Signature Pad Modal Overlay */}
+            {isSignatureModalOpen && (
               <DigitalSignaturePad
-                initialSignature={localSettings.signatureImageUrl}
+                initialSignatureUrl={localSettings.signatureImageUrl}
                 signatoryName={localSettings.authorizedSignatoryName}
                 signatoryTitle={localSettings.authorizedSignatoryTitle}
                 onSaveSignature={(signatureDataUrl) => {
                   handleSettingsChange("signatureImageUrl", signatureDataUrl);
+                  setIsSignatureModalOpen(false);
                 }}
-                onClearSignature={() => {
-                  handleSettingsChange("signatureImageUrl", "");
-                }}
+                onClose={() => setIsSignatureModalOpen(false)}
               />
-            </div>
+            )}
 
           </div>
         </div>
