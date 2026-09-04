@@ -43,7 +43,14 @@ import {
   Sparkles,
   ExternalLink,
   ChevronRight,
-  Plus
+  Plus,
+  LogIn,
+  LogOut,
+  Car,
+  Coffee,
+  Activity,
+  Filter,
+  ShieldAlert
 } from 'lucide-react';
 import { useLanguage } from '../../utils/LanguageContext';
 import { formatDateToDDMMMMYYYY } from '../../utils/dateFormatter';
@@ -128,6 +135,8 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
     | 'documents'
   >('overview');
 
+  const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'CHECK_IN' | 'CHECK_OUT' | 'MISSION' | 'BREAK'>('ALL');
+
   const currentEmployee =
     employee ||
     (employeeId && employees ? employees.find((e) => e.id === employeeId || ensureValidUuid(e.id) === ensureValidUuid(employeeId)) : employees?.[0]);
@@ -173,6 +182,85 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
   const empRecognitions = (recognitions || []).filter((r) => isEmpMatch(r?.employeeId));
   const empCareer = (careerHistories || []).filter((h) => isEmpMatch(h?.employeeId));
   const empDocs = (documents || []).filter((d) => isEmpMatch(d?.employeeId));
+
+  // ----------------------------------------------------
+  // ATTENDANCE & MOVEMENTS STATISTICAL ANALYSIS ENGINE
+  // ----------------------------------------------------
+  const movementStats = React.useMemo(() => {
+    let checkInCount = 0;
+    let checkOutCount = 0;
+    let missionCount = 0;
+    let breakCount = 0;
+    let emergencyCount = 0;
+
+    const datesMap: Record<string, { checkIns: Date[]; checkOuts: Date[] }> = {};
+
+    empMovements.forEach((m) => {
+      const cat = m.movementCategory;
+      if (cat === 'CHECK_IN') checkInCount++;
+      else if (cat === 'CHECK_OUT') checkOutCount++;
+      else if (cat === 'MISSION_OUT' || cat === 'MISSION_IN') missionCount++;
+      else if (cat === 'BREAK_OUT' || cat === 'BREAK_IN') breakCount++;
+      else if (cat === 'EMERGENCY_OUT' || cat === 'EMERGENCY_IN') emergencyCount++;
+
+      const dateKey = m.date || (m.timestamp ? m.timestamp.split('T')[0] : '');
+      if (dateKey) {
+        if (!datesMap[dateKey]) {
+          datesMap[dateKey] = { checkIns: [], checkOuts: [] };
+        }
+        const timeObj = new Date(m.timestamp || `${m.date}T${m.time}`);
+        if (!isNaN(timeObj.getTime())) {
+          if (cat === 'CHECK_IN' || cat === 'MISSION_IN' || cat === 'BREAK_IN') {
+            datesMap[dateKey].checkIns.push(timeObj);
+          } else {
+            datesMap[dateKey].checkOuts.push(timeObj);
+          }
+        }
+      }
+    });
+
+    let totalMinutes = 0;
+    const uniqueDatesCount = Object.keys(datesMap).length;
+
+    Object.values(datesMap).forEach(({ checkIns, checkOuts }) => {
+      if (checkIns.length > 0) {
+        const earliestIn = new Date(Math.min(...checkIns.map((d) => d.getTime())));
+        let latestOut: Date;
+        if (checkOuts.length > 0) {
+          latestOut = new Date(Math.max(...checkOuts.map((d) => d.getTime())));
+        } else {
+          latestOut = new Date(earliestIn.getTime() + 8 * 3600 * 1000);
+        }
+        const diffMs = latestOut.getTime() - earliestIn.getTime();
+        if (diffMs > 0 && diffMs < 24 * 3600 * 1000) {
+          totalMinutes += Math.round(diffMs / (1000 * 60));
+        }
+      }
+    });
+
+    const totalWorkHours = (totalMinutes / 60).toFixed(1);
+    const avgHoursPerDay = uniqueDatesCount > 0 ? (totalMinutes / (60 * uniqueDatesCount)).toFixed(1) : '0.0';
+
+    return {
+      checkInCount,
+      checkOutCount,
+      missionCount,
+      breakCount,
+      emergencyCount,
+      totalWorkHours,
+      avgHoursPerDay,
+      uniqueDatesCount
+    };
+  }, [empMovements]);
+
+  const filteredEmpMovements = React.useMemo(() => {
+    if (attendanceFilter === 'ALL') return empMovements;
+    if (attendanceFilter === 'CHECK_IN') return empMovements.filter((m) => m.movementCategory === 'CHECK_IN');
+    if (attendanceFilter === 'CHECK_OUT') return empMovements.filter((m) => m.movementCategory === 'CHECK_OUT');
+    if (attendanceFilter === 'MISSION') return empMovements.filter((m) => m.movementCategory === 'MISSION_OUT' || m.movementCategory === 'MISSION_IN');
+    if (attendanceFilter === 'BREAK') return empMovements.filter((m) => m.movementCategory === 'BREAK_OUT' || m.movementCategory === 'BREAK_IN' || m.movementCategory === 'EMERGENCY_OUT' || m.movementCategory === 'EMERGENCY_IN');
+    return empMovements;
+  }, [empMovements, attendanceFilter]);
 
   // Quick calculations
   const totalLeavesTaken = empLeaves
@@ -524,64 +612,217 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
 
           {/* 3. ATTENDANCE & MOVEMENTS */}
           {active360Tab === 'attendance' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-800">سجل حركات الحضور والانصراف عبر الكشك اللوحي ({empMovements.length})</h3>
-                <span className="text-xs text-slate-500 font-mono">رمز الموظف: {currentEmployee.employeeCode}</span>
+            <div className="space-y-5">
+              {/* Statistical Reports Summary Banner */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+                {/* Stat 1: Total Calculated Work Hours */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-900 to-slate-900 text-white border border-indigo-700/50 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-indigo-200 font-medium">ساعات العمل التقديرية</span>
+                    <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black font-mono tracking-tight text-white mb-0.5">
+                    {movementStats.totalWorkHours} <span className="text-xs font-semibold text-indigo-200">ساعة</span>
+                  </div>
+                  <div className="text-[11px] text-indigo-300/80">
+                    معدل {movementStats.avgHoursPerDay} س/يوم عبر {movementStats.uniqueDatesCount} أيام مسجلة
+                  </div>
+                </div>
+
+                {/* Stat 2: Check-Ins / Check-Outs */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-900 to-slate-900 text-white border border-emerald-700/50 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-emerald-200 font-medium">الحضور والإنصراف</span>
+                    <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300">
+                      <LogIn className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black font-mono tracking-tight text-white mb-0.5">
+                    {movementStats.checkInCount} <span className="text-xs font-semibold text-emerald-200">حضور</span> | {movementStats.checkOutCount} <span className="text-xs font-semibold text-emerald-200">انصراف</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-300/80">
+                    مجموع الحضور المباشر عبر الكشك
+                  </div>
+                </div>
+
+                {/* Stat 3: Missions & Temporary Breaks */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-900 text-white border border-blue-700/50 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-blue-200 font-medium">المهمات والاستئذانات</span>
+                    <div className="p-2 rounded-xl bg-blue-500/20 text-blue-300">
+                      <Car className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black font-mono tracking-tight text-white mb-0.5">
+                    {movementStats.missionCount} <span className="text-xs font-semibold text-blue-200">مهمة</span> | {movementStats.breakCount} <span className="text-xs font-semibold text-blue-200">استراحة</span>
+                  </div>
+                  <div className="text-[11px] text-blue-300/80">
+                    الخروج المؤقت لمهمات رسمية أو استئذان
+                  </div>
+                </div>
+
+                {/* Stat 4: Discipline & Emergency Movement Summary */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-900 to-slate-900 text-white border border-purple-700/50 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-purple-200 font-medium">إجمالي الحركات المسجلة</span>
+                    <div className="p-2 rounded-xl bg-purple-500/20 text-purple-300">
+                      <Activity className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black font-mono tracking-tight text-white mb-0.5">
+                    {empMovements.length} <span className="text-xs font-semibold text-purple-200">حركة</span>
+                  </div>
+                  <div className="text-[11px] text-purple-300/80">
+                    {movementStats.emergencyCount > 0 ? `${movementStats.emergencyCount} حركات خروج طوارئ` : "انضباط تام بالحضور اليومي"}
+                  </div>
+                </div>
               </div>
-              {empMovements.length > 0 ? (
+
+              {/* Action & Filter Header */}
+              <div className="flex items-center justify-between flex-wrap gap-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-slate-800">سجل حركات الحضور والانصراف التفصيلي</h3>
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
+                    {filteredEmpMovements.length} سجل
+                  </span>
+                </div>
+
+                {/* Category Quick Filter Pills */}
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs flex-wrap">
+                  <button
+                    onClick={() => setAttendanceFilter('ALL')}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                      attendanceFilter === 'ALL' ? 'bg-white text-indigo-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    الكل ({empMovements.length})
+                  </button>
+                  <button
+                    onClick={() => setAttendanceFilter('CHECK_IN')}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                      attendanceFilter === 'CHECK_IN' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    الحضور ({movementStats.checkInCount})
+                  </button>
+                  <button
+                    onClick={() => setAttendanceFilter('CHECK_OUT')}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                      attendanceFilter === 'CHECK_OUT' ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    الانصراف ({movementStats.checkOutCount})
+                  </button>
+                  <button
+                    onClick={() => setAttendanceFilter('MISSION')}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                      attendanceFilter === 'MISSION' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    المهمات ({movementStats.missionCount})
+                  </button>
+                  <button
+                    onClick={() => setAttendanceFilter('BREAK')}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                      attendanceFilter === 'BREAK' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    الاستئذانات ({movementStats.breakCount + movementStats.emergencyCount})
+                  </button>
+                </div>
+              </div>
+
+              {/* Compact High-Density Table Layout (تقليص الجدول بحسب طلب المستخدم) */}
+              {filteredEmpMovements.length > 0 ? (
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                   <table className="w-full text-right text-xs">
-                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                    <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
                       <tr>
-                        <th className="p-3">التاريخ</th>
-                        <th className="p-3">الوقت</th>
-                        <th className="p-3">نوع الحركة</th>
-                        <th className="p-3">الجهاز والموقع</th>
-                        <th className="p-3">السبب / التفاصيل</th>
-                        <th className="p-3">حالة المزامنة</th>
+                        <th className="py-2.5 px-3">تاريخ ووقت الحركة</th>
+                        <th className="py-2.5 px-3">نوع الحركة</th>
+                        <th className="py-2.5 px-3">الجهاز والفرع</th>
+                        <th className="py-2.5 px-3">السبب / بيان الاستئذان</th>
+                        <th className="py-2.5 px-3">التوثيق والمزامنة</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {empMovements.map((m) => (
-                        <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 font-semibold text-slate-800">{m.date}</td>
-                          <td className="p-3 font-mono font-bold text-indigo-950">{m.time}</td>
-                          <td className="p-3">
-                            <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100">
-                              {m.movementTypeNameAr}
-                            </span>
-                          </td>
-                          <td className="p-3 text-slate-600">
-                            <div className="font-semibold text-slate-800">{m.deviceName}</div>
-                            <div className="text-[10px] text-slate-500">{m.branchName} - {m.location || 'المدخل الرئيسي'}</div>
-                          </td>
-                          <td className="p-3 text-slate-600 max-w-xs truncate">
-                            {m.reason ? (
-                              <span className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 text-[11px]">
-                                {m.reason}
+                      {filteredEmpMovements.map((m) => {
+                        const isCheckIn = m.movementCategory === 'CHECK_IN';
+                        const isCheckOut = m.movementCategory === 'CHECK_OUT';
+                        const isMission = m.movementCategory === 'MISSION_OUT' || m.movementCategory === 'MISSION_IN';
+                        const isBreak = m.movementCategory === 'BREAK_OUT' || m.movementCategory === 'BREAK_IN';
+
+                        return (
+                          <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
+                            {/* Date & Time */}
+                            <td className="py-2 px-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-slate-900">{m.date}</span>
+                                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 font-mono text-[11px] font-bold border border-slate-200">
+                                  {m.time}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Movement Category Badge */}
+                            <td className="py-2 px-3">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                                isCheckIn
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : isCheckOut
+                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                  : isMission
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                  : isBreak
+                                  ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                  : 'bg-purple-50 text-purple-700 border-purple-200'
+                              }`}>
+                                {isCheckIn && <LogIn className="w-3 h-3 text-emerald-600" />}
+                                {isCheckOut && <LogOut className="w-3 h-3 text-rose-600" />}
+                                {isMission && <Car className="w-3 h-3 text-blue-600" />}
+                                {isBreak && <Coffee className="w-3 h-3 text-amber-600" />}
+                                <span>{m.movementTypeNameAr}</span>
                               </span>
-                            ) : (
-                              <span className="text-slate-400 text-[11px]">—</span>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <span className="text-emerald-600 font-medium flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              مؤكد ومزامن
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+
+                            {/* Device & Location */}
+                            <td className="py-2 px-3">
+                              <div className="font-semibold text-slate-800 text-[11px]">{m.deviceName}</div>
+                              <div className="text-[10px] text-slate-500">{m.branchName} • {m.location || 'المدخل الرئيسي'}</div>
+                            </td>
+
+                            {/* Reason / Details */}
+                            <td className="py-2 px-3 max-w-xs truncate">
+                              {m.reason ? (
+                                <span className="inline-block px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200/80 text-[11px] font-medium truncate max-w-[200px]" title={m.reason}>
+                                  {m.reason}
+                                </span>
+                              ) : (
+                                <span className="text-slate-300 text-[11px]">—</span>
+                              )}
+                            </td>
+
+                            {/* Sync & Verification */}
+                            <td className="py-2 px-3">
+                              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                موثق ومزامن
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               ) : (
                 <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 text-center space-y-2">
                   <Clock className="w-10 h-10 text-slate-400 mx-auto" />
-                  <div className="text-sm font-bold text-slate-700">لا توجد حركات مسجلة لهذا الموظف</div>
+                  <div className="text-sm font-bold text-slate-700">لا توجد حركات مسجلة تفي بالتصفية المحددة</div>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    لم يتم تسجيل أي حضور، انصراف، استراحة أو مهمة عمل خارجية لهذا الموظف عبر كشك الحضور اللوحي حتى الآن.
+                    لم يتم العثور على حركات حضور أو انصراف مطابقة لخيارات التصفية المحددة لملف هذا الموظف.
                   </p>
                 </div>
               )}
