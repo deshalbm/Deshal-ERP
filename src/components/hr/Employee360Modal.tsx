@@ -174,11 +174,11 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
   const activeDisciplinaryCount = empDisciplinary.filter((d) => d?.status === 'APPROVED' || d?.status === 'EXECUTED').length;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 animate-fadeIn">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden text-slate-800">
         
         {/* TOP HEADER */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 relative flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800">
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 relative flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-5">
             <div className="relative">
               <img
@@ -235,14 +235,14 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={() => window.print()}
-              className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               طباعة التقرير الشامل
             </button>
             <button
               onClick={onClose}
-              className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors"
+              className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -250,7 +250,7 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
         </div>
 
         {/* 360 NAVIGATION BAR */}
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-2 overflow-x-auto flex items-center gap-2 no-scrollbar">
+        <div className="bg-slate-50 border-b border-slate-200 px-6 py-2 overflow-x-auto flex items-center gap-2 no-scrollbar shrink-0">
           {[
             { id: 'overview', label: 'نظرة عامة 360°', icon: User },
             { id: 'contracts', label: `عقود العمل (${empContracts.length})`, icon: FileText },

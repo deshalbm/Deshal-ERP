@@ -928,9 +928,9 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
       {/* MODAL 1: CREATE / EDIT PURCHASE INVOICE */}
       {/* ======================================================= */}
       {isPurchaseModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-8">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-indigo-100 text-indigo-700 rounded-xl">
                   <ShoppingCart className="w-5 h-5" />
@@ -947,7 +947,8 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSavePurchase} className="p-6 space-y-6 text-xs">
+            <form onSubmit={handleSavePurchase} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
               
               {/* Header Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
@@ -1296,10 +1297,10 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
                     <span className="font-mono text-indigo-700 text-base">{formTotalAmount.toFixed(3)} {currency}</span>
                   </div>
                 </div>
-
+              </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsPurchaseModalOpen(false)}
@@ -1323,9 +1324,9 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
       {/* MODAL 2: PREVIEW & PRINT PURCHASE INVOICE */}
       {/* ======================================================= */}
       {isPreviewModalOpen && previewPurchase && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-8">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200 shrink-0">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-600" />
                 <h3 className="text-base font-bold text-slate-900">
@@ -1349,7 +1350,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
               </div>
             </div>
 
-            <div className="p-8 space-y-6 text-slate-800" id="printable-purchase-invoice">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 text-slate-800" id="printable-purchase-invoice">
               {/* Header */}
               <div className="flex items-start justify-between border-b border-slate-200 pb-6">
                 <div>
@@ -1470,9 +1471,9 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
       {/* MODAL 3: SUPPLIERS DIRECTORY */}
       {/* ======================================================= */}
       {isSuppliersModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-8">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200 shrink-0">
               <div className="flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-indigo-600" />
                 <h3 className="text-base font-bold text-slate-900">دليل الموردين المعتمدين</h3>
@@ -1494,7 +1495,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
               </div>
             </div>
 
-            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suppliers.map((sup) => (
                   <div key={sup.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
@@ -1514,7 +1515,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-end px-6 py-4 bg-slate-50 border-t border-slate-200">
+            <div className="flex items-center justify-end px-6 py-4 bg-slate-50 border-t border-slate-200 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsSuppliersModalOpen(false)}
@@ -1531,9 +1532,9 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
       {/* MODAL 4: ADD NEW SUPPLIER */}
       {/* ======================================================= */}
       {isNewSupplierModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white w-full max-w-md max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200 shrink-0">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-indigo-600" />
                 <h3 className="text-base font-bold text-slate-900">إضافة مورد جديد</h3>
@@ -1546,65 +1547,67 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveNewSupplier} className="p-6 space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">اسم شركة المورد *</label>
-                <input
-                  type="text"
-                  required
-                  value={newSupplierData.name || ""}
-                  onChange={(e) => setNewSupplierData({ ...newSupplierData, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white"
-                  placeholder="مثال: شركة التوريدات التقنية المحدودة"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">الشخص المسؤول / جهة الاتصال</label>
-                <input
-                  type="text"
-                  value={newSupplierData.contactPerson || ""}
-                  onChange={(e) => setNewSupplierData({ ...newSupplierData, contactPerson: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white"
-                  placeholder="المهندس / مدير المبيعات"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSaveNewSupplier} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-3 text-xs">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">رقم الهاتف</label>
+                  <label className="block font-bold text-slate-700 mb-1">اسم شركة المورد *</label>
                   <input
                     type="text"
-                    value={newSupplierData.phone || ""}
-                    onChange={(e) => setNewSupplierData({ ...newSupplierData, phone: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 focus:bg-white"
-                    placeholder="+968..."
+                    required
+                    value={newSupplierData.name || ""}
+                    onChange={(e) => setNewSupplierData({ ...newSupplierData, name: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white"
+                    placeholder="مثال: شركة التوريدات التقنية المحدودة"
                   />
                 </div>
+
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">البريد الإلكتروني</label>
+                  <label className="block font-bold text-slate-700 mb-1">الشخص المسؤول / جهة الاتصال</label>
                   <input
-                    type="email"
-                    value={newSupplierData.email || ""}
-                    onChange={(e) => setNewSupplierData({ ...newSupplierData, email: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 focus:bg-white"
-                    placeholder="sales@..."
+                    type="text"
+                    value={newSupplierData.contactPerson || ""}
+                    onChange={(e) => setNewSupplierData({ ...newSupplierData, contactPerson: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white"
+                    placeholder="المهندس / مدير المبيعات"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">رقم الهاتف</label>
+                    <input
+                      type="text"
+                      value={newSupplierData.phone || ""}
+                      onChange={(e) => setNewSupplierData({ ...newSupplierData, phone: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 focus:bg-white"
+                      placeholder="+968..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">البريد الإلكتروني</label>
+                    <input
+                      type="email"
+                      value={newSupplierData.email || ""}
+                      onChange={(e) => setNewSupplierData({ ...newSupplierData, email: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 focus:bg-white"
+                      placeholder="sales@..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">العنوان / المدينة</label>
+                  <input
+                    type="text"
+                    value={newSupplierData.address || ""}
+                    onChange={(e) => setNewSupplierData({ ...newSupplierData, address: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white"
+                    placeholder="المنطقة الصناعية - صحار / مسقط"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">العنوان / المدينة</label>
-                <input
-                  type="text"
-                  value={newSupplierData.address || ""}
-                  onChange={(e) => setNewSupplierData({ ...newSupplierData, address: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white"
-                  placeholder="المنطقة الصناعية - صحار / مسقط"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-200 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsNewSupplierModalOpen(false)}

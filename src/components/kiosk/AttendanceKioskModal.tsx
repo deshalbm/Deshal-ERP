@@ -1210,7 +1210,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
       {/* 1. ADMIN AUTHENTICATION DIALOG (TRIGGERED BY 7 TAPS ON LOGO) */}
       {/* ========================================================================= */}
       {isAdminAuthDialogOpen && (
-        <div className="fixed inset-0 z-[120] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[120] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="w-full max-w-md bg-slate-900 border border-slate-700/80 p-6 rounded-3xl shadow-2xl text-right animate-scaleUp">
             <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2.5 text-amber-400 font-bold text-lg">
@@ -1314,8 +1314,8 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
       {/* 2. KIOSK ADMINISTRATION SCREEN (شاشة إدارة الكشك اللوحي) */}
       {/* ========================================================================= */}
       {isKioskAdminPanelOpen && (
-        <div className="fixed inset-0 z-[130] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-2xl bg-slate-900 border border-slate-700 p-6 sm:p-8 rounded-3xl shadow-2xl text-right animate-scaleUp my-8">
+        <div className="fixed inset-0 z-[130] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
+          <div className="w-full max-w-2xl max-h-[90vh] bg-slate-900 border border-slate-700 p-6 sm:p-8 rounded-3xl shadow-2xl text-right animate-scaleUp overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
               <div className="flex items-center gap-3">
@@ -1480,7 +1480,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
       {/* 3. EXIT CONFIRMATION MODAL (PRESERVES DEVICE ID & TOKEN) */}
       {/* ========================================================================= */}
       {isExitConfirmModalOpen && (
-        <div className="fixed inset-0 z-[140] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[140] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="w-full max-w-md bg-slate-900 border border-rose-500/40 p-6 rounded-3xl shadow-2xl text-right animate-scaleUp">
             <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 mx-auto mb-4">
               <AlertTriangle className="w-8 h-8" />

@@ -143,16 +143,16 @@ export const ERPOnboardingModal: React.FC<ERPOnboardingModalProps> = ({
   return (
     <div
       id="onboarding-modal-backdrop"
-      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
         id="onboarding-modal-container"
-        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
+        className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Banner */}
-        <div className="p-6 bg-linear-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white relative">
+        <div className="p-6 bg-linear-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white relative shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-bold text-indigo-200 border border-white/10">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -191,7 +191,7 @@ export const ERPOnboardingModal: React.FC<ERPOnboardingModalProps> = ({
         </div>
 
         {/* Step Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Step Pill Navigator */}
           <div className="grid grid-cols-6 gap-1.5">
             {steps.map((st, idx) => {
@@ -265,7 +265,7 @@ export const ERPOnboardingModal: React.FC<ERPOnboardingModalProps> = ({
         </div>
 
         {/* Footer Navigation */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
           <button
             onClick={handlePrev}
             disabled={currentStepIdx === 0}

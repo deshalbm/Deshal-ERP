@@ -1153,33 +1153,35 @@ export const CRMView: React.FC<CRMViewProps> = ({
       {/* 4. MODAL: Add / Edit Customer */}
       {/* ========================================================================= */}
       {isAddEditModalOpen && editingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/80 backdrop-blur-xs animate-in fade-in duration-200">
           <div
-            className="bg-white text-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-slate-200 relative"
+            className="bg-white text-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 relative"
             dir="rtl"
           >
-            <button
-              onClick={() => setIsAddEditModalOpen(false)}
-              className="absolute top-4 left-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center space-x-3 space-x-reverse mb-6">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md">
-                <Building2 className="w-5 h-5" />
+            <div className="p-6 pb-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shrink-0">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    {editingCustomer.id && customers.some((c) => c.id === editingCustomer.id)
+                      ? "تعديل بيانات العميل / المستأجر"
+                      : "إضافة عميل / مستأجر جديد"}
+                  </h2>
+                  <p className="text-xs text-slate-500">سجل وتوثيق بيانات المنشأة لإدارة العقود، الباقات والربط التلقائي بالسندات</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">
-                  {editingCustomer.id && customers.some((c) => c.id === editingCustomer.id)
-                    ? "تعديل بيانات العميل / المستأجر"
-                    : "إضافة عميل / مستأجر جديد"}
-                </h2>
-                <p className="text-xs text-slate-500">سجل وتوثيق بيانات المنشأة لإدارة العقود، الباقات والربط التلقائي بالسندات</p>
-              </div>
+              <button
+                onClick={() => setIsAddEditModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleSaveModal} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveModal} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
               
               {/* Row 1: Name & Contact Person */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1344,8 +1346,10 @@ export const CRMView: React.FC<CRMViewProps> = ({
                 />
               </div>
 
+              </div>
+
               {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 p-4 bg-slate-50 border-t border-slate-100 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsAddEditModalOpen(false)}

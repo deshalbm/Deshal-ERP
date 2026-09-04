@@ -279,11 +279,11 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl border border-slate-200 space-y-4.5 max-h-[92vh] overflow-y-auto custom-scrollbar">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
               <Building2 className="w-5 h-5" />
@@ -298,18 +298,24 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                {language === "ar" ? "كشف فوري للتعارضات، تسعير دقيق، وإصدار تلقائي لسندات القبض" : "Instant conflict checks, real-time pricing & auto voucher generation"}
+                {language === "ar"
+                  ? "تأكيد فوري وتحديث ألي لجدول المواعيد والمستحقات المالية"
+                  : "Instant reservation with auto schedule & billing check"}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1.5 rounded-full hover:bg-slate-200/60 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4.5 text-xs sm:text-sm">
+        
         {/* --- SMART CONFLICT ALERT & ALTERNATIVES BANNER --- */}
         {conflictDetection.hasConflict && conflictDetection.conflictingBooking && (
           <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-amber-500/10 border border-amber-300 rounded-2xl p-4 space-y-3 animate-in fade-in">
@@ -396,8 +402,6 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
             )}
           </div>
         )}
-
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           
           {/* Space Selection Card */}
           <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-3.5 space-y-2">
@@ -655,8 +659,10 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
             </div>
           </div>
 
+          </div>
+
           {/* Footer Submit Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2.5 px-6 py-4 bg-slate-50 border-t border-slate-100 shrink-0">
             <button
               type="button"
               onClick={onClose}

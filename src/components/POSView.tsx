@@ -1563,7 +1563,7 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 1. Fast Payment Modal (نافذة إتمام الدفع والكاشير)                         */}
       {/* ========================================================================= */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
             
             {/* Modal Header */}
@@ -1754,7 +1754,7 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 2. Cashier Shift & Cash Drawer Modal (إدارة الوردية والصندوق)             */}
       {/* ========================================================================= */}
       {isShiftModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -1918,7 +1918,7 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 3. Thermal Receipt Print & Preview Modal (إيصال الكاشير الحراري 80mm)    */}
       {/* ========================================================================= */}
       {completedOrderForReceipt && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 max-h-[95vh] flex flex-col">
             
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
@@ -2082,7 +2082,7 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 4. Custom Item Quick Entry Modal                                          */}
       {/* ========================================================================= */}
       {isCustomItemModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white">{t("customItem")}</h3>
@@ -2166,7 +2166,7 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 6. Quick New Customer Creation Modal                                      */}
       {/* ========================================================================= */}
       {isNewCustomerModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -2236,7 +2236,7 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 7. Held Orders Switcher Modal                                             */}
       {/* ========================================================================= */}
       {isHeldCartsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -2296,7 +2296,7 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 8. POS Sales History & Refunds Archive Modal                              */}
       {/* ========================================================================= */}
       {isHistoryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
             
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
@@ -2387,7 +2387,7 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 9. Keyboard Shortcuts Guide Modal                                         */}
       {/* ========================================================================= */}
       {isShortcutsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">

@@ -1111,10 +1111,10 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
       {/* MODAL: ADD / EDIT BRANCH */}
       {/* ========================================================================= */}
       {isBranchModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] shadow-2xl border border-slate-100 flex flex-col overflow-hidden">
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
                   <Building2 className="w-6 h-6" />
@@ -1136,157 +1136,158 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveBranch} className="space-y-4 text-xs">
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="font-bold text-slate-700">اسم الفرع (بالعربية) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="مثال: فرع مسقط - غلا التجارية"
-                    value={branchFormData.name}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, name: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">كود الفرع *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="BR-MCT-02"
-                    value={branchFormData.code}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, code: e.target.value.toUpperCase() })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">الاسم بالإنجليزية</label>
-                  <input
-                    type="text"
-                    placeholder="Muscat Branch - Ghala"
-                    value={branchFormData.nameEn}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, nameEn: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">المدينة / المحافظة</label>
-                  <input
-                    type="text"
-                    placeholder="مثال: مسقط، صحار، صلالة، لوى"
-                    value={branchFormData.city}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, city: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">هاتف الفرع</label>
-                  <input
-                    type="text"
-                    placeholder="+968 91234567"
-                    value={branchFormData.phone}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, phone: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">البريد الإلكتروني للفرع</label>
-                  <input
-                    type="email"
-                    placeholder="branch@digititech.com"
-                    value={branchFormData.email}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, email: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">اسم المدير المسؤول</label>
-                  <input
-                    type="text"
-                    placeholder="أ. فيصل البلوشي"
-                    value={branchFormData.managerName}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, managerName: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">المستودع الافتراضي التابع للفرع</label>
-                  <input
-                    type="text"
-                    placeholder="مستودع مسقط الإقليمي"
-                    value={branchFormData.defaultWarehouse}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, defaultWarehouse: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">العنوان التفصيلي</label>
-                <input
-                  type="text"
-                  placeholder="شارع المعارض - أبراج غلا التجارية - مسقط"
-                  value={branchFormData.address}
-                  onChange={(e) => setBranchFormData({ ...branchFormData, address: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center pt-2">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">اللون المميز للفرع</label>
-                  <div className="flex items-center gap-2">
+            <form onSubmit={handleSaveBranch} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2 space-y-1">
+                    <label className="font-bold text-slate-700">اسم الفرع (بالعربية) *</label>
                     <input
-                      type="color"
-                      value={branchFormData.color || "#4f46e5"}
-                      onChange={(e) => setBranchFormData({ ...branchFormData, color: e.target.value })}
-                      className="w-10 h-10 rounded-xl cursor-pointer border border-slate-200"
+                      type="text"
+                      required
+                      placeholder="مثال: فرع مسقط - غلا التجارية"
+                      value={branchFormData.name}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, name: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
-                    <span className="font-mono text-slate-600 text-[11px]">{branchFormData.color}</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">كود الفرع *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="BR-MCT-02"
+                      value={branchFormData.code}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, code: e.target.value.toUpperCase() })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">الاسم بالإنجليزية</label>
+                    <input
+                      type="text"
+                      placeholder="Muscat Branch - Ghala"
+                      value={branchFormData.nameEn}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, nameEn: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">المدينة / المحافظة</label>
+                    <input
+                      type="text"
+                      placeholder="مثال: مسقط، صحار، صلالة، لوى"
+                      value={branchFormData.city}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, city: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">هاتف الفرع</label>
+                    <input
+                      type="text"
+                      placeholder="+968 91234567"
+                      value={branchFormData.phone}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, phone: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">البريد الإلكتروني للفرع</label>
+                    <input
+                      type="email"
+                      placeholder="branch@digititech.com"
+                      value={branchFormData.email}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, email: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">اسم المدير المسؤول</label>
+                    <input
+                      type="text"
+                      placeholder="أ. فيصل البلوشي"
+                      value={branchFormData.managerName}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, managerName: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">المستودع الافتراضي التابع للفرع</label>
+                    <input
+                      type="text"
+                      placeholder="مستودع مسقط الإقليمي"
+                      value={branchFormData.defaultWarehouse}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, defaultWarehouse: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">حالة الفرع</label>
-                  <select
-                    value={branchFormData.status}
-                    onChange={(e) => setBranchFormData({ ...branchFormData, status: e.target.value as any })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold focus:outline-none"
-                  >
-                    <option value="ACTIVE">نشط ويعمل</option>
-                    <option value="INACTIVE">معطل مؤقتاً</option>
-                  </select>
+                  <label className="font-bold text-slate-700">العنوان التفصيلي</label>
+                  <input
+                    type="text"
+                    placeholder="شارع المعارض - أبراج غلا التجارية - مسقط"
+                    value={branchFormData.address}
+                    onChange={(e) => setBranchFormData({ ...branchFormData, address: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
                 </div>
 
-                <div className="pt-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(branchFormData.isMain)}
-                      onChange={(e) => setBranchFormData({ ...branchFormData, isMain: e.target.checked })}
-                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                    />
-                    <span className="font-bold text-slate-800">تعيين كمقر رئيسي (HQ)</span>
-                  </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center pt-2">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">اللون المميز للفرع</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={branchFormData.color || "#4f46e5"}
+                        onChange={(e) => setBranchFormData({ ...branchFormData, color: e.target.value })}
+                        className="w-10 h-10 rounded-xl cursor-pointer border border-slate-200"
+                      />
+                      <span className="font-mono text-slate-600 text-[11px]">{branchFormData.color}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">حالة الفرع</label>
+                    <select
+                      value={branchFormData.status}
+                      onChange={(e) => setBranchFormData({ ...branchFormData, status: e.target.value as any })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold focus:outline-none"
+                    >
+                      <option value="ACTIVE">نشط ويعمل</option>
+                      <option value="INACTIVE">معطل مؤقتاً</option>
+                    </select>
+                  </div>
+
+                  <div className="pt-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(branchFormData.isMain)}
+                        onChange={(e) => setBranchFormData({ ...branchFormData, isMain: e.target.checked })}
+                        className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                      />
+                      <span className="font-bold text-slate-800">تعيين كمقر رئيسي (HQ)</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-5 border-t border-slate-100">
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsBranchModalOpen(false)}
@@ -1311,10 +1312,10 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
       {/* MODAL: INTER-BRANCH STOCK TRANSFER */}
       {/* ========================================================================= */}
       {isTransferModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-6">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] shadow-2xl border border-slate-100 flex flex-col overflow-hidden">
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl">
                   <ArrowRightLeft className="w-6 h-6" />
@@ -1332,117 +1333,118 @@ export const BranchesView: React.FC<BranchesViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleExecuteTransfer} className="space-y-4 text-xs">
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">رقم مستند التحويل *</label>
-                  <input
-                    type="text"
-                    required
-                    value={transferFormData.transferNumber}
-                    onChange={(e) => setTransferFormData({ ...transferFormData, transferNumber: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold focus:bg-white focus:outline-none"
-                  />
+            <form onSubmit={handleExecuteTransfer} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">رقم مستند التحويل *</label>
+                    <input
+                      type="text"
+                      required
+                      value={transferFormData.transferNumber}
+                      onChange={(e) => setTransferFormData({ ...transferFormData, transferNumber: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold focus:bg-white focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">تاريخ التحويل *</label>
+                    <input
+                      type="date"
+                      required
+                      value={transferFormData.date}
+                      onChange={(e) => setTransferFormData({ ...transferFormData, date: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <div className="space-y-1">
+                    <label className="font-bold text-indigo-900 block">من فرع (المصدر) *</label>
+                    <select
+                      value={transferFormData.fromBranchId}
+                      onChange={(e) => setTransferFormData({ ...transferFormData, fromBranchId: e.target.value })}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-semibold focus:outline-none"
+                    >
+                      {branches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name} ({b.city})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-emerald-900 block">إلى فرع (الوجهة) *</label>
+                    <select
+                      value={transferFormData.toBranchId}
+                      onChange={(e) => setTransferFormData({ ...transferFormData, toBranchId: e.target.value })}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-semibold focus:outline-none"
+                    >
+                      {branches
+                        .filter((b) => b.id !== transferFormData.fromBranchId)
+                        .map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name} ({b.city})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">تاريخ التحويل *</label>
-                  <input
-                    type="date"
-                    required
-                    value={transferFormData.date}
-                    onChange={(e) => setTransferFormData({ ...transferFormData, date: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono focus:bg-white focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <div className="space-y-1">
-                  <label className="font-bold text-indigo-900 block">من فرع (المصدر) *</label>
+                  <label className="font-bold text-slate-700">اختر الصنف المراد تحويله *</label>
                   <select
-                    value={transferFormData.fromBranchId}
-                    onChange={(e) => setTransferFormData({ ...transferFormData, fromBranchId: e.target.value })}
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-semibold focus:outline-none"
+                    value={transferFormData.itemId}
+                    onChange={(e) => setTransferFormData({ ...transferFormData, itemId: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold focus:bg-white focus:outline-none"
                   >
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name} ({b.city})
+                    {inventory.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        [{item.sku}] {item.name} - متوفر ({item.quantity} {item.unit}) في {item.warehouse}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-emerald-900 block">إلى فرع (الوجهة) *</label>
-                  <select
-                    value={transferFormData.toBranchId}
-                    onChange={(e) => setTransferFormData({ ...transferFormData, toBranchId: e.target.value })}
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-semibold focus:outline-none"
-                  >
-                    {branches
-                      .filter((b) => b.id !== transferFormData.fromBranchId)
-                      .map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {b.name} ({b.city})
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">الكمية المحولة *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={transferFormData.quantity}
+                      onChange={(e) => setTransferFormData({ ...transferFormData, quantity: Number(e.target.value) })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-sm focus:bg-white focus:outline-none"
+                    />
+                  </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">اختر الصنف المراد تحويله *</label>
-                <select
-                  value={transferFormData.itemId}
-                  onChange={(e) => setTransferFormData({ ...transferFormData, itemId: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold focus:bg-white focus:outline-none"
-                >
-                  {inventory.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      [{item.sku}] {item.name} - متوفر ({item.quantity} {item.unit}) في {item.warehouse}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">الكمية المحولة *</label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={transferFormData.quantity}
-                    onChange={(e) => setTransferFormData({ ...transferFormData, quantity: Number(e.target.value) })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-sm focus:bg-white focus:outline-none"
-                  />
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">المسؤول عن التحويل</label>
+                    <input
+                      type="text"
+                      value={transferFormData.transferByName}
+                      onChange={(e) => setTransferFormData({ ...transferFormData, transferByName: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">المسؤول عن التحويل</label>
-                  <input
-                    type="text"
-                    value={transferFormData.transferByName}
-                    onChange={(e) => setTransferFormData({ ...transferFormData, transferByName: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none"
+                  <label className="font-bold text-slate-700">ملاحظات التحويل والمناقلة</label>
+                  <textarea
+                    rows={2}
+                    placeholder="سبب التحويل أو اسم المشروع / الطلبية..."
+                    value={transferFormData.notes}
+                    onChange={(e) => setTransferFormData({ ...transferFormData, notes: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none resize-none"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">ملاحظات التحويل والمناقلة</label>
-                <textarea
-                  rows={2}
-                  placeholder="سبب التحويل أو اسم المشروع / الطلبية..."
-                  value={transferFormData.notes}
-                  onChange={(e) => setTransferFormData({ ...transferFormData, notes: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none resize-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsTransferModalOpen(false)}

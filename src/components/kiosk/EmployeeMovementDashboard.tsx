@@ -1409,7 +1409,7 @@ export const EmployeeMovementDashboard: React.FC<EmployeeMovementDashboardProps>
       {/* MODAL: SET / RESET EMPLOYEE PIN (تعيين وتشفير PIN الموظف) */}
       {/* ========================================================================= */}
       {isPinModalOpen && targetPinEmployee && (
-        <div className="fixed inset-0 z-[110] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-right animate-scaleUp">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
               <div className="flex items-center gap-2">
@@ -1501,7 +1501,7 @@ export const EmployeeMovementDashboard: React.FC<EmployeeMovementDashboardProps>
       {/* MODAL: REQUEST ATTENDANCE ADJUSTMENT (طلب تصحيح حركة) */}
       {/* ========================================================================= */}
       {isAdjustmentModalOpen && (
-        <div className="fixed inset-0 z-[110] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
           <div className="w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-right animate-scaleUp">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
               <div className="flex items-center gap-2">
@@ -1616,7 +1616,7 @@ export const EmployeeMovementDashboard: React.FC<EmployeeMovementDashboardProps>
       {/* MODAL: ADD / EDIT KIOSK DEVICE (تسجيل جهاز كشك لوحي جديد) */}
       {/* ========================================================================= */}
       {isDeviceModalOpen && (
-        <div className="fixed inset-0 z-[110] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-right animate-scaleUp">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
               <div className="flex items-center gap-2">
