@@ -51,6 +51,7 @@ import { sendWelcomeCredentialsEmail } from "../lib/email/resendService";
 import * as hrSvc from "../lib/supabase/hrService";
 import { isSupabaseConfigured } from "../lib/supabase/client";
 import { enqueueOfflineMutation } from "../lib/supabase/syncService";
+import { uploadImageToStorage } from "../lib/supabase/storageService";
 import { EmployeeMovementDashboard } from "./kiosk/EmployeeMovementDashboard";
 import { AttendanceKioskModal } from "./kiosk/AttendanceKioskModal";
 import {
@@ -60,6 +61,10 @@ import {
   Shield,
   ShieldCheck,
   Building2,
+  Camera,
+  Upload,
+  User,
+  RefreshCw,
   Phone,
   Mail,
   CreditCard,
@@ -107,7 +112,6 @@ import {
   Wallet,
   AlertTriangle,
   Tablet,
-  RefreshCw,
   Hash
 } from "lucide-react";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
@@ -542,9 +546,39 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
     kioskPin: ""
   });
 
-  // State for Kiosk PIN management in Add / Edit Staff Modal
+  // State for Kiosk PIN & Avatar Upload management in Add / Edit Staff Modal
   const [existingPinRecord, setExistingPinRecord] = useState<EmployeePinRecord | null>(null);
   const [showPinPlain, setShowPinPlain] = useState<boolean>(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
+
+  const handleAvatarFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert(language === "ar" ? "حجم الصورة يجب ألا يتجاوز 5 ميجابايت" : "Image size must not exceed 5MB");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        if (base64) {
+          const filePath = `avatars/emp_${formData.employeeCode || Date.now()}_${Date.now()}.png`;
+          const res = await uploadImageToStorage("company_assets", filePath, base64);
+          const finalUrl = res.publicUrl || base64;
+          setFormData((prev) => ({ ...prev, avatarUrl: finalUrl }));
+        }
+        setIsUploadingAvatar(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+      setIsUploadingAvatar(false);
+    }
+  };
 
   // Payroll State
   const [selectedPayrollMonth, setSelectedPayrollMonth] = useState<string>("2026-08");
@@ -2836,7 +2870,79 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
             <form onSubmit={handleSaveEmployee} className="flex flex-col min-h-0 flex-1 overflow-hidden">
               {/* Scrollable Form Body */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                
+                {/* Profile Photo / Avatar Picker Section */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-indigo-600" />
+                      {language === "ar" ? "الصورة الشخصية والرمز التعبيري" : "Profile Picture & Avatar"}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Supabase Storage</span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    {/* Preview & File Upload Input */}
+                    <div className="relative group shrink-0">
+                      <img
+                        src={formData.avatarUrl || PRESET_AVATARS[0]}
+                        alt="Avatar Preview"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-indigo-500/50 shadow-xs"
+                      />
+                      <label className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <Camera className="w-5 h-5" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      {isUploadingAvatar && (
+                        <div className="absolute inset-0 bg-slate-900/80 rounded-full flex items-center justify-center text-white">
+                          <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 space-y-2 text-center sm:text-start rtl:sm:text-end">
+                      <div className="flex items-center gap-2 justify-center sm:justify-start rtl:sm:justify-end">
+                        <label className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{language === "ar" ? "رفع صورة شخصية" : "Upload Photo"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-[11px] text-slate-500">
+                          {language === "ar" ? "تُحفظ الصورة في قاعدة البيانات وتُرفع على Supabase Storage" : "Synced to DB & Supabase Storage"}
+                        </span>
+                      </div>
+
+                      {/* Presets Grid */}
+                      <div className="flex items-center gap-2 pt-1 flex-wrap justify-center sm:justify-start rtl:sm:justify-end">
+                        <span className="text-[10px] text-slate-400 font-bold">{language === "ar" ? "أو اختر رمزاً:" : "Presets:"}</span>
+                        {PRESET_AVATARS.map((url, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, avatarUrl: url })}
+                            className={`w-7 h-7 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
+                              formData.avatarUrl === url ? "border-indigo-600 scale-110 shadow-xs" : "border-slate-300 hover:border-slate-400"
+                            }`}
+                          >
+                            <img src={url} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الاسم الكامل (عربي) *" : "Full Name (Arabic) *"}</label>

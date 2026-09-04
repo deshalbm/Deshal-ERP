@@ -17,7 +17,10 @@ import {
   ShieldCheck,
   RefreshCw,
   QrCode,
-  Key
+  Key,
+  Camera,
+  Upload,
+  User
 } from "lucide-react";
 import {
   AuthSession,
@@ -31,8 +34,11 @@ import {
   loadActiveSessions,
   revokeSession,
   revokeAllOtherSessions,
-  loadUserAccounts
+  loadUserAccounts,
+  updateUserAvatar
 } from "../../utils/authManager";
+import { uploadImageToStorage } from "../../lib/supabase/storageService";
+import { upsertEmployee } from "../../lib/supabase/employeeService";
 import { useLanguage } from "../../utils/LanguageContext";
 
 interface SecuritySettingsModalProps {
@@ -43,7 +49,7 @@ interface SecuritySettingsModalProps {
   onAuditLog?: (action: any, module: any, entityId: string, entityName: string, descAr: string, descEn: string, details?: string) => void;
 }
 
-type SecurityTab = "password" | "two_factor" | "pin" | "sessions";
+type SecurityTab = "password" | "two_factor" | "pin" | "sessions" | "avatar";
 
 export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
   session,
@@ -82,6 +88,93 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
   // Active Sessions
   const [sessionsList, setSessionsList] = useState<ActiveSession[]>(() => loadActiveSessions());
   const [sessionActionMessage, setSessionActionMessage] = useState<string>("");
+
+  // Profile Picture (Avatar) States
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>(
+    session.user.avatarUrl || session.employee?.avatarUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+  );
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
+  const [avatarSuccess, setAvatarSuccess] = useState<string>("");
+  const [avatarError, setAvatarError] = useState<string>("");
+
+  const presetAvatars = [
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80"
+  ];
+
+  const handleSelectAvatarUrl = async (url: string) => {
+    setAvatarError("");
+    setAvatarSuccess("");
+    setIsUploadingAvatar(true);
+
+    try {
+      let finalUrl = url;
+      if (url.startsWith("data:")) {
+        const filePath = `avatars/user_${session.user.id}_${Date.now()}.png`;
+        const res = await uploadImageToStorage("company_assets", filePath, url);
+        if (res.publicUrl) {
+          finalUrl = res.publicUrl;
+        }
+      }
+
+      setCurrentAvatarUrl(finalUrl);
+      updateUserAvatar(session.user.id, finalUrl);
+
+      if (session.employee) {
+        const updatedEmp = { ...session.employee, avatarUrl: finalUrl };
+        await upsertEmployee(updatedEmp, session.employee.branchId || "company-1");
+      }
+
+      const updatedUser = { ...session.user, avatarUrl: finalUrl };
+      const updatedEmp = session.employee ? { ...session.employee, avatarUrl: finalUrl } : session.employee;
+      onSessionUpdated({ ...session, user: updatedUser, employee: updatedEmp });
+
+      setAvatarSuccess(
+        language === "ar"
+          ? "تم تحديث الصورة الشخصية بنجاح وحفظها في قاعدة البيانات والمخزن السحابي"
+          : "Profile picture updated successfully and synced to Storage & DB"
+      );
+
+      if (onAuditLog) {
+        onAuditLog(
+          "UPDATE",
+          "PROFILE",
+          session.user.id,
+          session.user.fullName,
+          `تحديث الصورة الشخصية للمستخدم ${session.user.fullName}`,
+          `Profile photo updated for user ${session.user.fullName}`
+        );
+      }
+    } catch (err: any) {
+      console.error("Avatar update error:", err);
+      setAvatarError(err?.message || "فشل تحديث الصورة الشخصية");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError(language === "ar" ? "حجم الصورة يجب ألا يتجاوز 5 ميجابايت" : "Photo size must not exceed 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (base64) {
+        handleSelectAvatarUrl(base64);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   if (!isOpen) return null;
 
@@ -254,6 +347,18 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
         {/* Tab Navigation */}
         <div className="px-6 pt-4 border-b border-slate-800 bg-slate-900 flex items-center gap-2 overflow-x-auto scrollbar-none">
           <button
+            onClick={() => setActiveTab("avatar")}
+            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center gap-2 border-b-2 ${
+              activeTab === "avatar"
+                ? "border-indigo-500 text-indigo-400 bg-indigo-500/10"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>{language === "ar" ? "الصورة الشخصية" : "Profile Photo"}</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("password")}
             className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer flex items-center gap-2 border-b-2 ${
               activeTab === "password"
@@ -304,6 +409,87 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
 
         {/* Tab Content Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
+
+          {/* ========================================================================= */}
+          {/* TAB 0: PROFILE PICTURE (AVATAR) */}
+          {/* ========================================================================= */}
+          {activeTab === "avatar" && (
+            <div className="space-y-6 max-w-lg mx-auto">
+              <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-200 leading-relaxed">
+                {language === "ar"
+                  ? "يمكنك رفع صورة شخصية حديثة من جهازك أو الاختيار من الرموز المعتمدة. يتم حفظ وتحديث الصورة تلقائياً في قاعدة البيانات والمخزن السحابي."
+                  : "Upload a profile photo or select a preset avatar. Changes are instantly saved to Supabase Storage & DB."}
+              </div>
+
+              {avatarError && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2 rtl:space-x-reverse">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{avatarError}</span>
+                </div>
+              )}
+
+              {avatarSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center space-x-2 rtl:space-x-reverse">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{avatarSuccess}</span>
+                </div>
+              )}
+
+              {/* Current Avatar Display & File Upload */}
+              <div className="flex flex-col items-center justify-center p-6 bg-slate-950/80 border border-slate-800 rounded-3xl space-y-4">
+                <div className="relative group">
+                  <img
+                    src={currentAvatarUrl}
+                    alt={session.user.fullName}
+                    className="w-28 h-28 rounded-full object-cover border-4 border-indigo-500/40 shadow-xl"
+                  />
+                  {isUploadingAvatar && (
+                    <div className="absolute inset-0 bg-slate-900/80 rounded-full flex items-center justify-center text-white">
+                      <RefreshCw className="w-6 h-6 animate-spin text-indigo-400" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-center space-y-1">
+                  <h4 className="text-sm font-bold text-white">{session.user.fullName}</h4>
+                  <p className="text-xs text-slate-400">{session.user.email}</p>
+                </div>
+
+                {/* Upload Button */}
+                <label className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl flex items-center space-x-2 rtl:space-x-reverse cursor-pointer shadow-lg shadow-indigo-600/30 transition-all">
+                  <Upload className="w-4 h-4" />
+                  <span>{language === "ar" ? "رفع صورة شخصية جديدة" : "Upload New Photo"}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Preset Avatars Selection */}
+              <div className="space-y-3">
+                <h5 className="text-xs font-bold text-slate-300">
+                  {language === "ar" ? "أو اختر من الصور والرمز المتاحة:" : "Or select from preset avatars:"}
+                </h5>
+                <div className="grid grid-cols-6 gap-3">
+                  {presetAvatars.map((url, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectAvatarUrl(url)}
+                      className={`relative rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${
+                        currentAvatarUrl === url ? "border-indigo-500 scale-105 shadow-md" : "border-slate-800 hover:border-slate-600"
+                      }`}
+                    >
+                      <img src={url} alt={`Preset ${idx + 1}`} className="w-full h-14 object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ========================================================================= */}
           {/* TAB 1: CHANGE PASSWORD */}

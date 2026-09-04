@@ -320,6 +320,39 @@ export function changeUserPin(userId: string, newPin: string): { success: boolea
   return { success: true };
 }
 
+// Update User & Employee Avatar (Profile Picture)
+export function updateUserAvatar(userId: string, newAvatarUrl: string): { success: boolean; error?: string } {
+  if (!newAvatarUrl) return { success: false, error: "رابط الصورة غير صالح" };
+
+  const users = loadUserAccounts();
+  const user = users.find((u) => u.id === userId || u.employeeId === userId);
+  if (user) {
+    user.avatarUrl = newAvatarUrl;
+    user.updatedAt = new Date().toISOString();
+    saveUserAccounts(users);
+  }
+
+  const session = loadAuthSession();
+  if (session && (session.user.id === userId || session.user.employeeId === userId || session.employee?.id === userId)) {
+    session.user.avatarUrl = newAvatarUrl;
+    if (session.employee) {
+      session.employee.avatarUrl = newAvatarUrl;
+    }
+    saveAuthSession(session);
+  }
+
+  // Also update in loaded employees list
+  const employees = loadEmployees();
+  const targetEmp = employees.find((e) => e.id === userId || (user && e.id === user.employeeId));
+  if (targetEmp) {
+    targetEmp.avatarUrl = newAvatarUrl;
+    targetEmp.updatedAt = new Date().toISOString();
+    localStorage.setItem("rv_deshal_employees", JSON.stringify(employees));
+  }
+
+  return { success: true };
+}
+
 // Automatically create or update UserAccount profile when adding/editing Employee
 export function syncUserAccountFromEmployee(employee: Employee, initialPassword?: string): UserAccount {
   const users = loadUserAccounts();
