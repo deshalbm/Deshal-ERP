@@ -16,6 +16,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_ENABLED=${EMAIL_ENABLED}
     env_file:
       - path: .env
         required: false
