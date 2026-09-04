@@ -141,8 +141,6 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
     employee ||
     (employeeId && employees ? employees.find((e) => e.id === employeeId || ensureValidUuid(e.id) === ensureValidUuid(employeeId)) : employees?.[0]);
 
-  if (!isOpen || !currentEmployee) return null;
-
   const isEmpMatch = (itemEmpId?: string, itemEmpCode?: string, itemEmpName?: string) => {
     if (!currentEmployee) return false;
     const cleanCurrentId = (currentEmployee.id || '').trim().toLowerCase();
@@ -269,6 +267,8 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
   const latestReview = empReviews[0];
   const totalRecognitions = empRecognitions.length;
   const activeDisciplinaryCount = empDisciplinary.filter((d) => d?.status === 'APPROVED' || d?.status === 'EXECUTED').length;
+
+  if (!isOpen || !currentEmployee) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 animate-fadeIn">
