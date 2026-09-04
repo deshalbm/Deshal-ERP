@@ -48,6 +48,7 @@ import {
 import { useLanguage } from '../../utils/LanguageContext';
 import { formatDateToDDMMMMYYYY } from '../../utils/dateFormatter';
 import { ensureValidUuid } from '../../utils/uuid';
+import { loadAttendanceMovementLogs } from '../../utils/attendanceStorage';
 
 export interface Employee360ModalProps {
   isOpen: boolean;
@@ -135,23 +136,31 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
 
   const isEmpMatch = (itemEmpId?: string, itemEmpCode?: string, itemEmpName?: string) => {
     if (!currentEmployee) return false;
-    if (itemEmpId && (itemEmpId === currentEmployee.id || ensureValidUuid(itemEmpId) === ensureValidUuid(currentEmployee.id))) {
-      return true;
+    const cleanCurrentId = (currentEmployee.id || '').trim().toLowerCase();
+    const cleanCurrentCode = (currentEmployee.employeeCode || '').trim().toLowerCase();
+    const cleanCurrentName = (currentEmployee.fullName || '').trim().toLowerCase();
+
+    if (itemEmpId) {
+      const cleanItemId = itemEmpId.trim().toLowerCase();
+      if (cleanItemId === cleanCurrentId) return true;
+      if (cleanItemId && cleanCurrentId && ensureValidUuid(cleanItemId) === ensureValidUuid(cleanCurrentId)) return true;
     }
-    if (itemEmpCode && currentEmployee.employeeCode && itemEmpCode.trim() === currentEmployee.employeeCode.trim()) {
-      return true;
+    if (itemEmpCode && cleanCurrentCode) {
+      if (itemEmpCode.trim().toLowerCase() === cleanCurrentCode) return true;
     }
-    if (itemEmpName && currentEmployee.fullName && itemEmpName.trim() === currentEmployee.fullName.trim()) {
-      return true;
+    if (itemEmpName && cleanCurrentName) {
+      if (itemEmpName.trim().toLowerCase() === cleanCurrentName) return true;
     }
     return false;
   };
+
+  const safeMovementLogs = movementLogs && movementLogs.length > 0 ? movementLogs : loadAttendanceMovementLogs();
 
   // Filtered employee specific items
   const empContracts = (contracts || []).filter((c) => isEmpMatch(c?.employeeId));
   const activeContract = empContracts.find((c) => c?.status === 'ACTIVE' || c?.status === 'EXPIRING_SOON') || empContracts[0];
   const empAttendance = (attendanceRecords || []).filter((a) => isEmpMatch(a?.employeeId, a?.employeeCode, a?.employeeName));
-  const empMovements = (movementLogs || []).filter((m) => isEmpMatch(m?.employeeId, m?.employeeCode, m?.employeeName));
+  const empMovements = (safeMovementLogs || []).filter((m) => isEmpMatch(m?.employeeId, m?.employeeCode, m?.employeeName));
   const empPayroll = (payrollSlips || []).filter((p) => isEmpMatch(p?.employeeId, p?.employeeCode, p?.employeeName));
   const empLeaves = (leaveRequests || []).filter((l) => isEmpMatch(l?.employeeId));
   const empRequests = (employeeRequests || []).filter((r) => isEmpMatch(r?.employeeId));
@@ -412,21 +421,32 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
                   <Clock className="w-4 h-4 text-indigo-600" />
-                  آخر حركات الحضور المسجلة عبر الكشك
+                  آخر حركات الحضور المسجلة عبر الكشك ({empMovements.length})
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {empMovements.slice(0, 3).map((m) => (
-                    <div key={m.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-indigo-700">{m.movementTypeNameAr}</span>
-                        <span className="font-mono text-slate-500">{m.time}</span>
+                {empMovements.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {empMovements.slice(0, 3).map((m) => (
+                      <div key={m.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-indigo-700">{m.movementTypeNameAr}</span>
+                          <span className="font-mono text-slate-500 font-semibold">{m.time}</span>
+                        </div>
+                        <div className="text-slate-500 text-[11px]">
+                          التاريخ: {m.date} | الجهاز: {m.deviceName}
+                        </div>
+                        {m.reason && (
+                          <div className="text-[10px] text-amber-800 bg-amber-50 p-1.5 rounded-lg border border-amber-200/60 mt-1">
+                            السبب: {m.reason}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-slate-500 text-[11px]">
-                        التاريخ: {m.date} | الجهاز: {m.deviceName}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-slate-50 rounded-xl text-center text-slate-500 text-xs">
+                    لا توجد حركات حضور أو انصراف مسجلة عبر الكشك لهذا الموظف حتى الآن.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -505,40 +525,66 @@ export const Employee360Modal: React.FC<Employee360ModalProps> = ({
           {/* 3. ATTENDANCE & MOVEMENTS */}
           {active360Tab === 'attendance' && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-800">سجل حركات الحضور والانصراف عبر الكشك اللوحي</h3>
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                <table className="w-full text-right text-xs">
-                  <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-                    <tr>
-                      <th className="p-3">التاريخ</th>
-                      <th className="p-3">الوقت</th>
-                      <th className="p-3">نوع الحركة</th>
-                      <th className="p-3">الجهاز والموقع</th>
-                      <th className="p-3">حالة المزامنة</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {empMovements.map((m) => (
-                      <tr key={m.id} className="hover:bg-slate-50">
-                        <td className="p-3 font-semibold text-slate-800">{m.date}</td>
-                        <td className="p-3 font-mono">{m.time}</td>
-                        <td className="p-3">
-                          <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold">
-                            {m.movementTypeNameAr}
-                          </span>
-                        </td>
-                        <td className="p-3 text-slate-600">{m.deviceName} - {m.branchName}</td>
-                        <td className="p-3">
-                          <span className="text-emerald-600 font-medium flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            مؤكد ومزامن
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-800">سجل حركات الحضور والانصراف عبر الكشك اللوحي ({empMovements.length})</h3>
+                <span className="text-xs text-slate-500 font-mono">رمز الموظف: {currentEmployee.employeeCode}</span>
               </div>
+              {empMovements.length > 0 ? (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                  <table className="w-full text-right text-xs">
+                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                      <tr>
+                        <th className="p-3">التاريخ</th>
+                        <th className="p-3">الوقت</th>
+                        <th className="p-3">نوع الحركة</th>
+                        <th className="p-3">الجهاز والموقع</th>
+                        <th className="p-3">السبب / التفاصيل</th>
+                        <th className="p-3">حالة المزامنة</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {empMovements.map((m) => (
+                        <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 font-semibold text-slate-800">{m.date}</td>
+                          <td className="p-3 font-mono font-bold text-indigo-950">{m.time}</td>
+                          <td className="p-3">
+                            <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100">
+                              {m.movementTypeNameAr}
+                            </span>
+                          </td>
+                          <td className="p-3 text-slate-600">
+                            <div className="font-semibold text-slate-800">{m.deviceName}</div>
+                            <div className="text-[10px] text-slate-500">{m.branchName} - {m.location || 'المدخل الرئيسي'}</div>
+                          </td>
+                          <td className="p-3 text-slate-600 max-w-xs truncate">
+                            {m.reason ? (
+                              <span className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 text-[11px]">
+                                {m.reason}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-[11px]">—</span>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span className="text-emerald-600 font-medium flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              مؤكد ومزامن
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 text-center space-y-2">
+                  <Clock className="w-10 h-10 text-slate-400 mx-auto" />
+                  <div className="text-sm font-bold text-slate-700">لا توجد حركات مسجلة لهذا الموظف</div>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    لم يتم تسجيل أي حضور، انصراف، استراحة أو مهمة عمل خارجية لهذا الموظف عبر كشك الحضور اللوحي حتى الآن.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

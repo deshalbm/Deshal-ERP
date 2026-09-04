@@ -3540,6 +3540,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
         employees={employees}
         contracts={contractsList}
         attendanceRecords={attendanceRecords}
+        movementLogs={movementLogsList}
         payrollSlips={payrollSlips}
         leaveRequests={leaveRequests}
         reviews={reviewsList}
