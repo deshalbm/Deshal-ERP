@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CompanySettings, DesignTheme, PageSizeFormat, TemplateStyle, Employee, Branch, AuditLogEntry } from "../types";
+import { CompanySettings, DesignTheme, PageSizeFormat, TemplateStyle, Employee, Branch, AuditLogEntry, KioskDevice } from "../types";
 import { useLanguage } from "../utils/LanguageContext";
 import {
   Building2,
@@ -21,10 +21,19 @@ import {
   MessageSquare,
   Database,
   Download,
-  Mail,
-  Send,
   Key,
-  AtSign
+  AtSign,
+  Tablet,
+  Copy,
+  Plus,
+  Trash2,
+  Edit2,
+  Lock,
+  Unlock,
+  XCircle,
+  ShieldAlert,
+  Mail,
+  Send
 } from "lucide-react";
 import { EmployeesManager } from "./EmployeesManager";
 import { ActivityLogsManager } from "./ActivityLogsManager";
@@ -35,6 +44,13 @@ import { DEFAULT_COMPANY_SETTINGS, DEFAULT_RESEND_SETTINGS } from "../utils/stor
 import { sendTestEmail, fetchEmailLogs } from "../lib/email/emailService";
 import { seedDemoDataToSupabase } from "../lib/supabase/seedDemoData";
 import { useERPData } from "../contexts/ERPDataContext";
+import {
+  loadKioskDevices,
+  saveKioskDevices,
+  loadActiveKioskDeviceId,
+  saveActiveKioskDeviceId,
+  saveIsKioskModeEnabled
+} from "../utils/attendanceStorage";
 
 interface SettingsStudioProps {
   settings?: CompanySettings;
@@ -43,9 +59,11 @@ interface SettingsStudioProps {
   branches?: Branch[];
   activeEmployeeId?: string;
   auditLogs?: AuditLogEntry[];
+  kioskDevices?: KioskDevice[];
   onSaveSettings: (settings: CompanySettings) => void;
   onSaveTheme: (theme: DesignTheme) => void;
   onSaveEmployees?: (employees: Employee[]) => void;
+  onSaveKioskDevices?: (devices: KioskDevice[]) => void;
   onSelectActiveEmployee?: (id: string) => void;
   onClearAuditLogs?: () => void;
   onOpenSecuritySettings?: () => void;
@@ -75,9 +93,11 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
   branches = [],
   activeEmployeeId = "emp-1",
   auditLogs = [],
+  kioskDevices,
   onSaveSettings,
   onSaveTheme,
   onSaveEmployees,
+  onSaveKioskDevices,
   onSelectActiveEmployee,
   onClearAuditLogs,
   onOpenSecuritySettings,
@@ -89,7 +109,32 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
     ...(settings || {})
   }));
   const [localTheme, setLocalTheme] = useState<DesignTheme>(theme);
-  const [activeTab, setActiveTab] = useState<"company" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "email" | "employees" | "logs" | "demo">("company");
+  const [activeTab, setActiveTab] = useState<"company" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "email" | "employees" | "kiosk_devices" | "logs" | "demo">("company");
+  
+  // Kiosk Devices Management State
+  const safeKioskDevices = kioskDevices || loadKioskDevices();
+  const handleSaveKioskDevices = onSaveKioskDevices || ((devs: KioskDevice[]) => saveKioskDevices(devs));
+  const [activeDeviceIdState, setActiveDeviceIdState] = useState<string>(() => loadActiveKioskDeviceId());
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+
+  // Device Modal State
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState<boolean>(false);
+  const [editingDevice, setEditingDevice] = useState<KioskDevice | null>(null);
+  const [deviceFormData, setDeviceFormData] = useState<{
+    name: string;
+    deviceCode: string;
+    branchId: string;
+    location: string;
+    model: string;
+    status: "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
+  }>({
+    name: "",
+    deviceCode: "",
+    branchId: branches[0]?.id || "branch-sohar",
+    location: "",
+    model: "Apple iPad Pro 11-inch",
+    status: "ACTIVE"
+  });
   const [showSavedNotification, setShowSavedNotification] = useState<boolean>(false);
   const [isUpdatingRates, setIsUpdatingRates] = useState<boolean>(false);
   const [ratesSuccessMessage, setRatesSuccessMessage] = useState<string>("");
@@ -359,6 +404,19 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
           >
             <Users className="w-3.5 h-3.5" />
             <span>{t("tabEmployees")} ({employees.length})</span>
+          </button>
+
+          <button
+            id="tab-kiosk-devices-btn"
+            onClick={() => setActiveTab("kiosk_devices")}
+            className={`py-2.5 px-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === "kiosk_devices"
+                ? "bg-amber-600 text-white shadow-sm font-bold"
+                : "text-amber-800 hover:text-amber-950 hover:bg-amber-100/50"
+            }`}
+          >
+            <Tablet className="w-3.5 h-3.5 text-amber-500" />
+            <span>{language === "ar" ? "أجهزة الكشك" : "Kiosk Devices"} ({safeKioskDevices.length})</span>
           </button>
 
           <button
@@ -1601,6 +1659,379 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Tab: Kiosk Devices Management (إدارة أجهزة الكشك اللوحية) */}
+      {activeTab === "kiosk_devices" && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20">
+                <Tablet className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  {language === "ar" ? "إدارة أجهزة كشك الحضور والانصراف المعتمدة (Kiosk Devices Catalog)" : "Authorized Attendance Kiosk Devices"}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {language === "ar"
+                    ? "إضافة وتعديل الأجهزة اللوحية المصرح لها بتسجيل الحضور، وتوليد أكواد التفعيل وتوكنات الأمان"
+                    : "Manage, register, and activate hardware tablet devices allowed to log attendance"}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEditingDevice(null);
+                setDeviceFormData({
+                  name: `كشك اللوحي - ${branches[0]?.name || "الفرع الرئيسي"}`,
+                  deviceCode: `KIOSK-${branches[0]?.code || "SOH"}-${safeKioskDevices.length + 1}`,
+                  branchId: branches[0]?.id || "branch-sohar",
+                  location: "المدخل الرئيسي",
+                  model: "Apple iPad Pro 11-inch",
+                  status: "ACTIVE"
+                });
+                setIsDeviceModalOpen(true);
+              }}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{language === "ar" ? "إضافة جهاز كشك جديد" : "Add New Kiosk Device"}</span>
+            </button>
+          </div>
+
+          {/* Kiosk Devices Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {safeKioskDevices.map((device) => {
+              const isActive = device.status === "ACTIVE";
+              const isCurrentActive = activeDeviceIdState === device.id;
+
+              return (
+                <div
+                  key={device.id}
+                  className={`bg-white rounded-2xl border p-5 shadow-xs flex flex-col justify-between space-y-4 relative transition-all ${
+                    isCurrentActive
+                      ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/10"
+                      : isActive
+                      ? "border-slate-200 hover:border-slate-300"
+                      : "border-rose-200 bg-rose-50/20"
+                  }`}
+                >
+                  <div className="space-y-3">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2.5 rounded-xl border ${isActive ? "bg-indigo-50 text-indigo-600 border-indigo-100" : "bg-rose-50 text-rose-600 border-rose-100"}`}>
+                          <Tablet className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-extrabold text-sm text-slate-900 leading-snug">{device.name}</h4>
+                          <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                            {device.deviceCode}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${isActive ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-rose-100 text-rose-800 border-rose-200"}`}>
+                        {isActive ? (language === "ar" ? "نشط ومفعل" : "Active") : (language === "ar" ? "معلق" : "Suspended")}
+                      </span>
+                    </div>
+
+                    {/* Metadata Specs */}
+                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-xs space-y-1.5 font-medium">
+                      <div className="flex justify-between text-slate-600">
+                        <span>الفرع:</span>
+                        <span className="font-bold text-slate-900">{device.branchName}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>الموقع:</span>
+                        <span className="font-bold text-slate-900">{device.location}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>نوع الجهاز:</span>
+                        <span className="font-bold text-slate-800">{device.model}</span>
+                      </div>
+                    </div>
+
+                    {/* Activation Code Box */}
+                    <div className="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-indigo-900">
+                        <span>كود التفعيل السري (Activation Code):</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(device.activationCode || device.deviceCode);
+                            setCopiedCodeId(device.id);
+                            setTimeout(() => setCopiedCodeId(null), 2000);
+                          }}
+                          className="px-2 py-0.5 bg-white text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[10px] font-bold border border-indigo-200 transition-colors cursor-pointer flex items-center gap-1"
+                        >
+                          {copiedCodeId === device.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedCodeId === device.id ? "تم النسخ" : "نسخ الكود"}</span>
+                        </button>
+                      </div>
+                      <div className="font-mono text-sm font-black text-indigo-950 bg-white p-1.5 rounded-lg border border-indigo-100 text-center tracking-wider">
+                        {device.activationCode || device.deviceCode}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions Footer */}
+                  <div className="pt-3 border-t border-slate-100 space-y-2">
+                    {/* Bind Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        saveActiveKioskDeviceId(device.id);
+                        saveIsKioskModeEnabled(true);
+                        setActiveDeviceIdState(device.id);
+                        alert(language === "ar" ? `تم ربط وتفعيل هذا المتصفح كجهاز كشك (${device.name}) بنجاح!` : `Browser successfully bound to ${device.name}`);
+                      }}
+                      className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center justify-center gap-1.5 ${
+                        isCurrentActive
+                          ? "bg-emerald-600 text-white font-extrabold"
+                          : "bg-slate-900 hover:bg-slate-800 text-white"
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>{isCurrentActive ? (language === "ar" ? "مفعل حالياً على هذا المتصفح ✓" : "Bound to this browser ✓") : (language === "ar" ? "ربط وتفعيل هذا المتصفح ككشك الآن" : "Bind This Browser Now")}</span>
+                    </button>
+
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = safeKioskDevices.map((d) =>
+                            d.id === device.id ? { ...d, status: (d.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE") as any } : d
+                          );
+                          handleSaveKioskDevices(updated);
+                        }}
+                        className={`font-bold flex items-center gap-1 transition-colors cursor-pointer ${
+                          isActive ? "text-rose-600 hover:text-rose-800" : "text-emerald-600 hover:text-emerald-800"
+                        }`}
+                      >
+                        {isActive ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                        <span>{isActive ? "تعليق" : "تفعيل"}</span>
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingDevice(device);
+                            setDeviceFormData({
+                              name: device.name,
+                              deviceCode: device.deviceCode,
+                              branchId: device.branchId,
+                              location: device.location,
+                              model: device.model || "Apple iPad Pro",
+                              status: device.status
+                            });
+                            setIsDeviceModalOpen(true);
+                          }}
+                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                          title="تعديل البيانات"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(language === "ar" ? `هل أنت متأكد من حذف جهاز الكشك (${device.name})؟` : `Delete kiosk device ${device.name}?`)) {
+                              const updated = safeKioskDevices.filter((d) => d.id !== device.id);
+                              handleSaveKioskDevices(updated);
+                            }
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="حذف الجهاز"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add / Edit Device Modal */}
+          {isDeviceModalOpen && (
+            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+              <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70 shrink-0">
+                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                    <Tablet className="w-4 h-4 text-indigo-600" />
+                    <span>{editingDevice ? (language === "ar" ? "تعديل جهاز كشك" : "Edit Kiosk Device") : (language === "ar" ? "إضافة جهاز كشك جديد" : "Add New Kiosk Device")}</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeviceModalOpen(false)}
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl cursor-pointer"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-4 text-xs overflow-y-auto flex-1">
+                  <div>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">
+                      اسم الجهاز المعرف <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={deviceFormData.name}
+                      onChange={(e) => setDeviceFormData({ ...deviceFormData, name: e.target.value })}
+                      placeholder="مثال: آيباد الاستقبال - صحار"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-hidden"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 block mb-1">
+                        كود الجهاز <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={deviceFormData.deviceCode}
+                        onChange={(e) => setDeviceFormData({ ...deviceFormData, deviceCode: e.target.value.toUpperCase() })}
+                        placeholder="KIOSK-SOH-MAIN"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold text-indigo-900 outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 block mb-1">
+                        الفرع التابع له
+                      </label>
+                      <select
+                        value={deviceFormData.branchId}
+                        onChange={(e) => setDeviceFormData({ ...deviceFormData, branchId: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-hidden"
+                      >
+                        {branches.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">
+                      الموقع المحدد بالمشروع / المرفق
+                    </label>
+                    <input
+                      type="text"
+                      value={deviceFormData.location}
+                      onChange={(e) => setDeviceFormData({ ...deviceFormData, location: e.target.value })}
+                      placeholder="مثال: صالة الاستقبال والمدخل التنفيذي"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">
+                      نوع الهاردوير / الموديل
+                    </label>
+                    <input
+                      type="text"
+                      value={deviceFormData.model}
+                      onChange={(e) => setDeviceFormData({ ...deviceFormData, model: e.target.value })}
+                      placeholder="Apple iPad Pro 11-inch / Samsung Galaxy Tab"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-800 block mb-1">
+                      حالة تفعيل الجهاز
+                    </label>
+                    <select
+                      value={deviceFormData.status}
+                      onChange={(e) => setDeviceFormData({ ...deviceFormData, status: e.target.value as any })}
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-hidden"
+                    >
+                      <option value="ACTIVE">{language === "ar" ? "نشط ومفعل (ACTIVE)" : "Active"}</option>
+                      <option value="SUSPENDED">{language === "ar" ? "معلق مؤقتاً (SUSPENDED)" : "Suspended"}</option>
+                      <option value="DEACTIVATED">{language === "ar" ? "ملغى (DEACTIVATED)" : "Deactivated"}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/80 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsDeviceModalOpen(false)}
+                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    إلغاء
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!deviceFormData.name.trim() || !deviceFormData.deviceCode.trim()) return;
+                      const targetBranch = branches.find((b) => b.id === deviceFormData.branchId) || branches[0];
+
+                      if (editingDevice) {
+                        const updated = safeKioskDevices.map((d) =>
+                          d.id === editingDevice.id
+                            ? {
+                                ...d,
+                                name: deviceFormData.name,
+                                deviceCode: deviceFormData.deviceCode,
+                                branchId: deviceFormData.branchId,
+                                branchName: targetBranch?.name || d.branchName,
+                                location: deviceFormData.location,
+                                model: deviceFormData.model,
+                                status: deviceFormData.status,
+                                updatedAt: new Date().toISOString()
+                              }
+                            : d
+                        );
+                        handleSaveKioskDevices(updated);
+                      } else {
+                        const randomCode = Math.floor(100000 + Math.random() * 900000);
+                        const newDev: KioskDevice = {
+                          id: `dev-${Date.now()}`,
+                          deviceCode: deviceFormData.deviceCode,
+                          name: deviceFormData.name,
+                          companyName: localSettings.companyName || "ديشال",
+                          branchId: deviceFormData.branchId,
+                          branchName: targetBranch?.name || "الفرع الرئيسي",
+                          location: deviceFormData.location || "المدخل الرئيسي",
+                          deviceToken: `dsh_kiosk_tok_${randomCode}_${Date.now().toString(36)}`,
+                          activationCode: `DSH-K-${randomCode}`,
+                          status: deviceFormData.status,
+                          lastPing: new Date().toISOString(),
+                          ipAddress: "192.168.1.100",
+                          model: deviceFormData.model,
+                          appVersion: "Deshal Kiosk v3.4",
+                          isLocked: false,
+                          createdAt: new Date().toISOString(),
+                          updatedAt: new Date().toISOString()
+                        };
+                        handleSaveKioskDevices([...safeKioskDevices, newDev]);
+                      }
+                      setIsDeviceModalOpen(false);
+                    }}
+                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold shadow-md transition-all cursor-pointer"
+                  >
+                    {editingDevice ? (language === "ar" ? "حفظ التعديلات" : "Save Changes") : (language === "ar" ? "حفظ وتوليد الكود" : "Save & Generate Code")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

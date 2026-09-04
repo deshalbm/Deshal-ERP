@@ -42,6 +42,7 @@ import {
   PayrollSlip,
   LeaveRequest,
   AttendanceMovementLog,
+  KioskDevice,
   Account,
   JournalEntry,
   AccountingRevisionLog,
@@ -157,6 +158,7 @@ import {
   saveAttendanceMovementLogs,
   loadMovementTypes,
   loadKioskDevices,
+  saveKioskDevices,
   loadActiveKioskDeviceId
 } from "./utils/attendanceStorage";
 import { OfflineIndicator } from "./components/OfflineIndicator";
@@ -221,6 +223,14 @@ export default function App() {
   const [selectedServiceForBooking, setSelectedServiceForBooking] = useState<ConsultingService | null>(null);
   const [isTenantSubModalOpen, setIsTenantSubModalOpen] = useState<boolean>(false);
   const [selectedTenantSubForEditing, setSelectedTenantSubForEditing] = useState<TenantSubscription | null>(null);
+
+  // Kiosk Devices & Attendance State
+  const [kioskDevicesList, setKioskDevicesList] = useState<KioskDevice[]>(() => loadKioskDevices());
+
+  const handleSaveKioskDevices = (updated: KioskDevice[]) => {
+    setKioskDevicesList(updated);
+    saveKioskDevices(updated);
+  };
 
   // Deshal HR & Payroll Management States
   const [employeesList, setEmployeesList] = useState<Employee[]>(() => loadEmployees());
@@ -2735,9 +2745,11 @@ export default function App() {
             branches={branchesList}
             activeEmployeeId={activeEmployeeId}
             auditLogs={auditLogsList}
+            kioskDevices={kioskDevicesList}
             onSaveSettings={handleSaveCompanySettings}
             onSaveTheme={handleSaveDesignTheme}
             onSaveEmployees={handleSaveEmployees}
+            onSaveKioskDevices={handleSaveKioskDevices}
             onSelectActiveEmployee={handleSelectActiveEmployee}
             onClearAuditLogs={handleClearAuditLogs}
             onOpenSecuritySettings={() => setIsSecurityModalOpen(true)}
@@ -2845,7 +2857,7 @@ export default function App() {
         employees={employeesList}
         branches={branchesList}
         companySettings={companySettings}
-        kioskDevices={loadKioskDevices()}
+        kioskDevices={kioskDevicesList}
         movementTypes={loadMovementTypes()}
         movementLogs={loadAttendanceMovementLogs()}
         activeDeviceId={loadActiveKioskDeviceId()}
