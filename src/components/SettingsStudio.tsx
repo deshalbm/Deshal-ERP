@@ -1607,8 +1607,8 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
       {activeTab === "employees" && (
         <div className="pt-2">
           <EmployeesManager
-            employees={employees}
-            branches={branches}
+            employees={employees || []}
+            branches={branches || []}
             companySettings={localSettings}
             activeEmployeeId={activeEmployeeId}
             onSaveEmployees={onSaveEmployees || (() => {})}

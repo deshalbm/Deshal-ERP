@@ -149,7 +149,9 @@ export const PerformanceManager: React.FC<PerformanceManagerProps> = ({
       createdAt: selectedReview ? selectedReview.createdAt : new Date().toISOString()
     };
 
-    onSaveReview(rev);
+    if (onSaveReview) {
+      onSaveReview(rev);
+    }
     setIsReviewModalOpen(false);
   };
 

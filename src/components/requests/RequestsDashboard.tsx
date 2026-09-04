@@ -63,8 +63,8 @@ interface RequestsDashboardProps {
 }
 
 export const RequestsDashboard: React.FC<RequestsDashboardProps> = ({
-  employees,
-  branches,
+  employees = [],
+  branches = [],
   currentEmployee,
   companySettings
 }) => {

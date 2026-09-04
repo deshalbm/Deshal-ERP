@@ -225,9 +225,9 @@ const PRESET_AVATARS = [
 ];
 
 export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
-  employees,
+  employees = [],
   branches = [],
-  companySettings,
+  companySettings = {} as CompanySettings,
   activeEmployeeId = "emp-1",
   attendanceRecords = [],
   payrollSlips = [],
@@ -522,8 +522,8 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
     role: "SALES",
     jobTitle: "",
     department: "المبيعات والمشاريع",
-    branchId: branches[0]?.id || "",
-    branchName: branches[0]?.name || "",
+    branchId: branches?.[0]?.id || "",
+    branchName: branches?.[0]?.name || "",
     status: "ACTIVE",
     hireDate: new Date().toISOString().split("T")[0],
     contractType: "FULL_TIME",
@@ -532,7 +532,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
     maxSalaryCap: undefined,
     maxBonusCap: undefined,
     preferredBonusTreasury: "الخزينة النقدية الرئيسية",
-    currency: companySettings.currency || "OMR",
+    currency: companySettings?.currency || "OMR",
     bankName: "بنك مسقط",
     bankIban: "",
     avatarUrl: PRESET_AVATARS[0],
@@ -562,10 +562,10 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
   // Attendance State
   const [attendanceDate, setAttendanceDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
-  const [quickClockInEmpId, setQuickClockInEmpId] = useState<string>(employees[0]?.id || "");
+  const [quickClockInEmpId, setQuickClockInEmpId] = useState<string>(employees?.[0]?.id || "");
   const [isAddAttendanceModalOpen, setIsAddAttendanceModalOpen] = useState<boolean>(false);
   const [manualAttForm, setManualAttForm] = useState({
-    employeeId: employees[0]?.id || "",
+    employeeId: employees?.[0]?.id || "",
     date: new Date().toISOString().split("T")[0],
     checkIn: "08:00",
     checkOut: "16:00",
@@ -576,7 +576,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
   // Leaves State
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState<boolean>(false);
   const [leaveForm, setLeaveForm] = useState({
-    employeeId: employees[0]?.id || "",
+    employeeId: employees?.[0]?.id || "",
     leaveType: "ANNUAL" as LeaveType,
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
@@ -586,7 +586,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
   // Filtered employees
   const filteredEmployees = useMemo(() => {
-    return employees.filter((emp) => {
+    return (employees || []).filter((emp) => {
       const term = searchTerm.toLowerCase().trim();
       const matchesSearch =
         !term ||
@@ -616,25 +616,25 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
   // Financial & Staff Metrics
   const metrics = useMemo(() => {
-    const totalCount = employees.length;
-    const activeCount = employees.filter((e) => e.status === "ACTIVE").length;
-    const onLeaveCount = employees.filter((e) => e.status === "ON_LEAVE").length;
-    const totalPayroll = employees
+    const totalCount = (employees || []).length;
+    const activeCount = (employees || []).filter((e) => e.status === "ACTIVE").length;
+    const onLeaveCount = (employees || []).filter((e) => e.status === "ON_LEAVE").length;
+    const totalPayroll = (employees || [])
       .filter((e) => e.status === "ACTIVE")
       .reduce((sum, e) => sum + (Number(e.basicSalary) || 0) + (Number(e.allowances) || 0), 0);
-    const adminCount = employees.filter((e) => e.role === "ADMIN" || e.role === "MANAGER").length;
+    const adminCount = (employees || []).filter((e) => e.role === "ADMIN" || e.role === "MANAGER").length;
 
     return { totalCount, activeCount, onLeaveCount, totalPayroll, adminCount };
   }, [employees]);
 
   // Current active employee object
   const currentActiveEmployee = useMemo(() => {
-    return employees.find((e) => e.id === activeEmployeeId) || employees[0];
+    return (employees || []).find((e) => e.id === activeEmployeeId) || (employees || [])[0] || ({ fullName: "المستخدم" } as Employee);
   }, [employees, activeEmployeeId]);
 
   // Monthly Payroll Slips Filtered
   const currentMonthSlips = useMemo(() => {
-    return payrollSlips.filter((s) => s.payrollMonth === selectedPayrollMonth);
+    return (payrollSlips || []).filter((s) => s.payrollMonth === selectedPayrollMonth);
   }, [payrollSlips, selectedPayrollMonth]);
 
   const payrollSummary = useMemo(() => {

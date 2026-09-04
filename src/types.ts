@@ -408,6 +408,8 @@ export interface CompanySettings {
   supabaseSync?: SupabaseSyncSettings;
   whatsappSettings?: WhatsAppSettings;
   resendSettings?: ResendSettings;
+  name?: string;
+  currency?: string;
 }
 
 export type PageSizeFormat = 'A4' | 'A5' | 'LETTER' | 'THERMAL_80MM' | 'THERMAL_58MM';

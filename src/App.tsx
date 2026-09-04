@@ -2706,14 +2706,14 @@ export default function App() {
 
         {activeTab === "employees" && (
           <EmployeesManager
-            employees={employeesList}
-            branches={branchesList}
+            employees={employeesList || []}
+            branches={branchesList || []}
             companySettings={companySettings}
             activeEmployeeId={activeEmployeeId}
-            attendanceRecords={attendanceList}
-            payrollSlips={payrollSlipsList}
-            leaveRequests={leaveRequestsList}
-            vouchers={vouchersList}
+            attendanceRecords={attendanceList || []}
+            payrollSlips={payrollSlipsList || []}
+            leaveRequests={leaveRequestsList || []}
+            vouchers={vouchersList || []}
             onSaveEmployees={handleSaveEmployees}
             onSaveAttendance={handleSaveAttendance}
             onSavePayrollSlips={handleSavePayrollSlips}

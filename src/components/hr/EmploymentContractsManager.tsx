@@ -174,7 +174,9 @@ export const EmploymentContractsManager: React.FC<EmploymentContractsManagerProp
       updatedAt: new Date().toISOString()
     };
 
-    onSaveContract(contractToSave);
+    if (onSaveContract) {
+      onSaveContract(contractToSave);
+    }
     setIsEditorOpen(false);
   };
 
