@@ -2812,11 +2812,11 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
       {/* 2. Add / Edit Employee Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
-          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white shrink-0">
               <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
                 <UserCheck className="w-5 h-5 text-indigo-400" />
                 <h3 className="font-bold text-base">
@@ -2824,6 +2824,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
               >
@@ -2832,7 +2833,9 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSaveEmployee} className="p-6 space-y-4">
+            <form onSubmit={handleSaveEmployee} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+              {/* Scrollable Form Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 
                 <div>
@@ -3199,12 +3202,14 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                 </div>
               </div>
 
-              {/* Modal Actions */}
-              <div className="pt-4 border-t border-slate-200 flex items-center justify-end space-x-2 rtl:space-x-reverse">
+              </div>
+
+              {/* Modal Actions Footer */}
+              <div className="p-4 sm:px-6 bg-slate-50 border-t border-slate-200 flex items-center justify-end space-x-2 rtl:space-x-reverse shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                 >
                   {language === "ar" ? "إلغاء" : "Cancel"}
                 </button>
@@ -3223,16 +3228,17 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
       {/* 3. Manual Attendance Modal */}
       {isAddAttendanceModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="relative w-full max-w-md max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white shrink-0">
               <h3 className="font-bold text-sm">{language === "ar" ? "تسجيل حضور وانصراف يدوي" : "Manual Attendance Stamp"}</h3>
-              <button onClick={() => setIsAddAttendanceModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button type="button" onClick={() => setIsAddAttendanceModalOpen(false)} className="text-slate-400 hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveManualAttendance} className="p-6 space-y-3.5">
+            <form onSubmit={handleSaveManualAttendance} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-3.5">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الموظف" : "Staff Member"}</label>
                 <select
@@ -3302,17 +3308,19 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex justify-end space-x-2 rtl:space-x-reverse">
+              </div>
+
+              <div className="p-4 sm:px-6 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2 rtl:space-x-reverse shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsAddAttendanceModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
                 >
                   تسجيل الحضور
                 </button>
@@ -3324,16 +3332,17 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
       {/* 4. Request Leave Modal */}
       {isLeaveModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="relative w-full max-w-md max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white shrink-0">
               <h3 className="font-bold text-sm">{language === "ar" ? "تقديم طلب إجازة رسمي" : "Submit Leave Request"}</h3>
-              <button onClick={() => setIsLeaveModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="text-slate-400 hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveLeaveRequest} className="p-6 space-y-3.5">
+            <form onSubmit={handleSaveLeaveRequest} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-3.5">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الموظف مقدم الطلب" : "Staff Member"}</label>
                 <select
@@ -3406,17 +3415,19 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex justify-end space-x-2 rtl:space-x-reverse">
+              </div>
+
+              <div className="p-4 sm:px-6 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2 rtl:space-x-reverse shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsLeaveModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
                 >
                   اعتماد الطلب
                 </button>
