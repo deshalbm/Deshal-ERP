@@ -307,9 +307,12 @@ export default function App() {
   // New ERP Navigation & Modal UI State
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("erp_sidebar_collapsed") === "true";
+      const saved = localStorage.getItem("erp_sidebar_collapsed");
+      if (saved !== null) {
+        return saved === "true";
+      }
     }
-    return false;
+    return true; // Default to collapsed on desktop as requested
   });
   const [isSidebarOpenMobile, setIsSidebarOpenMobile] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
