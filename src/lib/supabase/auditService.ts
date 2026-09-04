@@ -66,7 +66,12 @@ export async function getAuditLogs(
     .limit(limit);
 
   if (error) {
-    console.error('[AuditService] getAuditLogs:', error.message);
+    if (error.message.includes('JWT issued at future') || error.message.includes('JWT expired')) {
+      console.warn('[AuditService] Future-dated or invalid JWT token detected. Clearing stale auth session...');
+      supabase.auth.signOut().catch(() => {});
+    } else {
+      console.error('[AuditService] getAuditLogs:', error.message);
+    }
     return [];
   }
 

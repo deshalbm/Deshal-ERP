@@ -153,14 +153,32 @@ export async function getCurrentSession(): Promise<{
 }> {
   if (!isSupabaseConfigured) return { session: null, user: null };
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  try {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
 
-  if (!session?.user) return { session: null, user: null };
+    if (error) {
+      console.warn('[AuthService] getSession error:', error.message);
+      if (
+        error.message.includes('JWT issued at future') ||
+        error.message.includes('invalid') ||
+        error.message.includes('expired')
+      ) {
+        await supabase.auth.signOut().catch(() => {});
+      }
+      return { session: null, user: null };
+    }
 
-  const profile = await fetchUserProfile(session.user.id);
-  return { session, user: profile };
+    if (!session?.user) return { session: null, user: null };
+
+    const profile = await fetchUserProfile(session.user.id);
+    return { session, user: profile };
+  } catch (err: any) {
+    console.warn('[AuthService] getCurrentSession exception:', err?.message);
+    return { session: null, user: null };
+  }
 }
 
 // ──────────────────────────────────────────────
