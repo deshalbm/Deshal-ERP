@@ -7,6 +7,30 @@ export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CHECK' | 'CREDIT_CARD' |
 
 export type VoucherStatus = 'ISSUED' | 'DRAFT' | 'PAID' | 'CANCELLED';
 
+export type DiscountType = 'PERCENTAGE' | 'FIXED';
+
+export interface MasterLocation {
+  id: string;
+  governorateAr: string;
+  governorateEn: string;
+  cityAr: string;
+  cityEn: string;
+  displayOrder?: number;
+}
+
+export interface PublicInvoiceVerification {
+  valid: boolean;
+  documentType?: 'INVOICE' | 'VOUCHER';
+  documentNumber?: string;
+  issueDate?: string;
+  companyName?: string;
+  totalAmount?: number;
+  taxAmount?: number;
+  currency?: string;
+  status?: string;
+  message?: string;
+}
+
 export interface Branch {
   id: string;
   code: string; // e.g. "BR-SOH-01", "BR-MCT-02"
@@ -102,6 +126,8 @@ export interface ReceiptVoucher {
   subtotal: number;
   taxRate: number; // percentage
   taxAmount: number;
+  discountType?: DiscountType;
+  discountValue?: number;
   discountRate?: number; // percentage
   discountAmount: number;
   totalAmount: number;
@@ -112,6 +138,10 @@ export interface ReceiptVoucher {
   preparedBy: string;
   approvedBy: string;
   receivedBy: string;
+  verificationToken?: string;
+  transferProofUrl?: string;
+  posLastFour?: string;
+  paymentGatewayRef?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -257,9 +287,11 @@ export interface Customer {
   name: string; // Client / Company name
   contactPerson?: string;
   phone: string;
+  normalizedPhone?: string;
   email: string;
   address?: string;
   city?: string;
+  governorate?: string;
   country?: string;
   taxId?: string;
   crNumber?: string;

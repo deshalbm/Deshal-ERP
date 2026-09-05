@@ -12,7 +12,93 @@ import type {
   CostCenter,
   AccountingRevisionLog,
 } from '../../types/accounting';
+import type { ReceiptVoucher } from '../../types';
 import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+
+// ──────────────────────────────────────────────
+// Atomic Sequence & Financial Posting RPCs
+// ──────────────────────────────────────────────
+
+export async function fetchNextVoucherNumber(
+  companyId: string,
+  type: string,
+  branchId?: string
+): Promise<string> {
+  if (!isSupabaseConfigured) {
+    const year = new Date().getFullYear();
+    const prefix = type === 'RECEIPT' ? 'REC' : type === 'PAYMENT' ? 'PAY' : 'INV';
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    return `${prefix}-${year}-${rand}`;
+  }
+
+  try {
+    const validCompanyId = ensureValidUuid(companyId);
+    const validBranchId = ensureNullableUuid(branchId);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('generate_next_voucher_number', {
+      p_company_id: validCompanyId,
+      p_type: type,
+      p_branch_id: validBranchId,
+    });
+
+    if (error || !data) {
+      console.warn('[AccountingService] RPC generate_next_voucher_number fallback:', error?.message);
+      const year = new Date().getFullYear();
+      const prefix = type === 'RECEIPT' ? 'REC' : type === 'PAYMENT' ? 'PAY' : 'INV';
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      return `${prefix}-${year}-${rand}`;
+    }
+
+    return String(data);
+  } catch (e) {
+    console.error('[AccountingService] fetchNextVoucherNumber exception:', e);
+    const year = new Date().getFullYear();
+    const prefix = type === 'RECEIPT' ? 'REC' : type === 'PAYMENT' ? 'PAY' : 'INV';
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    return `${prefix}-${year}-${rand}`;
+  }
+}
+
+export async function postVoucherFinancialTransaction(
+  companyId: string,
+  branchId: string,
+  voucherPayload: Partial<ReceiptVoucher>
+): Promise<{ success: boolean; voucherId?: string; voucherNumber?: string; error?: string }> {
+  if (!isSupabaseConfigured) {
+    return { success: false, error: 'Supabase غير مضبوط.' };
+  }
+
+  try {
+    const validCompanyId = ensureValidUuid(companyId);
+    const validBranchId = ensureNullableUuid(branchId);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('post_voucher_financial_transaction', {
+      p_company_id: validCompanyId,
+      p_branch_id: validBranchId,
+      p_voucher_payload: voucherPayload,
+    });
+
+    if (error) {
+      console.error('[AccountingService] postVoucherFinancialTransaction RPC error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    if (data && data.success) {
+      return {
+        success: true,
+        voucherId: data.voucherId,
+        voucherNumber: data.voucherNumber,
+      };
+    }
+
+    return { success: false, error: data?.message || 'فشلت عملية حفظ وتسجيل السند المحاسبي.' };
+  } catch (e: any) {
+    console.error('[AccountingService] postVoucherFinancialTransaction exception:', e);
+    return { success: false, error: e?.message || String(e) };
+  }
+}
 
 // ──────────────────────────────────────────────
 // Chart of Accounts

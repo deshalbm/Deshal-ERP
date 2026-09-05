@@ -603,89 +603,9 @@ export function DocWizardView({
               </div>
             </div>
 
-            {/* STEP 1: Document Classification, Branch, Numbers, Dates, Fast Presets */}
+            {/* STEP 1: Document Classification, Branch, Numbers, Dates */}
             {currentStep === 1 && (
               <div className="space-y-6 animate-fadeIn">
-                {/* Fast Presets */}
-                <div className="space-y-2.5">
-                  <label className="text-xs font-black text-slate-700 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    {t("quickFillPresets")}
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyPreset("services")}
-                      className={`p-3 rounded-2xl border text-start transition-all cursor-pointer flex items-center gap-3 ${
-                        selectedPreset === "services"
-                          ? "bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-200"
-                          : "bg-slate-50 hover:bg-slate-100 border-slate-200"
-                      }`}
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                        <Receipt className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">{t("presetCorporateServices")}</div>
-                        <div className="text-[10px] text-slate-500">{isRtl ? "قبض تحويل بنكي - ضريبة 5%" : "Receipt transfer 5% VAT"}</div>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleApplyPreset("hardware")}
-                      className={`p-3 rounded-2xl border text-start transition-all cursor-pointer flex items-center gap-3 ${
-                        selectedPreset === "hardware"
-                          ? "bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-200"
-                          : "bg-slate-50 hover:bg-slate-100 border-slate-200"
-                      }`}
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                        <FileText className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">{t("presetHardwareSale")}</div>
-                        <div className="text-[10px] text-slate-500">{isRtl ? "فاتورة ضريبية رسمية" : "Official Tax Invoice"}</div>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleApplyPreset("rent")}
-                      className={`p-3 rounded-2xl border text-start transition-all cursor-pointer flex items-center gap-3 ${
-                        selectedPreset === "rent"
-                          ? "bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-200"
-                          : "bg-slate-50 hover:bg-slate-100 border-slate-200"
-                      }`}
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
-                        <CreditCard className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">{t("presetOfficeRent")}</div>
-                        <div className="text-[10px] text-slate-500">{isRtl ? "سند صرف بشيك مصرفي" : "Payment via bank cheque"}</div>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleApplyPreset("consulting")}
-                      className={`p-3 rounded-2xl border text-start transition-all cursor-pointer flex items-center gap-3 ${
-                        selectedPreset === "consulting"
-                          ? "bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-200"
-                          : "bg-slate-50 hover:bg-slate-100 border-slate-200"
-                      }`}
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                        <Briefcase className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">{t("presetNetworkConsulting")}</div>
-                        <div className="text-[10px] text-slate-500">{isRtl ? "سند قبض نقدي / تحويل" : "Consulting services receipt"}</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
 
                 {/* Document Type Visual Cards */}
                 <div className="space-y-2">

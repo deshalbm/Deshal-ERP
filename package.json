@@ -11,7 +11,8 @@
     "lint": "tsc --noEmit",
     "test:finance": "npx tsx src/tests/financialAccounting.test.ts",
     "test:integration": "npx tsx src/tests/supabaseDataIntegration.test.ts",
-    "test": "npx tsx src/tests/financialAccounting.test.ts && npx tsx src/tests/supabaseDataIntegration.test.ts"
+    "test:vouchers": "npx tsx src/tests/vouchersAndInvoicing.test.ts",
+    "test": "npx tsx src/tests/financialAccounting.test.ts && npx tsx src/tests/supabaseDataIntegration.test.ts && npx tsx src/tests/vouchersAndInvoicing.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
