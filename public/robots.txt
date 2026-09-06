@@ -1,0 +1,19 @@
+# Robots.txt for Al Daleel Al Shamil (alshamil.om)
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /app/
+Disallow: /*?*sort=
+Disallow: /*?*filter=
+
+# Googlebot specific optimizations
+User-agent: Googlebot
+Allow: /assets/
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.svg$
+
+# Sitemap declaration
+Sitemap: https://alshamil.om/sitemap.xml

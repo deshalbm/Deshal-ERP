@@ -175,9 +175,12 @@ import { ContextualHelpDrawer } from "./components/help/ContextualHelpDrawer";
 import { HelpCenterView } from "./components/help/HelpCenterView";
 import { ERPOnboardingModal } from "./components/onboarding/ERPOnboardingModal";
 import { NotificationsDrawer, ERPNotification } from "./components/notifications/NotificationsDrawer";
+import { WebsiteView } from "./components/website/WebsiteView";
+import { WebsiteLayout } from "./components/website/WebsiteLayout";
+import CmsManagerView from "./components/cms/CmsManagerView";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings" | "help">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings" | "help" | "website" | "cms">("home");
   const [userName, setUserName] = useState<string>(() => {
     if (typeof window !== "undefined") {
       const activeSession = loadAuthSession();
@@ -2296,6 +2299,34 @@ export default function App() {
     saveFiscalPeriods(updated);
   };
 
+  const [routePath, setRoutePath] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return window.location.pathname;
+    }
+    return "/";
+  });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setRoutePath(window.location.pathname);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Render Public Website if route is not /app
+  if (!routePath.startsWith("/app")) {
+    return (
+      <WebsiteLayout
+        initialPath={routePath}
+        onNavigateToERP={() => {
+          window.history.pushState({}, "", "/app");
+          setRoutePath("/app");
+        }}
+      />
+    );
+  }
+
   if (!authSession) {
     return (
       <LoginPage
@@ -2394,6 +2425,42 @@ export default function App() {
               onOpenOnboarding={() => setIsOnboardingOpen(true)}
             />
           )}
+
+          {activeTab === "website" && (
+            <WebsiteView
+              onOpenERPModule={(tab) => handleNavigateWithHistory(tab as any)}
+              onOpenSpaceBookingModal={(spaceName) => {
+                if (spaceName) {
+                  const found = rentalSpacesList.find(s => s.name.includes(spaceName) || spaceName.includes(s.name));
+                  if (found) setSelectedSpaceForBooking(found);
+                }
+                setIsBookingModalOpen(true);
+              }}
+              onOpenServiceBookingModal={(serviceName) => {
+                if (serviceName) {
+                  const found = consultingServicesList.find(s => s.name.includes(serviceName) || serviceName.includes(s.name));
+                  if (found) setSelectedServiceForBooking(found);
+                }
+                setIsServiceBookingModalOpen(true);
+              }}
+            />
+          )}
+
+          {activeTab === "cms" && (() => {
+            const activeSession = loadAuthSession();
+            const cmsCompanyId = (activeSession?.user as any)?.companyId || companySettings?.id || "";
+            const cmsUserId = activeSession?.user?.id || "";
+            const cmsUserRole = activeSession?.user?.role || "VIEWER";
+            const cmsUserName = activeSession?.user?.fullName || userName || "مستخدم";
+            return (
+              <CmsManagerView
+                companyId={cmsCompanyId}
+                userId={cmsUserId}
+                userRole={cmsUserRole}
+                userName={cmsUserName}
+              />
+            );
+          })()}
 
         {activeTab === "pos" && (
           <POSView

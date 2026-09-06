@@ -36,12 +36,13 @@ import {
   FileCheck2,
   Tablet,
   BookOpen,
-  Scale
+  Scale,
+  Globe
 } from "lucide-react";
 import { useLanguage } from "../utils/LanguageContext";
 import { AuthSession } from "../types";
 
-export type NavTabType = "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings";
+export type NavTabType = "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings" | "website" | "cms";
 
 interface NavigationDrawerProps {
   isOpen: boolean;
@@ -424,6 +425,39 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           icon: Settings,
           colorClass: "text-slate-700",
           bgClass: "bg-slate-100"
+        },
+        {
+          id: "website",
+          labelAr: "الموقع الإلكتروني والمعاينة",
+          labelEn: "Public Website & Preview",
+          descAr: "معاينة وإدارة الموقع الإلكتروني لشركة الدليل الشامل في صحار",
+          descEn: "Preview & manage Al Daleel Al Shamil corporate website",
+          icon: Tablet,
+          badge: language === "ar" ? "الموقع العام" : "Public Site",
+          badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
+          colorClass: "text-[#006d33]",
+          bgClass: "bg-emerald-50"
+        }
+      ]
+    },
+    {
+      id: "deshal-web",
+      labelAr: "دشال الويب",
+      labelEn: "Deshal Web",
+      icon: Globe,
+      defaultOpen: false,
+      items: [
+        {
+          id: "cms",
+          labelAr: "إدارة المواقع والمحتوى (CMS)",
+          labelEn: "Website & CMS Manager",
+          descAr: "إنشاء وإدارة مواقع المستأجرين والصفحات والمدونة وSEO",
+          descEn: "Manage tenant websites, pages, blog & SEO",
+          icon: Globe,
+          badge: "CMS",
+          badgeColor: "bg-violet-100 text-violet-800 border-violet-200",
+          colorClass: "text-violet-600",
+          bgClass: "bg-violet-50"
         }
       ]
     }
