@@ -616,8 +616,10 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
         immutable: true,
         index: false,
         setHeaders: (res, filepath) => {
-          if (filepath.endsWith(".html")) {
-            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          if (filepath.endsWith(".html") || filepath.endsWith("sw.js") || filepath.endsWith("manifest.webmanifest") || filepath.endsWith("manifest.json")) {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
+            res.setHeader("Pragma", "no-cache");
+            res.setHeader("Expires", "0");
           }
         },
       })
@@ -632,7 +634,9 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
     // For crawlers: inject critical meta tags from CMS into the HTML before serving.
     // For browsers: serve the standard index.html SPA as-is.
     app.get("*", async (req, res) => {
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
       const indexPath = path.join(distPath, "index.html");
       const ua = req.headers["user-agent"] || "";
 

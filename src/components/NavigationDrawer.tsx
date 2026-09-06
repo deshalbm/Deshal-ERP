@@ -409,6 +409,40 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
       ]
     },
     {
+      id: "deshal-web",
+      titleAr: "دشال الويب والمحتوى (Deshal Web & CMS)",
+      titleEn: "Deshal Web & CMS Suite",
+      icon: Globe,
+      colorClass: "text-violet-600",
+      bgClass: "bg-violet-50",
+      items: [
+        {
+          id: "website",
+          labelAr: "الموقع الإلكتروني والمعاينة",
+          labelEn: "Public Website & Preview",
+          descAr: "معاينة وإدارة الموقع الإلكتروني لشركة الدليل الشامل في صحار",
+          descEn: "Preview & manage Al Daleel Al Shamil corporate website",
+          icon: Tablet,
+          badge: language === "ar" ? "الموقع العام" : "Public Site",
+          badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
+          colorClass: "text-[#006d33]",
+          bgClass: "bg-emerald-50"
+        },
+        {
+          id: "cms",
+          labelAr: "إدارة المواقع والمحتوى (CMS)",
+          labelEn: "Website & CMS Manager",
+          descAr: "إنشاء وإدارة مواقع المستأجرين والصفحات والمدونة وSEO",
+          descEn: "Manage tenant websites, pages, blog & SEO",
+          icon: Globe,
+          badge: "CMS",
+          badgeColor: "bg-violet-100 text-violet-800 border-violet-200",
+          colorClass: "text-violet-600",
+          bgClass: "bg-violet-50"
+        }
+      ]
+    },
+    {
       id: "settings",
       titleAr: "إعدادات النظام والأمان (Deshal Settings)",
       titleEn: "System & Security Settings",
@@ -425,43 +459,20 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           icon: Settings,
           colorClass: "text-slate-700",
           bgClass: "bg-slate-100"
-        },
-        {
-          id: "website",
-          labelAr: "الموقع الإلكتروني والمعاينة",
-          labelEn: "Public Website & Preview",
-          descAr: "معاينة وإدارة الموقع الإلكتروني لشركة الدليل الشامل في صحار",
-          descEn: "Preview & manage Al Daleel Al Shamil corporate website",
-          icon: Tablet,
-          badge: language === "ar" ? "الموقع العام" : "Public Site",
-          badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
-          colorClass: "text-[#006d33]",
-          bgClass: "bg-emerald-50"
-        }
-      ]
-    },
-    {
-      id: "deshal-web",
-      labelAr: "دشال الويب",
-      labelEn: "Deshal Web",
-      icon: Globe,
-      defaultOpen: false,
-      items: [
-        {
-          id: "cms",
-          labelAr: "إدارة المواقع والمحتوى (CMS)",
-          labelEn: "Website & CMS Manager",
-          descAr: "إنشاء وإدارة مواقع المستأجرين والصفحات والمدونة وSEO",
-          descEn: "Manage tenant websites, pages, blog & SEO",
-          icon: Globe,
-          badge: "CMS",
-          badgeColor: "bg-violet-100 text-violet-800 border-violet-200",
-          colorClass: "text-violet-600",
-          bgClass: "bg-violet-50"
         }
       ]
     }
   ], [language, vouchersCount, inventoryCount, customersCount, employeesCount]);
+
+  // Auto-expand active category when drawer opens
+  useEffect(() => {
+    if (isOpen && activeTab) {
+      const activeCat = categories.find(cat => cat.items.some(item => item.id === activeTab));
+      if (activeCat) {
+        setExpandedCategories(prev => ({ ...prev, [activeCat.id]: true }));
+      }
+    }
+  }, [isOpen, activeTab, categories]);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => ({

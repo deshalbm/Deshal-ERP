@@ -1,5 +1,5 @@
-// Service Worker for Receipt Voucher Studio (البصمة الذكية - نظام سندات الاستلام)
-const CACHE_NAME = 'smart-voucher-pwa-v1';
+// Service Worker for Deshal ERP
+const CACHE_NAME = 'deshal-erp-pwa-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -10,7 +10,7 @@ const STATIC_ASSETS = [
   '/favicon.svg'
 ];
 
-// Install Event - Pre-cache core shell
+// Install Event - Pre-cache core shell & activate immediately
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -21,13 +21,14 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate Event - Clean old caches and claim clients
+// Activate Event - Clean all old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Purging outdated cache key:', key);
             return caches.delete(key);
           }
         })
@@ -36,7 +37,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Stale-While-Revalidate / Cache-First for static assets, Network-First for APIs
+// Fetch Event - Network-First for HTML/Navigation (always fresh index.html), Cache-First for versioned assets
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -46,8 +47,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // API requests: Network first, don't cache POST AI endpoints
+  // API requests: Network only
   if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // HTML / Navigation requests: ALWAYS NETWORK-FIRST
+  // This guarantees users get the newest index.html immediately without needing hard-refresh
+  const isNavigation = request.mode === 'navigate' || request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html');
+  if (isNavigation) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Offline fallback
+          return caches.match(request).then((cached) => cached || caches.match('/index.html'));
+        })
+    );
     return;
   }
 
@@ -71,34 +95,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // General App Assets - Stale While Revalidate
+  // Static Assets with hashes (e.g. /assets/index-xxx.js) - Cache-First, fallback to Network
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
-      const fetchPromise = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          // If offline and requesting navigation, fallback to cached index.html
-          if (request.mode === 'navigate') {
-            return caches.match('/index.html') || caches.match('/');
-          }
-        });
-
-      return cachedResponse || fetchPromise;
+      if (cachedResponse) return cachedResponse;
+      return fetch(request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+        }
+        return networkResponse;
+      });
     })
   );
 });
 
-// Listen for message from main app
+// Listen for message from main app to reload/skip waiting
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
+
