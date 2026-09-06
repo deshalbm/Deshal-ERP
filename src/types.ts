@@ -697,6 +697,15 @@ export interface KioskDevice {
   location: string; // e.g. "مدخل المقر الرئيسي", "بوابة المستودع A"
   deviceToken: string; // Secure token for API/Applet validation
   activationCode?: string; // e.g. "DSH-K-849204"
+  devicePinHash?: string; // SHA-256 salted PIN hash for device exit / lock override
+  devicePinSalt?: string; // Cryptographic salt for device PIN
+  qrPairingPayload?: string; // Encoded payload string for QR pairing
+  hardwareInfo?: {
+    userAgent?: string;
+    platform?: string;
+    screenResolution?: string;
+    deviceId?: string;
+  };
   status: KioskDeviceStatus;
   lastPing?: string;
   ipAddress?: string;

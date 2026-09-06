@@ -5,7 +5,7 @@
  * and security lockout controls without exposing plain-text PINs.
  */
 
-import { Employee, EmployeePinRecord } from "../types";
+import { Employee, EmployeePinRecord, KioskDevice } from "../types";
 
 const PIN_STORAGE_KEY = "deshal_kiosk_employee_pins_v1";
 const FAILED_ATTEMPTS_STORAGE_KEY = "deshal_kiosk_failed_attempts_v1";
@@ -340,12 +340,45 @@ export async function verifyMasterExitPin(pin: string): Promise<boolean> {
 }
 
 /**
+ * Hash and attach a secret device PIN to a KioskDevice object
+ */
+export async function setDeviceSecretPin(
+  device: KioskDevice,
+  plainPin: string
+): Promise<KioskDevice> {
+  const salt = generateSalt(16);
+  const devicePinHash = await hashPin(plainPin, salt);
+  return {
+    ...device,
+    devicePinHash,
+    devicePinSalt: salt,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Verify if an entered PIN matches a device's specific secret PIN
+ */
+export async function verifyDeviceSecretPin(
+  device: KioskDevice,
+  enteredPin: string
+): Promise<boolean> {
+  if (!device.devicePinHash || !device.devicePinSalt) {
+    // If no custom PIN set on device, check default master PINs
+    return enteredPin === "1234" || enteredPin === "9900";
+  }
+  const computedHash = await hashPin(enteredPin, device.devicePinSalt);
+  return computedHash === device.devicePinHash;
+}
+
+/**
  * Validates Admin PIN for the hidden 7-clicks Kiosk Administration and Exit flow.
- * Checks Master PINs (9900, 1234) and any employee with Admin privileges.
+ * Checks Master PINs (9900, 1234), device secret PIN, and any employee with Admin privileges.
  */
 export async function verifyAdminExitPin(
   pin: string,
-  employees: Employee[]
+  employees: Employee[],
+  currentDevice?: KioskDevice
 ): Promise<{
   success: boolean;
   adminName?: string;
@@ -372,6 +405,18 @@ export async function verifyAdminExitPin(
       success: true,
       adminName: "مدير النظام العام (Master Admin)"
     };
+  }
+
+  // Check current device specific secret PIN if present
+  if (currentDevice) {
+    const isDevicePinValid = await verifyDeviceSecretPin(currentDevice, pin);
+    if (isDevicePinValid) {
+      resetKioskFailedAttempts();
+      return {
+        success: true,
+        adminName: `رمز الجهاز الخاص (${currentDevice.name})`
+      };
+    }
   }
 
   // Check if PIN matches any administrator employee

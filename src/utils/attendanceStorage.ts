@@ -5,6 +5,7 @@
  * Attendance Adjustments, and Offline Sync Queue.
  */
 
+import QRCode from "qrcode";
 import {
   KioskDevice,
   MovementTypeConfig,
@@ -394,6 +395,118 @@ export function activateDeviceByCode(
     success: true,
     device: matched
   };
+}
+
+/**
+ * Detect hardware details of current tablet/device browser
+ */
+export function detectDeviceHardwareInfo(): {
+  userAgent: string;
+  platform: string;
+  screenResolution: string;
+  deviceId: string;
+} {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "Unknown Browser";
+  const platform =
+    typeof navigator !== "undefined"
+      ? (navigator as any).userAgentData?.platform || navigator.platform || "Tablet"
+      : "Tablet";
+  const screenRes =
+    typeof window !== "undefined" && window.screen
+      ? `${window.screen.width}x${window.screen.height}`
+      : "1024x768";
+  let deviceId = "";
+  try {
+    deviceId = localStorage.getItem("deshal_hardware_device_uuid") || "";
+    if (!deviceId) {
+      deviceId =
+        "HW-" +
+        Math.random().toString(36).substring(2, 8).toUpperCase() +
+        "-" +
+        Date.now().toString(36).toUpperCase();
+      localStorage.setItem("deshal_hardware_device_uuid", deviceId);
+    }
+  } catch (e) {
+    deviceId = "HW-GENERIC-" + Date.now();
+  }
+  return { userAgent: ua, platform, screenResolution: screenRes, deviceId };
+}
+
+/**
+ * Generates pairing QR code data payload for a kiosk device
+ */
+export function generateKioskPairingPayload(device: KioskDevice): string {
+  const payload = {
+    v: 1,
+    action: "DESHAL_KIOSK_PAIR",
+    id: device.id,
+    code: device.deviceCode,
+    activationCode: device.activationCode || device.deviceCode,
+    token: device.deviceToken,
+    name: device.name,
+    branchId: device.branchId,
+    branchName: device.branchName,
+    location: device.location,
+    ts: Date.now()
+  };
+  return JSON.stringify(payload);
+}
+
+/**
+ * Renders QR code payload as DataURL (base64 image)
+ */
+export async function generateKioskQRDataUrl(payload: string): Promise<string> {
+  try {
+    return await QRCode.toDataURL(payload, {
+      margin: 2,
+      width: 320,
+      color: {
+        dark: "#0f172a",
+        light: "#ffffff"
+      }
+    });
+  } catch (e) {
+    console.error("Failed to generate QR code DataURL:", e);
+    return "";
+  }
+}
+
+/**
+ * Parse QR Pairing string into kiosk activation parameters
+ */
+export function parseKioskPairingPayload(payloadStr: string): {
+  isValid: boolean;
+  activationCode?: string;
+  deviceId?: string;
+  name?: string;
+  branchId?: string;
+  branchName?: string;
+  location?: string;
+} {
+  const trimmed = payloadStr.trim();
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && (parsed.action === "DESHAL_KIOSK_PAIR" || parsed.activationCode || parsed.id)) {
+      return {
+        isValid: true,
+        activationCode: parsed.activationCode || parsed.code,
+        deviceId: parsed.id,
+        name: parsed.name,
+        branchId: parsed.branchId,
+        branchName: parsed.branchName,
+        location: parsed.location
+      };
+    }
+  } catch (e) {
+    // If user scanned or pasted direct activation code string
+    if (trimmed.length > 2) {
+      return {
+        isValid: true,
+        activationCode: trimmed
+      };
+    }
+  }
+  return { isValid: false };
 }
 
 // ----------------------------------------------------

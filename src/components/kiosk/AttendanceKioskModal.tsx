@@ -13,7 +13,8 @@ import {
   verifyKioskPin,
   verifyMasterExitPin,
   verifyAdminExitPin,
-  checkKioskLockout
+  checkKioskLockout,
+  setDeviceSecretPin
 } from "../../utils/kioskSecurity";
 import {
   calculateEmployeeCurrentStatus,
@@ -24,11 +25,14 @@ import {
   saveIsKioskModeEnabled,
   loadIsKioskModeEnabled,
   loadKioskDevices,
+  saveKioskDevices,
   loadAttendanceMovementLogs,
   loadMovementTypes,
   loadActiveKioskDeviceId,
   saveActiveKioskDeviceId,
-  activateDeviceByCode
+  activateDeviceByCode,
+  parseKioskPairingPayload,
+  detectDeviceHardwareInfo
 } from "../../utils/attendanceStorage";
 import {
   Clock,
@@ -68,7 +72,9 @@ import {
   Volume2,
   VolumeX,
   Sliders,
-  Tablet
+  Tablet,
+  QrCode,
+  Scan
 } from "lucide-react";
 
 export interface AttendanceKioskModalProps {
@@ -133,6 +139,22 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
   const [activationError, setActivationError] = useState<string>("");
   const [activationSuccessMsg, setActivationSuccessMsg] = useState<string>("");
 
+  // QR Pairing & Tablet Onboarding State
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
+  const [onboardingForm, setOnboardingForm] = useState<{
+    name: string;
+    branchId: string;
+    location: string;
+    plainPin: string;
+    deviceCode: string;
+  }>({
+    name: "",
+    branchId: branches[0]?.id || "branch-sohar",
+    location: "المدخل الرئيسي",
+    plainPin: "1234",
+    deviceCode: ""
+  });
+
   const matchedDevice = safeKioskDevices.find(
     (d) => d.id === currentDeviceId && d.status === "ACTIVE"
   );
@@ -164,6 +186,79 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
       setSelectedDevice(matchedDevice);
     }
   }, [matchedDevice]);
+
+  const handleQRPairingParse = (inputStr: string) => {
+    const parsed = parseKioskPairingPayload(inputStr);
+    if (!parsed.isValid) {
+      setActivationError("رمز ה-QR غير صحيح أو غير معتمد. يرجى مسح رمز QR من لوحة إعدادات ERP.");
+      return;
+    }
+
+    const code = parsed.activationCode || inputStr;
+    const existing = safeKioskDevices.find(
+      (d) =>
+        d.activationCode?.toUpperCase() === code.toUpperCase() ||
+        d.deviceCode?.toUpperCase() === code.toUpperCase() ||
+        d.id === parsed.deviceId
+    );
+
+    if (existing) {
+      handlePairDeviceDirectly(existing);
+    } else {
+      const generatedCode = parsed.activationCode || `KIOSK-${branches[0]?.code || "SOH"}-${safeKioskDevices.length + 1}`;
+      setOnboardingForm({
+        name: parsed.name || `آيباد كشك - ${branches[0]?.name || "الفرع الرئيسي"}`,
+        branchId: parsed.branchId || branches[0]?.id || "branch-sohar",
+        location: parsed.location || "المدخل الرئيسي",
+        plainPin: "1234",
+        deviceCode: generatedCode
+      });
+      setIsOnboardingModalOpen(true);
+    }
+  };
+
+  const handleCompleteOnboarding = async () => {
+    if (!onboardingForm.name.trim()) return;
+    const targetBranch = branches.find((b) => b.id === onboardingForm.branchId) || branches[0];
+    const hardware = detectDeviceHardwareInfo();
+    const randomCode = Math.floor(100000 + Math.random() * 900000);
+
+    let newDev: KioskDevice = {
+      id: `dev-qr-${Date.now()}`,
+      deviceCode: onboardingForm.deviceCode || `KIOSK-QR-${randomCode}`,
+      name: onboardingForm.name,
+      companyName: companySettings.companyNameAr || "ديشال",
+      branchId: onboardingForm.branchId,
+      branchName: targetBranch?.name || "الفرع الرئيسي",
+      location: onboardingForm.location || "المدخل الرئيسي",
+      deviceToken: `dsh_kiosk_qr_${randomCode}_${Date.now().toString(36)}`,
+      activationCode: `DSH-K-${randomCode}`,
+      hardwareInfo: hardware,
+      status: "ACTIVE",
+      lastPing: new Date().toISOString(),
+      model: hardware.platform + " Tablet",
+      appVersion: "Deshal Kiosk v3.4",
+      isLocked: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (onboardingForm.plainPin) {
+      newDev = await setDeviceSecretPin(newDev, onboardingForm.plainPin);
+    }
+
+    const updatedDevices = [...safeKioskDevices, newDev];
+    saveKioskDevices(updatedDevices);
+    setCurrentDeviceId(newDev.id);
+    setSelectedDevice(newDev);
+    setIsKioskModeEnabledState(true);
+    saveIsKioskModeEnabled(true);
+    saveActiveKioskDeviceId(newDev.id);
+    setIsOnboardingModalOpen(false);
+    setActivationError("");
+    setActivationSuccessMsg(`تم إكمال اقتران وإصدار حساب كشك مخصص للجهاز (${newDev.name}) بنجاح!`);
+    setTimeout(() => setActivationSuccessMsg(""), 4000);
+  };
 
   const handleActivateByCode = (codeToUse?: string) => {
     const code = (codeToUse || activationCodeInput).trim();
@@ -835,10 +930,10 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                 </div>
               )}
 
-              {/* Activation Code Form */}
-              <div className="w-full bg-slate-950 p-6 rounded-2xl border border-slate-800 mb-6">
-                <label className="block text-xs font-bold text-amber-400 mb-2">
-                  إدخال رمز تفعيل الكشك المعتمد (Activation Code):
+              {/* Activation Code & QR Payload Form */}
+              <div className="w-full bg-slate-950 p-6 rounded-2xl border border-slate-800 mb-6 space-y-3">
+                <label className="block text-xs font-bold text-amber-400 mb-1">
+                  مسح رمز ה-QR أو إدخال كود تفعيل الكشك المعتمد:
                 </label>
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   <div className="relative flex-1 w-full">
@@ -846,28 +941,44 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                       type="text"
                       value={activationCodeInput}
                       onChange={(e) => {
-                        setActivationCodeInput(e.target.value);
+                        const val = e.target.value;
+                        setActivationCodeInput(val);
                         setActivationError("");
+                        if (val.includes("DESHAL_KIOSK_PAIR") || val.startsWith("{")) {
+                          handleQRPairingParse(val);
+                        }
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") handleActivateByCode();
+                        if (e.key === "Enter") {
+                          if (activationCodeInput.includes("DESHAL_KIOSK_PAIR") || activationCodeInput.startsWith("{")) {
+                            handleQRPairingParse(activationCodeInput);
+                          } else {
+                            handleActivateByCode();
+                          }
+                        }
                       }}
-                      placeholder="مثال: DSH-K-849204 أو KIOSK-TABLET"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-sm uppercase placeholder:text-slate-500 focus:outline-none focus:border-amber-400 shadow-inner"
+                      placeholder="امسح رمز QR أو أدخل كود التفعيل (DSH-K-849204)..."
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-amber-400 shadow-inner"
                     />
-                    <Tablet className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <QrCode className="w-4 h-4 text-amber-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   </div>
                   <button
-                    onClick={() => handleActivateByCode()}
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shrink-0 shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2"
+                    onClick={() => {
+                      if (activationCodeInput.includes("DESHAL_KIOSK_PAIR") || activationCodeInput.startsWith("{")) {
+                        handleQRPairingParse(activationCodeInput);
+                      } else {
+                        handleActivateByCode();
+                      }
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <CheckCircle2 className="w-4 h-4" />
-                    تفعيل الجهاز الآن
+                    <Scan className="w-4 h-4" />
+                    تفعيل / اقتران الجهاز
                   </button>
                 </div>
 
                 {activationError && (
-                  <div className="mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                  <div className="mt-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                     <span>{activationError}</span>
                   </div>
@@ -1718,6 +1829,123 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                 className="py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/25 transition-colors"
               >
                 تأكيد الخروج الآن
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. TABLET ONBOARDING WIZARD MODAL FOR SCANNED / NEW QR DEVICES */}
+      {/* ========================================================================= */}
+      {isOnboardingModalOpen && (
+        <div className="fixed inset-0 z-[150] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
+          <div className="w-full max-w-lg bg-slate-900 border border-amber-500/40 p-6 rounded-3xl shadow-2xl text-right animate-scaleUp space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-amber-400 font-extrabold text-sm">
+                <QrCode className="w-5 h-5" />
+                <span>تحديد واقتران بيانات الكشك اللوحي الجديد</span>
+              </div>
+              <button
+                onClick={() => setIsOnboardingModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl text-xs text-indigo-300 space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-indigo-200">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>تم قراءة كود الـ QR والتقاط مواصفات هذا الجهاز تلقائياً!</span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                يرجى إكمال وتحديد اسم الجهاز والموقع والرمز السري لإصدار حساب كشك مخصص مقفل.
+              </p>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  اسم الجهاز المعرف <span className="text-amber-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={onboardingForm.name}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, name: e.target.value })}
+                  placeholder="مثال: تابلت الاستقبال - صحار"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">كود الجهاز</label>
+                  <input
+                    readOnly
+                    type="text"
+                    value={onboardingForm.deviceCode}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-amber-400 font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">الفرع التابع له</label>
+                  <select
+                    value={onboardingForm.branchId}
+                    onChange={(e) => setOnboardingForm({ ...onboardingForm, branchId: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold outline-none focus:border-amber-400"
+                  >
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">الموقع والتمركز</label>
+                <input
+                  type="text"
+                  value={onboardingForm.location}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, location: e.target.value })}
+                  placeholder="مثال: مدخل الاستقبال الرئيسي"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1 flex items-center justify-between">
+                  <span>الرمز السري المخصص للتابلت (Master Exit PIN)</span>
+                  <span className="text-[10px] text-slate-400">(المستخدم لفتح/إغلاق الجهاز)</span>
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={onboardingForm.plainPin}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, plainPin: e.target.value })}
+                  placeholder="1234"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-amber-300 font-mono font-bold tracking-widest outline-none focus:border-amber-400"
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex gap-3">
+              <button
+                onClick={() => setIsOnboardingModalOpen(false)}
+                className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleCompleteOnboarding}
+                className="flex-[2] py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                إصدار الحساب وفتح الكشك الآن
               </button>
             </div>
           </div>
