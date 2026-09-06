@@ -24,7 +24,7 @@ services:
         required: false
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.deshal-erp.rule=Host(`erp.deshalbm.com`) || Host(`deshalbm.com`) || Host(`www.deshalbm.com`) || Host(`alshamil.om`) || Host(`www.alshamil.om`)"
+      - "traefik.http.routers.deshal-erp.rule=Host(`erp.deshalbm.com`) || Host(`deshalbm.com`) || Host(`www.deshalbm.com`)"
       - "traefik.http.routers.deshal-erp.entrypoints=websecure"
       - "traefik.http.routers.deshal-erp.tls.certresolver=letsencrypt"
       - "traefik.http.services.deshal-erp.loadbalancer.server.port=3000"
