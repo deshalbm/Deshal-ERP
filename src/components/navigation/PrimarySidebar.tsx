@@ -283,8 +283,15 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
         {/* Brand Header */}
         <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg shadow-lg shrink-0">
-              D
+            <div className="w-10 h-10 rounded-2xl bg-white border border-slate-700 flex items-center justify-center shadow-lg shrink-0 overflow-hidden p-1">
+              <img
+                src="/assets/images/deshal_logo.png"
+                alt="Deshal ERP Logo"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/favicon.png';
+                }}
+              />
             </div>
             {!effectiveCollapsed && (
               <div className="min-w-0">

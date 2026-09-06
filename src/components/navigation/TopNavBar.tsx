@@ -114,8 +114,15 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             className="flex items-center gap-2.5 cursor-pointer group text-start shrink-0"
             title={isRTL ? 'العودة للرئيسية' : 'Go to Home'}
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 shadow-xs flex items-center justify-center text-white font-black group-hover:scale-105 transition-transform shrink-0">
-              <Building2 className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-center font-black group-hover:scale-105 transition-transform shrink-0 overflow-hidden p-1">
+              <img
+                src="/assets/images/deshal_logo.png"
+                alt="Deshal ERP Logo"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/favicon.png';
+                }}
+              />
             </div>
             <div className="hidden sm:block">
               <div className="flex items-center gap-1.5">
