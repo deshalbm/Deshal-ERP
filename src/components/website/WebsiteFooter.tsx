@@ -16,8 +16,12 @@ export const WebsiteFooter: React.FC<WebsiteFooterProps> = ({ onNavigate, curren
           {/* Brand Bio */}
           <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#006d33] flex items-center justify-center text-white font-extrabold text-base shadow-inner">
-                د
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1 border border-slate-700 shrink-0 overflow-hidden shadow-sm">
+                <img
+                  src="/assets/images/deshal_logo.png"
+                  alt="الدليل الشامل"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <span className="font-extrabold text-xl text-white">
                 {isAr ? 'الدليل الشامل لاستشارات إدارة المشاريع' : 'Al Daleel Al Shamil Consultancies'}

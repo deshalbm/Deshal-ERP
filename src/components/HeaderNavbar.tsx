@@ -156,8 +156,15 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
               onClick={() => setActiveTab("home")}
               className="flex items-center space-x-2 sm:space-x-2.5 rtl:space-x-reverse text-start rtl:text-end cursor-pointer group"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 bg-indigo-600 rounded-xl shadow-xs flex items-center justify-center text-white font-black group-hover:scale-105 transition-transform shrink-0">
-                <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white border border-slate-200 rounded-xl shadow-xs flex items-center justify-center font-black group-hover:scale-105 transition-transform shrink-0 overflow-hidden p-1">
+                <img
+                  src="/assets/images/deshal_logo.png"
+                  alt="Deshal ERP Logo"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/favicon.png';
+                  }}
+                />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center space-x-1.5 rtl:space-x-reverse">

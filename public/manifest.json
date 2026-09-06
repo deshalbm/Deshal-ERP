@@ -1,7 +1,7 @@
 {
-  "name": "البصمة الذكية - نظام سندات الاستلام الرسمية",
-  "short_name": "سندات البصمة",
-  "description": "نظام إدارة وطباعة وتصدير سندات القبض والدفع المالية الاحترافية متوافق مع كافة الأجهزة",
+  "name": "منظومة ديشال لإدارة الأعمال | Deshal Business Management ERP",
+  "short_name": "ديشال ERP",
+  "description": "منظومة ديشال المتكاملة لإدارة الأعمال، المالية، عقود الإيجار، المحاسبة، مساحات العمل والخدمات",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -13,16 +13,10 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/favicon.png",
+      "sizes": "1600x1600",
+      "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "/icon-maskable.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
     },
     {
       "src": "/icon-192.png",
@@ -34,6 +28,18 @@
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     }
   ]

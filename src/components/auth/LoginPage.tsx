@@ -464,8 +464,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       {/* Top Header Bar */}
       <header className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-600/30 flex items-center justify-center text-white font-black border border-indigo-400/30">
-            <Receipt className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center border border-slate-200 shrink-0 overflow-hidden p-1">
+            <img
+              src="/assets/images/deshal_logo.png"
+              alt="Deshal ERP"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <div className="flex items-center space-x-2 rtl:space-x-reverse">

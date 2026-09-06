@@ -742,6 +742,13 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
           }
         }
 
+        const origin = `https://${req.headers.host || site.domain || 'erp.deshalbm.com'}`;
+        if (!ogImage) {
+          ogImage = `${origin}/assets/images/deshal_logo.png`;
+        } else if (!ogImage.startsWith('http')) {
+          ogImage = `${origin}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
+        }
+
         // Import schema generator dynamically
         const { generateSchemaOrgGraph } = await import("./src/lib/cms/seoEngine.js").catch(() =>
           import("./src/lib/cms/seoEngine"));
@@ -752,7 +759,7 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
           pageTitle: seoTitle,
           pageDescription: seoDescription,
           canonicalUrl,
-          logoUrl: site.logoUrl,
+          logoUrl: site.logoUrl || `${origin}/assets/images/deshal_logo.png`,
           ogImage,
           pageType,
           datePublished,
@@ -766,11 +773,17 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
           `<title>${escapeHtmlAttr(seoTitle)}</title>`,
           `<meta name="description" content="${escapeHtmlAttr(seoDescription)}">`,
           `<link rel="canonical" href="${escapeHtmlAttr(canonicalUrl)}">`,
-          `<link rel="icon" type="image/png" href="${escapeHtmlAttr(site.logoUrl || '/assets/images/deshal_logo.png')}">`,
-          `<link rel="apple-touch-icon" href="${escapeHtmlAttr(site.logoUrl || '/assets/images/deshal_logo.png')}">`,
+          `<link rel="icon" type="image/png" sizes="32x32" href="${escapeHtmlAttr(site.logoUrl || '/favicon.png')}">`,
+          `<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">`,
+          `<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">`,
+          `<link rel="apple-touch-icon" sizes="180x180" href="${escapeHtmlAttr(site.logoUrl || '/apple-touch-icon.png')}">`,
           `<meta property="og:title" content="${escapeHtmlAttr(seoTitle)}">`,
           `<meta property="og:description" content="${escapeHtmlAttr(seoDescription)}">`,
           `<meta property="og:image" content="${escapeHtmlAttr(ogImage)}">`,
+          `<meta property="og:image:secure_url" content="${escapeHtmlAttr(ogImage)}">`,
+          `<meta property="og:image:type" content="image/png">`,
+          `<meta property="og:image:width" content="1600">`,
+          `<meta property="og:image:height" content="1600">`,
           `<meta property="og:url" content="${escapeHtmlAttr(canonicalUrl)}">`,
           `<meta property="og:type" content="${isBlogPath ? 'article' : 'website'}">`,
           `<meta property="og:site_name" content="${escapeHtmlAttr(site.name)}">`,

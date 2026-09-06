@@ -544,8 +544,15 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           {/* Drawer Header */}
           <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
             <div className="flex items-center space-x-3 rtl:space-x-reverse min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black shadow-xs shrink-0">
-                <Layers className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-black shadow-xs shrink-0 overflow-hidden p-1">
+                <img
+                  src="/assets/images/deshal_logo.png"
+                  alt="Deshal ERP Logo"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/favicon.png';
+                  }}
+                />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse">

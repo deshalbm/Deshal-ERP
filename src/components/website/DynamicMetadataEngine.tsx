@@ -29,7 +29,10 @@ export const DynamicMetadataEngine: React.FC<DynamicMetadataEngineProps> = ({
     const finalTitle = seo.seoTitle || `${pageTitle} — ${siteName}`;
     const finalDescription = seo.seoDescription || settings?.footerText || `${siteName} — ${pageTitle}`;
     const canonical = seo.canonicalUrl || normalizeCanonicalUrl(domain || window.location.hostname, path);
-    const ogImage = seo.ogImage || logoUrl || '';
+    const origin = window.location.origin;
+    let rawOgImage = seo.ogImage || logoUrl || '/assets/images/deshal_logo.png';
+    const ogImage = rawOgImage.startsWith('http') ? rawOgImage : `${origin}${rawOgImage.startsWith('/') ? '' : '/'}${rawOgImage}`;
+    const twitterImage = seo.twitterImage ? (seo.twitterImage.startsWith('http') ? seo.twitterImage : `${origin}${seo.twitterImage.startsWith('/') ? '' : '/'}${seo.twitterImage}`) : ogImage;
     const twitterCard = seo.twitterCard || 'summary_large_image';
 
     // 1. Update Title
@@ -61,14 +64,19 @@ export const DynamicMetadataEngine: React.FC<DynamicMetadataEngineProps> = ({
     setMetaTag('meta[name="description"]', 'name', 'description', finalDescription);
     setMetaTag('meta[name="robots"]', 'name', 'robots', seo.robots || 'index, follow');
     setLinkTag('canonical', canonical);
-    const faviconUrl = logoUrl || '/assets/images/deshal_logo.png';
+    const faviconUrl = logoUrl || '/favicon.png';
     setLinkTag('icon', faviconUrl);
-    setLinkTag('apple-touch-icon', faviconUrl);
+    setLinkTag('shortcut icon', '/favicon.ico');
+    setLinkTag('apple-touch-icon', logoUrl || '/apple-touch-icon.png');
 
     // 3. OpenGraph Meta Tags
     setMetaTag('meta[property="og:title"]', 'property', 'og:title', seo.ogTitle || finalTitle);
     setMetaTag('meta[property="og:description"]', 'property', 'og:description', seo.ogDescription || finalDescription);
     setMetaTag('meta[property="og:image"]', 'property', 'og:image', ogImage);
+    setMetaTag('meta[property="og:image:secure_url"]', 'property', 'og:image:secure_url', ogImage);
+    setMetaTag('meta[property="og:image:type"]', 'property', 'og:image:type', 'image/png');
+    setMetaTag('meta[property="og:image:width"]', 'property', 'og:image:width', '1600');
+    setMetaTag('meta[property="og:image:height"]', 'property', 'og:image:height', '1600');
     setMetaTag('meta[property="og:url"]', 'property', 'og:url', canonical);
     setMetaTag('meta[property="og:type"]', 'property', 'og:type', pageType === 'BlogPosting' ? 'article' : 'website');
     setMetaTag('meta[property="og:site_name"]', 'property', 'og:site_name', siteName);
@@ -77,7 +85,7 @@ export const DynamicMetadataEngine: React.FC<DynamicMetadataEngineProps> = ({
     setMetaTag('meta[name="twitter:card"]', 'name', 'twitter:card', twitterCard);
     setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', seo.twitterTitle || finalTitle);
     setMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description', seo.twitterDescription || finalDescription);
-    setMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image', seo.twitterImage || ogImage);
+    setMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image', twitterImage);
 
     // 5. Schema.org JSON-LD Graph
     const schemaGraph = generateSchemaOrgGraph({
