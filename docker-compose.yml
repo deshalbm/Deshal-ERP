@@ -26,10 +26,12 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.deshal-erp.rule=Host(`erp.deshalbm.com`)"
       - "traefik.http.routers.deshal-erp.entrypoints=websecure"
+      - "traefik.http.routers.deshal-erp.tls=true"
       - "traefik.http.routers.deshal-erp.tls.certresolver=letsencrypt"
       - "traefik.http.services.deshal-erp.loadbalancer.server.port=3000"
       - "traefik.http.routers.deshal-web.rule=Host(`deshalbm.com`) || Host(`www.deshalbm.com`)"
       - "traefik.http.routers.deshal-web.entrypoints=websecure"
+      - "traefik.http.routers.deshal-web.tls=true"
       - "traefik.http.routers.deshal-web.tls.certresolver=letsencrypt"
       - "traefik.http.routers.deshal-web.service=deshal-erp"
     networks:
