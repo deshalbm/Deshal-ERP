@@ -57,10 +57,13 @@ export const DynamicMetadataEngine: React.FC<DynamicMetadataEngineProps> = ({
       el.setAttribute('href', href);
     };
 
-    // 2. Standard Meta Tags
+    // 2. Standard Meta & Icon Tags
     setMetaTag('meta[name="description"]', 'name', 'description', finalDescription);
     setMetaTag('meta[name="robots"]', 'name', 'robots', seo.robots || 'index, follow');
     setLinkTag('canonical', canonical);
+    const faviconUrl = logoUrl || '/assets/images/deshal_logo.png';
+    setLinkTag('icon', faviconUrl);
+    setLinkTag('apple-touch-icon', faviconUrl);
 
     // 3. OpenGraph Meta Tags
     setMetaTag('meta[property="og:title"]', 'property', 'og:title', seo.ogTitle || finalTitle);

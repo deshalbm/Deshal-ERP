@@ -766,6 +766,8 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
           `<title>${escapeHtmlAttr(seoTitle)}</title>`,
           `<meta name="description" content="${escapeHtmlAttr(seoDescription)}">`,
           `<link rel="canonical" href="${escapeHtmlAttr(canonicalUrl)}">`,
+          `<link rel="icon" type="image/png" href="${escapeHtmlAttr(site.logoUrl || '/assets/images/deshal_logo.png')}">`,
+          `<link rel="apple-touch-icon" href="${escapeHtmlAttr(site.logoUrl || '/assets/images/deshal_logo.png')}">`,
           `<meta property="og:title" content="${escapeHtmlAttr(seoTitle)}">`,
           `<meta property="og:description" content="${escapeHtmlAttr(seoDescription)}">`,
           `<meta property="og:image" content="${escapeHtmlAttr(ogImage)}">`,
