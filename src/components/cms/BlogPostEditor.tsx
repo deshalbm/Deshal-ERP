@@ -3,6 +3,7 @@ import {
   Save, X, ChevronUp, ChevronDown, Check, AlertCircle, Image as ImageIcon 
 } from 'lucide-react';
 import { CmsBlogPost } from '../../types/cms';
+import { SeoStudioPanel } from './SeoStudioPanel';
 
 interface BlogPostEditorProps {
   siteId: string;
@@ -316,38 +317,36 @@ export default function BlogPostEditor({
             )}
           </div>
 
-          {/* SEO Panel */}
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-            <button 
-              className="w-full flex justify-between items-center p-4 font-semibold text-[#002e69]"
-              onClick={() => setSeoExpanded(!seoExpanded)}
-            >
-              إعدادات SEO
-              {seoExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </button>
-            {seoExpanded && (
-              <div className="p-4 border-t border-slate-200 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">عنوان SEO</label>
-                  <input
-                    type="text"
-                    value={post.seoTitle || ''}
-                    onChange={e => setPost(prev => ({ ...prev, seoTitle: e.target.value }))}
-                    className="w-full p-2 border border-slate-300 rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">وصف SEO</label>
-                  <textarea
-                    value={post.seoDescription || ''}
-                    onChange={e => setPost(prev => ({ ...prev, seoDescription: e.target.value }))}
-                    className="w-full p-2 border border-slate-300 rounded h-24"
-                    maxLength={160}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          {/* SEO / GEO / SMO Studio Panel */}
+          <SeoStudioPanel
+            seo={{
+              seoTitle: post.seoTitle,
+              seoDescription: post.seoDescription,
+              canonicalUrl: post.canonicalUrl,
+              ogImage: post.ogImage || post.coverImage,
+              ogTitle: post.ogTitle,
+              ogDescription: post.ogDescription,
+              robots: post.robots,
+              focusKeyword: post.focusKeyword,
+              secondaryKeywords: post.secondaryKeywords,
+              searchIntent: post.searchIntent,
+              twitterTitle: post.twitterTitle,
+              twitterDescription: post.twitterDescription,
+              twitterImage: post.twitterImage || post.coverImage,
+              twitterCard: post.twitterCard,
+              geoPrimaryQuestion: post.geoPrimaryQuestion,
+              geoDirectAnswer: post.geoDirectAnswer,
+              geoKeyFacts: post.geoKeyFacts,
+              geoFaqs: post.geoFaqs,
+              eeatAuthorName: post.authorName,
+              eeatReviewerName: post.eeatReviewerName,
+            }}
+            title={post.title || ''}
+            slug={post.slug || ''}
+            siteName="مدونة الدليل الشامل"
+            domain="alshamil.om"
+            onChange={updated => setPost(prev => ({ ...prev, ...updated }))}
+          />
 
           {/* Schema Preview */}
           <div className="bg-white rounded-lg shadow-sm border border-slate-200">

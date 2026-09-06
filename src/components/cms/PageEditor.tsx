@@ -3,6 +3,7 @@ import {
   Save, X, Plus, ChevronUp, ChevronDown, Trash2, Eye, EyeOff, Check, AlertCircle 
 } from 'lucide-react';
 import { TenantPage, CmsPageType, CmsPageSection, CmsSectionType, CmsSectionData } from '../../types/cms';
+import { SeoStudioPanel } from './SeoStudioPanel';
 
 interface PageEditorProps {
   siteId: string;
@@ -303,41 +304,37 @@ export default function PageEditor({
           {errors.sections && <p className="text-red-500 text-sm">{errors.sections}</p>}
         </div>
 
-        {/* SEO Panel */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-          <button 
-            className="w-full flex justify-between items-center p-4 font-semibold text-[#002e69]"
-            onClick={() => setSeoExpanded(!seoExpanded)}
-          >
-            إعدادات SEO (تحسين محركات البحث)
-            {seoExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-          {seoExpanded && (
-            <div className="p-4 border-t border-slate-200 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">عنوان SEO</label>
-                <input
-                  type="text"
-                  value={page.seoTitle || ''}
-                  onChange={e => setPage(prev => ({ ...prev, seoTitle: e.target.value }))}
-                  className="w-full p-2 border border-slate-300 rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">وصف SEO</label>
-                <textarea
-                  value={page.seoDescription || ''}
-                  onChange={e => setPage(prev => ({ ...prev, seoDescription: e.target.value }))}
-                  className="w-full p-2 border border-slate-300 rounded h-24"
-                  maxLength={160}
-                />
-                <div className="text-xs text-slate-500 mt-1">
-                  {page.seoDescription?.length || 0} / 160
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* SEO / GEO / SMO / AEO Studio Panel */}
+        <SeoStudioPanel
+          seo={{
+            seoTitle: page.seoTitle,
+            seoDescription: page.seoDescription,
+            canonicalUrl: page.canonicalUrl,
+            ogImage: page.ogImage,
+            ogTitle: page.ogTitle,
+            ogDescription: page.ogDescription,
+            robots: page.robots,
+            focusKeyword: page.focusKeyword,
+            secondaryKeywords: page.secondaryKeywords,
+            searchIntent: page.searchIntent,
+            twitterTitle: page.twitterTitle,
+            twitterDescription: page.twitterDescription,
+            twitterImage: page.twitterImage,
+            twitterCard: page.twitterCard,
+            geoPrimaryQuestion: page.geoPrimaryQuestion,
+            geoDirectAnswer: page.geoDirectAnswer,
+            geoKeyFacts: page.geoKeyFacts,
+            geoFaqs: page.geoFaqs,
+            eeatAuthorName: page.eeatAuthorName,
+            eeatAuthorCredentials: page.eeatAuthorCredentials,
+            eeatReviewerName: page.eeatReviewerName,
+          }}
+          title={page.title || ''}
+          slug={page.slug || ''}
+          siteName="الموقع الرسمي"
+          domain="alshamil.om"
+          onChange={updated => setPage(prev => ({ ...prev, ...updated }))}
+        />
       </div>
 
       {/* Footer / Status Bar */}

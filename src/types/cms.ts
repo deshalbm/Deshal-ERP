@@ -210,6 +210,26 @@ export interface CmsSeoFields {
   ogDescription?: string;
   robots?: string;
   structuredData?: Record<string, unknown>;
+  // Extended SEO / SMO / GEO / AEO / E-E-A-T fields
+  focusKeyword?: string;
+  secondaryKeywords?: string[];
+  searchIntent?: 'informational' | 'transactional' | 'navigational' | 'commercial';
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player';
+  geoPrimaryQuestion?: string;
+  geoDirectAnswer?: string;
+  geoKeyFacts?: string[];
+  geoFaqs?: Array<{ question: string; answer: string }>;
+  geoTopicEntity?: string;
+  eeatAuthorName?: string;
+  eeatAuthorCredentials?: string;
+  eeatReviewerName?: string;
+  eeatSources?: Array<{ title: string; url: string }>;
+  eeatLastReviewedAt?: string;
+  seoScore?: number;
+  seoHealthIssues?: Array<{ type: 'error' | 'warning' | 'info'; message: string; code: string }>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -232,6 +252,61 @@ export interface TenantWebsiteSettings {
   footerText?: string;
   copyrightText?: string;
   analyticsId?: string;
+  // Local SEO & Webmaster credentials (server-bound)
+  twitterCard?: string;
+  twitterSite?: string;
+  defaultLanguage?: string;
+  supportedLanguages?: string[];
+  localBusinessType?: string;
+  localGeoLatitude?: number;
+  localGeoLongitude?: number;
+  localOpeningHours?: Array<{ dayOfWeek: string; opens: string; closes: string }>;
+  localServiceArea?: string[];
+  localGbpUrl?: string;
+  googleSearchConsoleId?: string;
+  googleAnalyticsId?: string;
+  googleTagManagerId?: string;
+  microsoftClarityId?: string;
+  bingWebmasterId?: string;
+}
+
+export interface SeoRedirect {
+  id: string;
+  tenantWebsiteId: string;
+  companyId: string;
+  sourcePath: string;
+  destinationUrl: string;
+  statusCode: 301 | 302 | 307 | 308;
+  isActive: boolean;
+  hitsCount: number;
+  lastHitAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EntityType = 'Organization' | 'Brand' | 'Person' | 'Location' | 'Service' | 'Product' | 'Course' | 'Event';
+
+export interface CmsEntity {
+  id: string;
+  tenantWebsiteId: string;
+  companyId: string;
+  entityType: EntityType;
+  slug: string;
+  officialName: string;
+  alternateName?: string;
+  description?: string;
+  logoUrl?: string;
+  imageUrl?: string;
+  url?: string;
+  sameAs?: string[];
+  identifiers?: Record<string, unknown>;
+  schemaData?: Record<string, unknown>;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TenantWebsite {
@@ -499,6 +574,13 @@ export type CmsManagerTab =
   | 'blog'
   | 'media'
   | 'seo'
+  | 'social'
+  | 'geo'
+  | 'redirects'
+  | 'analytics'
+  | 'health'
+  | 'entities'
+  | 'settings'
   | 'review'
   | 'audit'
   | 'revisions';

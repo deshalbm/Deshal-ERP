@@ -49,14 +49,14 @@ export async function generateSitemapXml(siteContext: ResolvedSiteContext, supab
             supabaseServiceClient
                 .from('tenant_pages')
                 .select('slug, updated_at, canonical_url')
-                .eq('site_id', siteContext.siteId)
+                .eq('tenant_website_id', siteContext.siteId)
                 .eq('status', 'published')
                 .is('deleted_at', null),
             
             supabaseServiceClient
                 .from('cms_blog_posts')
                 .select('slug, updated_at, canonical_url')
-                .eq('site_id', siteContext.siteId)
+                .eq('tenant_website_id', siteContext.siteId)
                 .eq('status', 'published')
                 .is('deleted_at', null)
         ]);

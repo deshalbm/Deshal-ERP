@@ -25,6 +25,9 @@ import { WebTraining } from './WebTraining';
 import { WebKnowledgeHub } from './WebKnowledgeHub';
 import { WebContact } from './WebContact';
 
+import { DynamicMetadataEngine } from './DynamicMetadataEngine';
+import { WebsiteBreadcrumbs } from './WebsiteBreadcrumbs';
+
 interface WebsiteViewProps {
   onOpenERPModule?: (moduleTab: string) => void;
   onOpenSpaceBookingModal?: (spaceType?: string) => void;
@@ -38,6 +41,74 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
 }) => {
   const [activeWebTab, setActiveWebTab] = useState<string>('home');
   const [prefilledService, setPrefilledService] = useState<string | undefined>(undefined);
+
+  const getTabMetadata = (tab: string) => {
+    switch (tab) {
+      case 'about-us':
+      case 'about':
+        return {
+          title: 'عن الشركة — الدليل الشامل صحار',
+          description: 'شركة استشارية متخصصة ومصرحة في سلطنة عُمان لتأسيس ودعم نمو المشاريع من صحار.',
+          path: '/about',
+          breadcrumbs: [{ label: 'عن الشركة' }]
+        };
+      case 'services':
+        return {
+          title: 'الخدمات الاستشارية — الدليل الشامل صحار',
+          description: 'تأسيس الشركات، دراسات الجدوى، استشارات الهيكلة، والتسويق في سلطنة عُمان.',
+          path: '/services',
+          breadcrumbs: [{ label: 'الخدمات الاستشارية' }]
+        };
+      case 'business-center':
+      case 'business-ecosystem':
+        return {
+          title: 'مركز الأعمال بصحار — حاضنة مكاتب ومساحات عمل',
+          description: 'مكاتب مجهزة، قاعات اجتماعات، وعناوين تجارية معتمدة في صحار.',
+          path: '/business-center',
+          breadcrumbs: [{ label: 'مركز الأعمال بصحار' }]
+        };
+      case 'creative-studio':
+      case 'studio':
+        return {
+          title: 'استوديو البودكاست والمحتوى المرئي — صحار',
+          description: 'استوديو محتويات صوتية ومرئية مجهز بأحدث تقنيات التسجيل في صحار.',
+          path: '/creative-studio',
+          breadcrumbs: [{ label: 'استوديو البودكاست' }]
+        };
+      case 'training':
+      case 'training-academy':
+        return {
+          title: 'أكاديمية التدريب والورش — صحار',
+          description: 'برامج تطويرية وورش عمل تخصصية لرواد الأعمال والمستثمرين.',
+          path: '/training',
+          breadcrumbs: [{ label: 'التدريب والورش' }]
+        };
+      case 'knowledge-hub':
+      case 'insights-and-articles':
+        return {
+          title: 'مركز المعرفة والمدونة — الدليل الشامل',
+          description: 'مقالات وأدلة استرشادية حول تأسيس وإدارة الشركات في سلطنة عُمان.',
+          path: '/knowledge-hub',
+          breadcrumbs: [{ label: 'مركز المعرفة' }]
+        };
+      case 'contact':
+        return {
+          title: 'حجز موعد وتواصل — الدليل الشامل صحار',
+          description: 'تواصل مع مستشارينا في صحار أو احجز موعد استشارة وتأسيس.',
+          path: '/contact',
+          breadcrumbs: [{ label: 'حجز موعد وتواصل' }]
+        };
+      default:
+        return {
+          title: 'الدليل الشامل لاستشارات إدارة المشاريع — صحار',
+          description: 'شركة استشارية متخصصة ومصرحة في سلطنة عُمان. خدمات التأسيس، دراسات الجدوى، ومركز الأعمال بصحار.',
+          path: '/',
+          breadcrumbs: []
+        };
+    }
+  };
+
+  const activeMeta = getTabMetadata(activeWebTab);
 
   const handleNavigate = (tab: string, prefill?: string) => {
     if (prefill) {
@@ -76,6 +147,23 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-800 font-sans text-right pb-16" dir="rtl">
+      {/* Dynamic Metadata & Head Manager */}
+      <DynamicMetadataEngine
+        seo={{
+          seoTitle: activeMeta.title,
+          seoDescription: activeMeta.description,
+          canonicalUrl: `https://alshamil.om${activeMeta.path}`,
+          ogImage: '/assets/images/deshal_logo.png',
+          robots: 'index, follow',
+        }}
+        siteName="شركة الدليل الشامل لاستشارات إدارة المشاريع"
+        domain="alshamil.om"
+        pageTitle={activeMeta.title}
+        path={activeMeta.path}
+        logoUrl="/assets/images/deshal_logo.png"
+        breadcrumbs={activeMeta.breadcrumbs.map(b => ({ name: b.label, url: `https://alshamil.om${activeMeta.path}` }))}
+      />
+
       {/* ERP INTEGRATION CONTROL BAR */}
       <div className="bg-[#002e69] text-white px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-2 shadow-inner border-b border-blue-900">
         <div className="flex items-center gap-2">
@@ -120,7 +208,6 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
               alt="الدليل الشامل" 
               className="h-10 w-auto object-contain"
               onError={(e) => {
-                // Fallback to text icon if logo fails loading
                 (e.target as HTMLElement).style.display = 'none';
               }}
             />
@@ -186,6 +273,10 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
 
       {/* PAGE CONTENT CONTAINER */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+        {activeWebTab !== 'home' && (
+          <WebsiteBreadcrumbs items={activeMeta.breadcrumbs} onNavigate={handleNavigate} />
+        )}
+
         {(activeWebTab === 'home') && (
           <WebHome 
             onNavigate={handleNavigate} 

@@ -625,13 +625,42 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
       })
     );
 
-    // Return explicit 404 for missing asset bundles to avoid text/html MIME type errors
-    app.get("/assets/*", (_req, res) => {
-      res.status(404).type("text/plain").send("Asset not found");
+    // 301 Redirect Middleware
+    app.use(async (req, res, next) => {
+      if (req.method !== "GET" || req.path.startsWith("/api/") || req.path.startsWith("/assets/")) {
+        return next();
+      }
+      try {
+        const serviceClient = getSupabaseServiceClient();
+        if (!serviceClient) return next();
+        const site = await resolveSiteFromRequest(req);
+        if (!site) return next();
+
+        const client = serviceClient as any;
+        const { data: redirect } = await client
+          .from("seo_redirects")
+          .select("id, destination_url, status_code, hits_count")
+          .eq("tenant_website_id", site.siteId)
+          .eq("source_path", req.path)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (redirect && redirect.destination_url && redirect.destination_url !== req.path) {
+          client.from("seo_redirects")
+            .update({ hits_count: (redirect.hits_count || 0) + 1, last_hit_at: new Date().toISOString() })
+            .eq("id", redirect.id)
+            .then(() => {}).catch(() => {});
+
+          return res.redirect(redirect.status_code || 301, redirect.destination_url);
+        }
+      } catch {
+        // Fall through
+      }
+      next();
     });
 
     // SPA fallback with bot-aware SEO HTML injection
-    // For crawlers: inject critical meta tags from CMS into the HTML before serving.
+    // For crawlers: inject critical meta tags & Schema.org JSON-LD from CMS into the HTML before serving.
     // For browsers: serve the standard index.html SPA as-is.
     app.get("*", async (req, res) => {
       res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
@@ -645,7 +674,7 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
         return res.sendFile(indexPath);
       }
 
-      // Bot request — attempt to inject SEO meta from CMS
+      // Bot request — attempt to inject SEO meta & Schema.org from CMS
       try {
         const serviceClient = getSupabaseServiceClient();
         const site = await resolveSiteFromRequest(req).catch(() => null);
@@ -663,15 +692,20 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
         let html = await fs.readFile(indexPath, "utf-8");
 
         let seoTitle = site.name;
-        let seoDescription = "";
+        let seoDescription = site.settings?.footerText || "";
         let canonicalUrl = `https://${(req.headers.host || site.domain || "")}${req.path}`;
         let ogImage = site.logoUrl || "";
+        let twitterCard = "summary_large_image";
+        let datePublished: string | undefined;
+        let dateModified: string | undefined;
+        let authorName: string | undefined;
+        let pageType = isBlogPath ? "BlogPosting" : "WebPage";
 
         const client = serviceClient as any;
         if (isBlogPath && slug) {
           const { data: post } = await client
             .from("cms_blog_posts")
-            .select("title, seo_title, seo_description, og_image, cover_image, canonical_url")
+            .select("title, seo_title, seo_description, og_image, cover_image, canonical_url, twitter_card, published_at, updated_at, author_name")
             .eq("tenant_website_id", site.siteId)
             .eq("slug", slug)
             .eq("status", "published")
@@ -682,11 +716,15 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
             seoDescription = post.seo_description || "";
             ogImage = post.og_image || post.cover_image || ogImage;
             if (post.canonical_url) canonicalUrl = post.canonical_url;
+            if (post.twitter_card) twitterCard = post.twitter_card;
+            datePublished = post.published_at;
+            dateModified = post.updated_at;
+            authorName = post.author_name;
           }
         } else if (slug !== "home") {
           const { data: page } = await client
             .from("tenant_pages")
-            .select("title, seo_title, seo_description, og_image, canonical_url")
+            .select("title, seo_title, seo_description, og_image, canonical_url, twitter_card, published_at, updated_at, page_type")
             .eq("tenant_website_id", site.siteId)
             .eq("slug", slug)
             .eq("status", "published")
@@ -697,10 +735,33 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
             seoDescription = page.seo_description || "";
             ogImage = page.og_image || ogImage;
             if (page.canonical_url) canonicalUrl = page.canonical_url;
+            if (page.twitter_card) twitterCard = page.twitter_card;
+            datePublished = page.published_at;
+            dateModified = page.updated_at;
+            pageType = page.page_type || "WebPage";
           }
         }
 
-        // Inject meta tags into <head> — using string replacement, not DOM parsing
+        // Import schema generator dynamically
+        const { generateSchemaOrgGraph } = await import("./src/lib/cms/seoEngine.js").catch(() =>
+          import("./src/lib/cms/seoEngine"));
+
+        const schemaJson = generateSchemaOrgGraph({
+          siteName: site.name,
+          domain: site.domain || req.headers.host || "",
+          pageTitle: seoTitle,
+          pageDescription: seoDescription,
+          canonicalUrl,
+          logoUrl: site.logoUrl,
+          ogImage,
+          pageType,
+          datePublished,
+          dateModified,
+          authorName,
+          localSettings: site.settings,
+        });
+
+        // Inject meta tags into <head>
         const seoMeta = [
           `<title>${escapeHtmlAttr(seoTitle)}</title>`,
           `<meta name="description" content="${escapeHtmlAttr(seoDescription)}">`,
@@ -709,11 +770,17 @@ Ensure all numbers are numeric. If information is missing, infer reasonable prof
           `<meta property="og:description" content="${escapeHtmlAttr(seoDescription)}">`,
           `<meta property="og:image" content="${escapeHtmlAttr(ogImage)}">`,
           `<meta property="og:url" content="${escapeHtmlAttr(canonicalUrl)}">`,
-          `<meta property="og:type" content="website">`,
+          `<meta property="og:type" content="${isBlogPath ? 'article' : 'website'}">`,
+          `<meta property="og:site_name" content="${escapeHtmlAttr(site.name)}">`,
+          `<meta property="og:locale" content="${site.primaryLanguage || 'ar'}">`,
+          `<meta name="twitter:card" content="${escapeHtmlAttr(twitterCard)}">`,
+          `<meta name="twitter:title" content="${escapeHtmlAttr(seoTitle)}">`,
+          `<meta name="twitter:description" content="${escapeHtmlAttr(seoDescription)}">`,
+          `<meta name="twitter:image" content="${escapeHtmlAttr(ogImage)}">`,
           `<meta name="robots" content="index, follow">`,
+          `<script type="application/ld+json">${JSON.stringify(schemaJson)}</script>`,
         ].join("\n    ");
 
-        // Replace placeholder <title> or inject before </head>
         if (html.includes("<title>")) {
           html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtmlAttr(seoTitle)}</title>`);
         }
