@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ChevronLeft,
   X,
-  FileCheck
+  FileCheck,
+  Globe
 } from 'lucide-react';
 import { useLanguage } from '../../utils/LanguageContext';
 import { AuthSession } from '../../types';
@@ -220,6 +221,26 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             labelAr: 'إعدادات النظام والمؤسسة',
             labelEn: 'System Settings',
             icon: Settings
+          }
+        ]
+      },
+      {
+        id: 'group_web',
+        groupKey: 'DESHAL WEB & CMS',
+        titleAr: 'دشال الويب والمحتوى',
+        titleEn: 'Deshal Web & CMS',
+        items: [
+          {
+            id: 'website',
+            labelAr: 'الموقع الإلكتروني والمعاينة',
+            labelEn: 'Public Website',
+            icon: Globe
+          },
+          {
+            id: 'cms',
+            labelAr: 'إدارة المواقع والمحتوى (CMS)',
+            labelEn: 'Website & CMS Manager',
+            icon: Globe
           }
         ]
       }
