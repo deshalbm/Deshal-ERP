@@ -1585,7 +1585,7 @@ export const EmployeeMovementDashboard: React.FC<EmployeeMovementDashboardProps>
                   rows={3}
                   value={adjustmentFormData.reason}
                   onChange={(e) => setAdjustmentFormData({ ...adjustmentFormData, reason: e.target.value })}
-                  placeholder="مثال: نسيت تسجيل البصمة بالكشك بسبب تسليم شحنة فور وصولي للمستودع..."
+                  placeholder="مثال: نسيت تسجيل الحضور بالكشك بسبب تسليم شحنة فور وصولي للمستودع..."
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-amber-400"
                 />
               </div>

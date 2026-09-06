@@ -151,7 +151,7 @@ export const HelpCenterView: React.FC<HelpCenterViewProps> = ({ onNavigateTab })
       {
         id: 'hr-payroll',
         category: 'hr',
-        titleAr: 'إدارة الموظفين، كشك البصمة، ومسيرات الرواتب',
+        titleAr: 'إدارة الموظفين، كشك الحضور والانصراف، ومسيرات الرواتب',
         titleEn: 'HR Management, Attendance Kiosk & Payroll',
         descAr: 'دليل شامل لملفات الموظفين، أجهزة الحضور، واحتساب الرواتب.',
         descEn: 'Managing personnel, tablet attendance kiosk, and monthly salary disbursement.',

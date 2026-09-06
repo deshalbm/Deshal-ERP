@@ -225,7 +225,7 @@ export const ContextualHelpDrawer: React.FC<ContextualHelpDrawerProps> = ({
         summaryEn: 'Manage employee directory, daily biometric attendance, leave requests, and monthly payroll processing.',
         whatCanIDoAr: [
           'إضافة ملفات الموظفين، بيانات الرواتب، والبدلات والخصومات.',
-          'متابعة سجلات الحضور والانصراف وتطبيق كشك البصمة/الرمز (Kiosk).',
+          'متابعة سجلات الحضور والانصراف وتطبيق كشك الحضور/الرمز (Kiosk).',
           'معالجة طلبات الإجازات والسلف والمكافآت الفورية.',
           'إصدار قسائم الرواتب الرسمية وترحيل قيود الرواتب للمحاسبة.'
         ],
