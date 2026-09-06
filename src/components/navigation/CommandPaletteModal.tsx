@@ -21,7 +21,9 @@ import {
   BookOpen,
   Calendar,
   CheckCircle2,
-  BookCheck
+  BookCheck,
+  Globe,
+  Tablet
 } from 'lucide-react';
 import {
   ReceiptVoucher,
@@ -243,6 +245,34 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         iconColor: 'text-slate-600',
         onSelect: () => {
           onNavigateTab('settings');
+          onClose();
+        }
+      },
+      {
+        id: 'page-website',
+        category: 'pages',
+        categoryLabelAr: 'الشاشات الرئيسية',
+        categoryLabelEn: 'Core Pages',
+        title: isRTL ? 'الموقع الإلكتروني والمعاينة (Deshal Web)' : 'Public Website & Preview (Deshal Web)',
+        subtitle: isRTL ? 'معاينة وإدارة الموقع الإلكتروني لشركة الدليل الشامل في صحار' : 'Preview & manage Al Daleel Al Shamil corporate website',
+        icon: Tablet,
+        iconColor: 'text-[#006d33]',
+        onSelect: () => {
+          onNavigateTab('website');
+          onClose();
+        }
+      },
+      {
+        id: 'page-cms',
+        category: 'pages',
+        categoryLabelAr: 'الشاشات الرئيسية',
+        categoryLabelEn: 'Core Pages',
+        title: isRTL ? 'إدارة المواقع والمحتوى (CMS - Deshal Web)' : 'Website & CMS Manager (Deshal Web)',
+        subtitle: isRTL ? 'إنشاء وإدارة مواقع المستأجرين والصفحات والمدونة وSEO' : 'Manage tenant websites, pages, blog & SEO',
+        icon: Globe,
+        iconColor: 'text-violet-600',
+        onSelect: () => {
+          onNavigateTab('cms');
           onClose();
         }
       }
