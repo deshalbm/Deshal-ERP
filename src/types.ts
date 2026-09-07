@@ -131,6 +131,11 @@ export interface ReceiptVoucher {
   discountRate?: number; // percentage
   discountAmount: number;
   totalAmount: number;
+  paidAmount?: number; // Amount paid specifically for this receipt voucher (defaults to amount)
+  remainingAmount?: number; // Remaining balance = totalAmount - (paidAmount || amount)
+  linkedInvoiceId?: string; // ID of existing linked Tax Invoice
+  linkedInvoiceNumber?: string; // Number of existing linked Tax Invoice (e.g. INV-2026-0001)
+  autoGenerateInvoice?: boolean; // Option to automatically issue a matching Tax Invoice upon saving receipt
   notes: string;
   terms: string;
   customFields: CustomField[];

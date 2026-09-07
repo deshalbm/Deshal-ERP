@@ -944,6 +944,8 @@ export default function App() {
 
     setVouchersList(updatedList);
     saveVouchers(updatedList);
+    const reloaded = loadVouchers();
+    setVouchersList(reloaded);
 
     const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
     if (isSupabaseConfigured) {

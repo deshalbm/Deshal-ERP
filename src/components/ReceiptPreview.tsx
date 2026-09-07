@@ -808,7 +808,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 
                     <div className="border-t border-slate-300 pt-2.5 mt-2 flex justify-between items-center text-sm font-black text-slate-900">
                       <span className="font-sans font-bold uppercase tracking-wider text-xs">
-                        {printLang === "ar" ? "المبلغ الإجمالي المستحق:" : printLang === "en" ? "Total Amount Due:" : "المبلغ الإجمالي / Total Due:"}
+                        {printLang === "ar" ? "المبلغ الإجمالي للصفقة:" : printLang === "en" ? "Total Deal Amount:" : "المبلغ الإجمالي / Total Deal:"}
                       </span>
                       <span
                         style={{ color: theme.primaryColor || "#0f172a" }}
@@ -819,6 +819,36 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                         })}
                       </span>
                     </div>
+
+                    {/* Paid & Remaining Amount Breakdown for Receipt Vouchers */}
+                    {(voucher.type === "RECEIPT" || voucher.paidAmount !== undefined) && (
+                      <div className="space-y-1.5 pt-2 border-t border-slate-300">
+                        <div className="flex justify-between items-center text-slate-700">
+                          <span className="font-sans font-bold text-xs">{printLang === "ar" ? "المبلغ المدفوع:" : printLang === "en" ? "Paid Amount:" : "المبلغ المدفوع / Paid:"}</span>
+                          <span className="font-bold text-emerald-700">
+                            {voucher.currency} {(voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount).toLocaleString(undefined, {
+                              minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
+                            })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-slate-700">
+                          <span className="font-sans font-bold text-xs">{printLang === "ar" ? "المبلغ المتبقي:" : printLang === "en" ? "Remaining Balance:" : "المتبقي / Balance Due:"}</span>
+                          <span className={`font-bold ${(voucher.remainingAmount ?? Math.max(0, voucher.totalAmount - (voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount))) > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                            {voucher.currency} {(voucher.remainingAmount ?? Math.max(0, voucher.totalAmount - (voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount))).toLocaleString(undefined, {
+                              minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Linked Invoice Badge */}
+                    {voucher.linkedInvoiceNumber && (
+                      <div className="mt-2 text-[11px] bg-indigo-50 p-2 rounded-lg text-indigo-900 flex justify-between items-center font-bold border border-indigo-200">
+                        <span>{printLang === "ar" ? "مرتبط بالفاتورة الضريبية:" : printLang === "en" ? "Linked Tax Invoice:" : "مرتبط بالفاتورة / Linked Invoice:"}</span>
+                        <span className="font-mono text-indigo-700">#{voucher.linkedInvoiceNumber}</span>
+                      </div>
+                    )}
 
                     {/* Base Currency Equivalence in Standard Preview */}
                     {settings.showEquivalentInBaseCurrency && settings.defaultCurrency && voucher.currency !== settings.defaultCurrency && (

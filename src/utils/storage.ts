@@ -440,8 +440,12 @@ export function loadVouchers(): ReceiptVoucher[] {
           if (curr !== v.currency) shouldSave = true;
 
           const updatedLineItems = (v.lineItems && v.lineItems.length > 0)
-            ? v.lineItems.map(item => ({ ...item, description: TARGET_DESCRIPTION }))
+            ? v.lineItems.map(item => ({ ...item, description: item.description || TARGET_DESCRIPTION }))
             : [{ id: `li-${idx + 1}`, description: TARGET_DESCRIPTION, quantity: 1, unitPrice: v.totalAmount || v.amount || 0, amount: v.totalAmount || v.amount || 0 }];
+
+          const totalAmt = v.totalAmount ?? v.amount ?? 0;
+          const paidAmt = v.paidAmount ?? v.amount ?? totalAmt;
+          const remainingAmt = v.remainingAmount ?? Math.max(0, totalAmt - paidAmt);
 
           shouldSave = true;
 
@@ -450,7 +454,9 @@ export function loadVouchers(): ReceiptVoucher[] {
             voucherNumber: voucherNum,
             currency: curr,
             lineItems: updatedLineItems,
-            amountInWords: v.isCustomWords ? v.amountInWords : numberToWords(v.totalAmount || v.amount || 0, curr)
+            paidAmount: paidAmt,
+            remainingAmount: remainingAmt,
+            amountInWords: v.isCustomWords ? v.amountInWords : numberToWords(totalAmt, curr)
           };
         });
 
@@ -470,7 +476,44 @@ export function loadVouchers(): ReceiptVoucher[] {
 
 export function saveVouchers(vouchers: ReceiptVoucher[]): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(vouchers));
+    // Process autoGenerateInvoice flag for receipt vouchers
+    const processed: ReceiptVoucher[] = [];
+    vouchers.forEach((v) => {
+      const totalAmt = v.totalAmount ?? v.amount ?? 0;
+      const paidAmt = v.paidAmount ?? v.amount ?? totalAmt;
+      const remainingAmt = Math.max(0, totalAmt - paidAmt);
+      const updatedVoucher = {
+        ...v,
+        paidAmount: paidAmt,
+        remainingAmount: remainingAmt
+      };
+
+      if (updatedVoucher.type === "RECEIPT" && updatedVoucher.autoGenerateInvoice && !updatedVoucher.linkedInvoiceId) {
+        const generatedInvId = `inv-auto-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const invNumber = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        updatedVoucher.linkedInvoiceId = generatedInvId;
+        updatedVoucher.linkedInvoiceNumber = invNumber;
+        updatedVoucher.autoGenerateInvoice = false;
+
+        const autoInvoice: ReceiptVoucher = {
+          ...updatedVoucher,
+          id: generatedInvId,
+          type: "TAX_INVOICE",
+          voucherNumber: invNumber,
+          referenceNo: updatedVoucher.voucherNumber,
+          notes: `فاتورة ضريبية مُنشأة تلقائياً لسند القبض رقم ${updatedVoucher.voucherNumber}`,
+          autoGenerateInvoice: false,
+          linkedInvoiceId: updatedVoucher.id,
+          linkedInvoiceNumber: updatedVoucher.voucherNumber
+        };
+        processed.push(updatedVoucher);
+        processed.push(autoInvoice);
+      } else {
+        processed.push(updatedVoucher);
+      }
+    });
+
+    localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(processed));
   } catch (e) {
     console.error("Failed to save vouchers:", e);
   }
