@@ -138,9 +138,9 @@ export const WebContact: React.FC<WebContactProps> = ({ onNavigate, prefilledInt
         <div className="lg:col-span-5 bg-[#002e69] text-white rounded-3xl p-8 space-y-8 shadow-xl">
           <div className="space-y-3">
             <span className="text-xs font-bold text-[#8df9a5] bg-blue-900 px-3 py-1 rounded-full">بيانات التواصل المباشر</span>
-            <h3 className="text-2xl font-bold">مقر الشركة في صحار</h3>
+            <h3 className="text-2xl font-bold">مقر الشركة الرئيسي في صحار</h3>
             <p className="text-xs text-blue-100 leading-relaxed">
-              محافظة شمال الباطنة، ولاية صحار، الشارع التجاري بالقرب من غرفة تجارة وصناعة عُمان وميناء صحار.
+              الطابق الثاني ٢٠٠٩-٢٠١٢ | مبنى عمانا بلازا | فلج القبائل | صحار | سلطنة عمان (الرمز البريدي: ٣١١)
             </p>
           </div>
 
@@ -148,8 +148,11 @@ export const WebContact: React.FC<WebContactProps> = ({ onNavigate, prefilledInt
             <div className="flex items-center gap-3 bg-white/10 p-4 rounded-xl">
               <Phone className="w-5 h-5 text-[#8df9a5] shrink-0" />
               <div>
-                <span className="text-blue-200 block">الهاتف الرئيسي الموحد:</span>
-                <span className="font-bold text-sm text-white" dir="ltr">+968 2684 0000 / +968 9000 0000</span>
+                <span className="text-blue-200 block">الهاتف الأرضي والمتحرك:</span>
+                <div className="font-bold text-sm text-white space-y-0.5" dir="ltr">
+                  <div>الأرضي: +968 22730630</div>
+                  <div>المتحرك / الواتساب: +968 77627500</div>
+                </div>
               </div>
             </div>
 
@@ -157,7 +160,15 @@ export const WebContact: React.FC<WebContactProps> = ({ onNavigate, prefilledInt
               <Mail className="w-5 h-5 text-[#8df9a5] shrink-0" />
               <div>
                 <span className="text-blue-200 block">البريد الإلكتروني الرسمي:</span>
-                <span className="font-bold text-sm text-white" dir="ltr">info@alshamil.om</span>
+                <span className="font-bold text-sm text-white" dir="ltr">info@deshalbm.com</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white/10 p-4 rounded-xl">
+              <MapPin className="w-5 h-5 text-[#8df9a5] shrink-0" />
+              <div>
+                <span className="text-blue-200 block">العنوان الجغرافي والرمز البريدي:</span>
+                <span className="font-bold text-white">الطابق الثاني ٢٠٠٩-٢٠١٢، مبنى عمانا بلازا، فلج القبائل، صحار (ص.ب: 311)</span>
               </div>
             </div>
 

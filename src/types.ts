@@ -419,6 +419,8 @@ export interface CompanySettings {
   cityStateZip: string;
   country: string;
   phone: string;
+  landline?: string;
+  postalCode?: string;
   email: string;
   website: string;
   headerNotice: string;

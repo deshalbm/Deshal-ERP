@@ -152,16 +152,16 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
         seo={{
           seoTitle: activeMeta.title,
           seoDescription: activeMeta.description,
-          canonicalUrl: `https://alshamil.om${activeMeta.path}`,
+          canonicalUrl: `https://deshalbm.com${activeMeta.path}`,
           ogImage: '/assets/images/deshal_logo.png',
           robots: 'index, follow',
         }}
         siteName="شركة الدليل الشامل لاستشارات إدارة المشاريع"
-        domain="alshamil.om"
+        domain="deshalbm.com"
         pageTitle={activeMeta.title}
         path={activeMeta.path}
         logoUrl="/assets/images/deshal_logo.png"
-        breadcrumbs={activeMeta.breadcrumbs.map(b => ({ name: b.label, url: `https://alshamil.om${activeMeta.path}` }))}
+        breadcrumbs={activeMeta.breadcrumbs.map(b => ({ name: b.label, url: `https://deshalbm.com${activeMeta.path}` }))}
       />
 
       {/* ERP INTEGRATION CONTROL BAR */}
@@ -342,10 +342,10 @@ export const WebsiteView: React.FC<WebsiteViewProps> = ({
             <div className="md:col-span-4 space-y-3">
               <span className="font-bold text-white text-sm block">بيانات المقر والتواصل</span>
               <div className="space-y-2 text-slate-400">
-                <p>📍 ولاية صحار، محافظة شمال الباطنة، الشارع التجاري</p>
-                <p>📞 هاتف: 26840000 968+ / 90000000 968+</p>
-                <p>✉️ بريد: info@alshamil.om</p>
-                <p>🌐 الموقع: www.alshamil.om</p>
+                <p>📍 الطابق الثاني ٢٠٠٩-٢٠١٢ | مبنى عمانا بلازا | فلج القبائل | صحار | سلطنة عمان (ص.ب: 311)</p>
+                <p dir="ltr">📞 الأرضي: +968 22730630 | المتحرك: +968 77627500</p>
+                <p>✉️ بريد: info@deshalbm.com</p>
+                <p>🌐 الموقع: www.deshalbm.com</p>
               </div>
             </div>
           </div>

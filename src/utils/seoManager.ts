@@ -12,18 +12,20 @@ export const PAGE_SEO_CONFIGS: Record<string, PageSeoConfig> = {
     title: 'الدليل الشامل لاستشارات إدارة المشاريع | صحار، سلطنة عُمان',
     description: 'شركة استشارات رائدة في ولاية صحار وسلطنة عُمان. نقدم استشارات إدارة المشاريع الاحترافية (PMP)، دراسات الجدوى الاقتصادية، وتأسيس وتراخيص الشركات، وحاضنات ومكاتب أعمال متكاملة.',
     keywords: 'الدليل الشامل, استشارات إدارة مشاريع, صحار, دراسات جدوى عمان, استثمر بسهولة, المنطقة الحرة صحار, مكاتب أعمال صحار, تأسيس شركات عمان',
-    canonicalUrl: 'https://alshamil.om/',
-    ogImage: 'https://alshamil.om/assets/images/deshal_logo.png',
+    canonicalUrl: 'https://deshalbm.com/',
+    ogImage: 'https://deshalbm.com/assets/images/deshal_logo.png',
     structuredData: {
       '@context': 'https://schema.org',
       '@type': ['ProfessionalService', 'LocalBusiness'],
       'name': 'شركة الدليل الشامل لاستشارات إدارة المشاريع',
-      'url': 'https://alshamil.om/',
-      'telephone': '+96826840000',
+      'url': 'https://deshalbm.com/',
+      'telephone': '+96822730630',
       'address': {
         '@type': 'PostalAddress',
+        'streetAddress': 'الطابق الثاني ٢٠٠٩-٢٠١٢ | مبنى عمانا بلازا | فلج القبائل',
         'addressLocality': 'صحار',
         'addressRegion': 'محافظة شمال الباطنة',
+        'postalCode': '311',
         'addressCountry': 'OM'
       }
     }
@@ -32,55 +34,55 @@ export const PAGE_SEO_CONFIGS: Record<string, PageSeoConfig> = {
     title: 'عن الشركة والدور الاستراتيجي | الدليل الشامل صحار',
     description: 'تعرف على شركة الدليل الشامل لاستشارات إدارة المشاريع ورؤيتها المواكبة لرؤية عُمان 2040 والقيادة العمانية في ولاية صحار.',
     keywords: 'عن الدليل الشامل, رؤية عمان 2040, استشارات صحار, قيادة المشاريع شمال الباطنة',
-    canonicalUrl: 'https://alshamil.om/about'
+    canonicalUrl: 'https://deshalbm.com/about'
   },
   services: {
     title: 'منظومة الخدمات الاستشارية ودراسات الجدوى | صحار',
     description: 'استكشف خدماتنا الاستشارية في صحار: دراسات الجدوى الاقتصادية، حوكمة المشاريع PMP، التراخيص التجارية والصناعية، واستشارات التوسع والاستثمار.',
     keywords: 'خدمات استشارية صحار, دراسات جدوى بنك التنمية, حوكمة PMP عُمان, تراخيص استثمر بسهولة',
-    canonicalUrl: 'https://alshamil.om/services'
+    canonicalUrl: 'https://deshalbm.com/services'
   },
   'business-center': {
     title: 'مركز الأعمال والمكاتب التنفيذية وقاعات الاجتماعات بصحار',
     description: 'مكاتب خاصة ومساحات عمل مشتركة مجهزة بالكامل ومكاتب افتراضية في صحار مع عناوين تجارية معتمدة وخدمات دعم وإسناد لرواد الأعمال والشركات.',
     keywords: 'مكاتب للايجار صحار, قاعات اجتماعات صحار, مساحات عمل مشتركة صحار, عنوان تجاري صحار',
-    canonicalUrl: 'https://alshamil.om/business-center'
+    canonicalUrl: 'https://deshalbm.com/business-center'
   },
   studio: {
     title: 'استوديو البودكاست والإنتاج المرئي الاحترافي بصحار',
     description: 'استوديو صوتي ومرئي متكامل في صحار مجهز بأحدث كاميرات وميكروفونات الإنتاج وصناعة المحتوى المرئي والبودكاست والتغطيات المؤسسية.',
     keywords: 'استوديو بودكاست صحار, تصوير مرئي صحار, إنتاج محتوى عمان, ميكروفونات Shure صحار',
-    canonicalUrl: 'https://alshamil.om/studio'
+    canonicalUrl: 'https://deshalbm.com/studio'
   },
   training: {
     title: 'أكاديمية التدريب المهني وبرامج إدارة المشاريع PMP بصحار',
     description: 'التحق بأفضل البرامج التدريبية المهنية في صحار: إدارة المشاريع الاحترافية PMP، الجدوى المالية، ورش العمل الاستراتيجية المعتمدة لفرق العمل.',
     keywords: 'دورات PMP صحار, تدريب ادارة مشاريع عمان, ورش عمل صحار, تطوير كوادر عمانية',
-    canonicalUrl: 'https://alshamil.om/training'
+    canonicalUrl: 'https://deshalbm.com/training'
   },
   knowledge: {
     title: 'مركز المعرفة والمدونة الاستثمارية وأدلة الأعمال | عُمان',
     description: 'مقالات وأدلة إجرائية متخصصة في تأسيس الشركات في سلطنة عُمان عبر منصة استثمر بسهولة، دراسات الجدوى الاقتصادية، وفرص الاستثمار في صحار.',
     keywords: 'مدونة استثمارية صحار, دليل استثمر بسهولة, خطوات تاسيس شركة عمان',
-    canonicalUrl: 'https://alshamil.om/blog'
+    canonicalUrl: 'https://deshalbm.com/blog'
   },
   blog: {
     title: 'المدونة الاستثمارية ومركز المعرفة | الدليل الشامل صحار',
     description: 'مقالات وأدلة إجرائية متخصصة في تأسيس الشركات في سلطنة عُمان عبر منصة استثمر بسهولة، دراسات الجدوى الاقتصادية، وفرص الاستثمار في صحار.',
     keywords: 'مدونة استثمارية صحار, دليل استثمر بسهولة, خطوات تاسيس شركة عمان, مدونة الدليل الشامل',
-    canonicalUrl: 'https://alshamil.om/blog'
+    canonicalUrl: 'https://deshalbm.com/blog'
   },
   blogs: {
     title: 'المدونة الاستثمارية ومركز المعرفة | الدليل الشامل صحار',
     description: 'مقالات وأدلة إجرائية متخصصة في تأسيس الشركات في سلطنة عُمان عبر منصة استثمر بسهولة، دراسات الجدوى الاقتصادية، وفرص الاستثمار في صحار.',
     keywords: 'مدونة استثمارية صحار, دليل استثمر بسهولة, خطوات تاسيس شركة عمان, مدونة الدليل الشامل',
-    canonicalUrl: 'https://alshamil.om/blogs'
+    canonicalUrl: 'https://deshalbm.com/blogs'
   },
   contact: {
     title: 'حجز جلسة استشارية واتصل بنا | الدليل الشامل صحار',
     description: 'احجز استشارتك التشخيصية (30 دقيقة) مع خبرائنا في صحار حضورياً أو عن بعد عبر Google Meet، وتعرف على موقعنا ووسائل التواصل المباشرة.',
     keywords: 'حجز موعد استشارة صحار, تواصل الدليل الشامل, هاتف صحار استشارات',
-    canonicalUrl: 'https://alshamil.om/contact'
+    canonicalUrl: 'https://deshalbm.com/contact'
   }
 };
 

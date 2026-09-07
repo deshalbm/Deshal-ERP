@@ -59,19 +59,26 @@ export const WebsiteFooter: React.FC<WebsiteFooterProps> = ({ onNavigate, curren
             <div className="space-y-2.5 text-slate-400">
               <p className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[#006d33] shrink-0 mt-0.5" />
-                <span>{isAr ? 'ولاية صحار، محافظة شمال الباطنة، بالقرب من غرفة تجارة وصناعة عُمان وميناء صحار' : 'Sohar, Al Batinah North, near Chamber of Commerce & Sohar Port'}</span>
+                <span>
+                  {isAr 
+                    ? 'الطابق الثاني ٢٠٠٩-٢٠١٢ | مبنى عمانا بلازا | فلج القبائل | صحار | سلطنة عمان (ص.ب: 311)' 
+                    : 'Floor 2, 2009-2012 | Omana Plaza | Falaj Al Qabail | Sohar | Oman (P.O. Box 311)'}
+                </span>
               </p>
-              <p className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span dir="ltr">+968 2684 0000 / +968 9000 0000</span>
-              </p>
+              <div className="flex items-start gap-2">
+                <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5" dir="ltr">
+                  <div>{isAr ? 'الأرضي:' : 'Landline:'} +968 22730630</div>
+                  <div>{isAr ? 'المتحرك:' : 'Mobile:'} +968 77627500</div>
+                </div>
+              </div>
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>info@alshamil.om</span>
+                <span>info@deshalbm.com</span>
               </p>
               <p className="flex items-center gap-2">
                 <Globe className="w-4 h-4 text-[#006d33] shrink-0" />
-                <span>https://alshamil.om/</span>
+                <span>https://deshalbm.com/</span>
               </p>
             </div>
           </div>
