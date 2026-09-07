@@ -491,6 +491,7 @@ export type EmployeeRole =
   | 'RECEPTIONIST'
   | 'COLLABORATOR'
   | 'AUDITOR'
+  | 'KIOSK_TABLET'
   | 'CUSTOM';
 
 export type EmployeeStatus = 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | 'SUSPENDED';
@@ -525,6 +526,8 @@ export type EmployeePermission =
   | 'movement_types_mgmt'
   | 'employee_pin_mgmt'
   | 'attendance_settings'
+  // Kiosk Dedicated Tablet Permission
+  | 'kiosk_mode_only'
   // Collaborator & Auditor Permissions
   | 'auditor_read_only'
   | 'collaborator_limited';

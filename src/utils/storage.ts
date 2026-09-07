@@ -949,6 +949,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<EmployeeRole, EmployeePermission[]
     "print_export_vouchers",
     "auditor_read_only"
   ],
+  KIOSK_TABLET: [
+    "kiosk_mode_only"
+  ],
   CUSTOM: [
     "create_vouchers",
     "print_export_vouchers",

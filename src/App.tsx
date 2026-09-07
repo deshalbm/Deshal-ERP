@@ -2337,6 +2337,34 @@ export default function App() {
     );
   }
 
+  // Dedicated Kiosk Tablet Session Guard: Kiosk accounts have strictly single-purpose access to Attendance Kiosk Mode
+  const isKioskTabletUser =
+    authSession.user?.role === "KIOSK_TABLET" ||
+    (authSession.user?.role as string) === "KIOSK_TABLET" ||
+    authSession.employee?.role === "KIOSK_TABLET" ||
+    (authSession.employee?.role as string) === "KIOSK_TABLET" ||
+    authSession.employee?.permissions?.includes("kiosk_mode_only");
+
+  if (isKioskTabletUser) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 overflow-hidden">
+        <AttendanceKioskModal
+          isOpen={true}
+          onClose={handleLogout}
+          employees={employeesList}
+          branches={branchesList}
+          companySettings={companySettings}
+          kioskDevices={kioskDevicesList}
+          movementTypes={loadMovementTypes()}
+          movementLogs={loadAttendanceMovementLogs()}
+          activeDeviceId={loadActiveKioskDeviceId()}
+          onSaveMovementLog={handleSaveGlobalMovementLogSingle}
+          onAuditLog={triggerAuditLog}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans antialiased flex flex-row pb-16 lg:pb-0 overflow-x-hidden">
       

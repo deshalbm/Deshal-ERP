@@ -93,6 +93,12 @@ async function runKioskAuthTests() {
     }
   });
 
+  test("Authentication via email profile (kiosk.main@deshalbm.com) succeeds", () => {
+    const res = authenticateKioskAccount("kiosk.main@deshalbm.com", "123456", DEFAULT_KIOSK_DEVICES);
+    assert.strictEqual(res.success, true, "Email login should succeed for kiosk.main@deshalbm.com");
+    assert.strictEqual(res.device?.username, "kiosk.main", "Should match kiosk.main device");
+  });
+
   console.log("\n================================================================");
   console.log(`  RESULTS: Total Tests: ${total} | Passed: ${passed} | Failed: ${total - passed}`);
   console.log("================================================================\n");

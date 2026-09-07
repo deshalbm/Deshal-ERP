@@ -199,6 +199,7 @@ const ROLE_LABELS: Record<EmployeeRole, { ar: string; en: string; color: string;
   RECEPTIONIST: { ar: "استقبال وخدمة عملاء", en: "Customer Service", color: "text-teal-700", bg: "bg-teal-50 border-teal-200" },
   COLLABORATOR: { ar: "متعاون خارجي / مستشار", en: "External Collaborator", color: "text-blue-800", bg: "bg-blue-50 border-blue-300" },
   AUDITOR: { ar: "مراقب / مدقق حسابات", en: "Financial Auditor", color: "text-amber-800", bg: "bg-amber-50 border-amber-300" },
+  KIOSK_TABLET: { ar: "حساب كشك لوحي (حضور فقط)", en: "Attendance Kiosk Tablet", color: "text-indigo-800", bg: "bg-indigo-50 border-indigo-300" },
   CUSTOM: { ar: "صلاحيات مخصصة", en: "Custom Permissions", color: "text-slate-700", bg: "bg-slate-100 border-slate-300" }
 };
 
