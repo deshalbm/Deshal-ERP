@@ -34,6 +34,7 @@ import {
   parseKioskPairingPayload,
   detectDeviceHardwareInfo
 } from "../../utils/attendanceStorage";
+import { QRCameraScanner } from "./QRCameraScanner";
 import {
   Clock,
   Calendar,
@@ -141,6 +142,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
 
   // QR Pairing & Tablet Onboarding State
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
+  const [isKioskCameraScannerOpen, setIsKioskCameraScannerOpen] = useState<boolean>(false);
   const [onboardingForm, setOnboardingForm] = useState<{
     name: string;
     branchId: string;
@@ -963,6 +965,15 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                     <QrCode className="w-4 h-4 text-amber-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   </div>
                   <button
+                    type="button"
+                    onClick={() => setIsKioskCameraScannerOpen(true)}
+                    className="w-full sm:w-auto px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shrink-0 shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4" />
+                    مسح عبر الكاميرا
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       if (activationCodeInput.includes("DESHAL_KIOSK_PAIR") || activationCodeInput.startsWith("{")) {
                         handleQRPairingParse(activationCodeInput);
@@ -970,10 +981,10 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                         handleActivateByCode();
                       }
                     }}
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shrink-0 transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-700"
                   >
-                    <Scan className="w-4 h-4" />
-                    تفعيل / اقتران الجهاز
+                    <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                    تأكيد الكود
                   </button>
                 </div>
 
@@ -1950,6 +1961,21 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. CAMERA QR SCANNER MODAL FOR TABLET KIOSK */}
+      {/* ========================================================================= */}
+      {isKioskCameraScannerOpen && (
+        <QRCameraScanner
+          title="مسح QR Code للاقتران بالكاميرا"
+          description="قم بتوجيه كاميرا الجهاز نحو رمز الـ QR الخاص بنظام ERP لربطه وتفعيله ككشك معتمد"
+          onScan={(scannedText) => {
+            setIsKioskCameraScannerOpen(false);
+            handleQRPairingParse(scannedText);
+          }}
+          onClose={() => setIsKioskCameraScannerOpen(false)}
+        />
       )}
 
       {/* Bottom Status Bar */}

@@ -34,12 +34,14 @@ import {
   ShieldAlert,
   Mail,
   Send,
-  QrCode
+  QrCode,
+  Scan
 } from "lucide-react";
 import { EmployeesManager } from "./EmployeesManager";
 import { ActivityLogsManager } from "./ActivityLogsManager";
 import { DigitalSignaturePad } from "./DigitalSignaturePad";
 import { WhatsAppBaileysStudio } from "./WhatsAppBaileysStudio";
+import { QRCameraScanner } from "./kiosk/QRCameraScanner";
 import { AVAILABLE_CURRENCIES, fetchLiveExchangeRates } from "../utils/currencyConverter";
 import { DEFAULT_COMPANY_SETTINGS, DEFAULT_RESEND_SETTINGS } from "../utils/storage";
 import { sendTestEmail, fetchEmailLogs } from "../lib/email/emailService";
@@ -52,7 +54,8 @@ import {
   saveActiveKioskDeviceId,
   saveIsKioskModeEnabled,
   generateKioskPairingPayload,
-  generateKioskQRDataUrl
+  generateKioskQRDataUrl,
+  parseKioskPairingPayload
 } from "../utils/attendanceStorage";
 import { setDeviceSecretPin } from "../utils/kioskSecurity";
 
@@ -125,6 +128,49 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
   // Device QR Modal State
   const [qrModalDevice, setQrModalDevice] = useState<KioskDevice | null>(null);
   const [qrModalDataUrl, setQrModalDataUrl] = useState<string>("");
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState<boolean>(false);
+
+  const handleScanQRSuccess = (scannedText: string) => {
+    setIsCameraScannerOpen(false);
+    const parsed = parseKioskPairingPayload(scannedText);
+    const code = parsed.activationCode || scannedText.trim();
+
+    // Check if code matches an existing device
+    const existing = safeKioskDevices.find(
+      (d) =>
+        d.activationCode?.toUpperCase() === code.toUpperCase() ||
+        d.deviceCode?.toUpperCase() === code.toUpperCase() ||
+        d.id === parsed.deviceId
+    );
+
+    if (existing) {
+      setEditingDevice(existing);
+      setDeviceFormData({
+        name: existing.name,
+        deviceCode: existing.deviceCode,
+        branchId: existing.branchId,
+        location: existing.location,
+        model: existing.model || "Apple iPad Pro",
+        status: existing.status,
+        plainPin: "1234"
+      });
+      setIsDeviceModalOpen(true);
+      alert(`تم قراءة رمز الـ QR بنجاح للجهاز المسجل (${existing.name}). يمكنك مراجعة بياناته أو تعديلها الآن.`);
+    } else {
+      setEditingDevice(null);
+      setDeviceFormData({
+        name: parsed.name || `كشك اللوحي - ${branches[0]?.name || "الفرع الرئيسي"}`,
+        deviceCode: parsed.activationCode || `KIOSK-${branches[0]?.code || "SOH"}-${safeKioskDevices.length + 1}`,
+        branchId: parsed.branchId || branches[0]?.id || "branch-sohar",
+        location: parsed.location || "المدخل الرئيسي",
+        model: "Apple iPad Pro 11-inch",
+        status: "ACTIVE",
+        plainPin: "1234"
+      });
+      setIsDeviceModalOpen(true);
+      alert("تم قراءة رمز الـ QR بنجاح! يرجى مراجعة وتأكيد بيانات الجهاز وإدخال الرمز السري للحفظ.");
+    }
+  };
 
   // Device Modal State
   const [isDeviceModalOpen, setIsDeviceModalOpen] = useState<boolean>(false);
@@ -1752,25 +1798,37 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setEditingDevice(null);
-                setDeviceFormData({
-                  name: `كشك اللوحي - ${branches[0]?.name || "الفرع الرئيسي"}`,
-                  deviceCode: `KIOSK-${branches[0]?.code || "SOH"}-${safeKioskDevices.length + 1}`,
-                  branchId: branches[0]?.id || "branch-sohar",
-                  location: "المدخل الرئيسي",
-                  model: "Apple iPad Pro 11-inch",
-                  status: "ACTIVE"
-                });
-                setIsDeviceModalOpen(true);
-              }}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{language === "ar" ? "إضافة جهاز كشك جديد" : "Add New Kiosk Device"}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsCameraScannerOpen(true)}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-extrabold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <Scan className="w-4 h-4" />
+                <span>{language === "ar" ? "اقتران جهاز بمسح QR Code" : "Scan QR Code to Pair"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingDevice(null);
+                  setDeviceFormData({
+                    name: `كشك اللوحي - ${branches[0]?.name || "الفرع الرئيسي"}`,
+                    deviceCode: `KIOSK-${branches[0]?.code || "SOH"}-${safeKioskDevices.length + 1}`,
+                    branchId: branches[0]?.id || "branch-sohar",
+                    location: "المدخل الرئيسي",
+                    model: "Apple iPad Pro 11-inch",
+                    status: "ACTIVE",
+                    plainPin: "1234"
+                  });
+                  setIsDeviceModalOpen(true);
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{language === "ar" ? "إضافة جهاز كشك جديد" : "Add New Kiosk Device"}</span>
+              </button>
+            </div>
           </div>
 
           {/* Kiosk Devices Grid */}
@@ -1964,6 +2022,28 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                 </div>
 
                 <div className="p-6 space-y-4 text-xs overflow-y-auto flex-1">
+                  {/* Quick QR Scanner Banner */}
+                  <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-center justify-between gap-2">
+                    <div className="space-y-0.5 text-right">
+                      <div className="font-bold text-amber-950 text-xs flex items-center gap-1.5">
+                        <QrCode className="w-4 h-4 text-amber-600" />
+                        <span>اقتران سريع عبر مسح الـ QR Code</span>
+                      </div>
+                      <p className="text-[11px] text-amber-800">اقرأ رمز الـ QR المعروض على شاشة الجهاز اللوحي مباشرة</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDeviceModalOpen(false);
+                        setIsCameraScannerOpen(true);
+                      }}
+                      className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-extrabold text-[11px] flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer transition-all"
+                    >
+                      <Scan className="w-4 h-4" />
+                      <span>مسح الكاميرا</span>
+                    </button>
+                  </div>
+
                   <div>
                     <label className="text-xs font-bold text-slate-800 block mb-1">
                       اسم الجهاز المعرف <span className="text-rose-500">*</span>
@@ -2221,6 +2301,16 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Camera QR Scanner Modal */}
+          {isCameraScannerOpen && (
+            <QRCameraScanner
+              title="مسح QR Code الجهاز اللوحي"
+              description="وجه كاميرا الجهاز نحو رمز الـ QR المعروض على التابلت للاقتران أو التعديل الفوري"
+              onScan={handleScanQRSuccess}
+              onClose={() => setIsCameraScannerOpen(false)}
+            />
           )}
         </div>
       )}
