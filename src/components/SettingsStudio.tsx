@@ -130,6 +130,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
     branchId: string;
     location: string;
     username: string;
+    email: string;
     plainPassword: string;
     model: string;
     status: "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
@@ -139,6 +140,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
     branchId: branches[0]?.id || "branch-sohar",
     location: "",
     username: "",
+    email: "",
     plainPassword: "123456",
     model: "Apple iPad Pro 11-inch",
     status: "ACTIVE"
@@ -1756,12 +1758,14 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   setEditingDevice(null);
                   const nextIndex = safeKioskDevices.length + 1;
                   const defaultBranch = branches[0] || { id: "branch-sohar", name: "الفرع الرئيسي", code: "SOH" };
+                  const uName = nextIndex === 1 ? "kiosk.main" : `kiosk.${(defaultBranch.code || "branch").toLowerCase()}.${nextIndex}`;
                   setDeviceFormData({
                     name: `كشك الحضور - ${defaultBranch.name}`,
                     deviceCode: `KIOSK-${defaultBranch.code || "SOH"}-${nextIndex}`,
                     branchId: defaultBranch.id,
                     location: "المدخل الرئيسي",
-                    username: `kiosk.${(defaultBranch.code || "branch").toLowerCase()}.${nextIndex}`,
+                    username: uName,
+                    email: `${uName}@deshalbm.com`,
                     plainPassword: String(Math.floor(100000 + Math.random() * 900000)),
                     model: "Apple iPad 10th Gen",
                     status: "ACTIVE"
@@ -1781,6 +1785,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
             {safeKioskDevices.map((device) => {
               const isActive = device.status === "ACTIVE";
               const isCurrentActive = activeDeviceIdState === device.id;
+              const displayEmail = device.email || `${device.username || device.deviceCode.toLowerCase()}@deshalbm.com`;
 
               return (
                 <div
@@ -1832,7 +1837,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                     {/* Account Credentials Box */}
                     <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2">
                       <div className="flex items-center justify-between text-[11px] font-bold text-indigo-900">
-                        <span>بيانات الدخول للجهاز اللوحي:</span>
+                        <span>بيانات البريد والحساب اللوحي:</span>
                         <button
                           type="button"
                           disabled={sendingEmailDeviceId === device.id}
@@ -1843,7 +1848,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                               recipientEmail: recipient,
                               title: `بيانات حساب كشك الحضور اللوحي: ${device.name}`,
                               recipientName: device.name,
-                              message: `بيانات حساب الدخول الخاص بالكشك اللوحي (${device.name}):\n\n- اسم المستند: ${device.name}\n- الموقع: ${device.location} (${device.branchName})\n- اسم المستخدم: ${device.username || device.deviceCode}\n- كلمة المرور: ${device.plainPassword || "123456"}`,
+                              message: `بيانات حساب الدخول الخاص بالكشك اللوحي (${device.name}):\n\n- اسم الجهاز: ${device.name}\n- البريد الإلكتروني للحساب: ${displayEmail}\n- اسم المستخدم: ${device.username || device.deviceCode}\n- كلمة المرور: ${device.plainPassword || "123456"}\n- الموقع: ${device.location} (${device.branchName})`,
                               companyName: localSettings.companyName || "ديشال"
                             });
                             setSendingEmailDeviceId(null);
@@ -1861,14 +1866,20 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-white p-2 rounded-lg border border-indigo-100">
-                          <span className="text-[10px] text-slate-400 block font-bold">اسم المستخدم</span>
-                          <span className="font-mono font-black text-indigo-950 truncate block">{device.username || device.deviceCode}</span>
+                      <div className="space-y-1 text-xs">
+                        <div className="bg-white p-2 rounded-lg border border-indigo-100 flex justify-between items-center">
+                          <span className="text-[10px] text-slate-400 font-bold">البريد الإلكتروني:</span>
+                          <span className="font-mono font-black text-indigo-900 text-[11px] select-all">{displayEmail}</span>
                         </div>
-                        <div className="bg-white p-2 rounded-lg border border-indigo-100">
-                          <span className="text-[10px] text-slate-400 block font-bold">كلمة المرور</span>
-                          <span className="font-mono font-black text-slate-900 truncate block">{device.plainPassword || "123456"}</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-white p-2 rounded-lg border border-indigo-100">
+                            <span className="text-[10px] text-slate-400 block font-bold">المستخدم</span>
+                            <span className="font-mono font-black text-indigo-950 truncate block">{device.username || device.deviceCode}</span>
+                          </div>
+                          <div className="bg-white p-2 rounded-lg border border-indigo-100">
+                            <span className="text-[10px] text-slate-400 block font-bold">كلمة المرور</span>
+                            <span className="font-mono font-black text-slate-900 truncate block">{device.plainPassword || "123456"}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1916,13 +1927,15 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                         <button
                           type="button"
                           onClick={() => {
+                            const u = device.username || `kiosk.${device.deviceCode.toLowerCase()}`;
                             setEditingDevice(device);
                             setDeviceFormData({
                               name: device.name,
                               deviceCode: device.deviceCode,
                               branchId: device.branchId,
                               location: device.location,
-                              username: device.username || `kiosk.${device.deviceCode.toLowerCase()}`,
+                              username: u,
+                              email: device.email || `${u}@deshalbm.com`,
                               plainPassword: device.plainPassword || "123456",
                               model: device.model || "Apple iPad Pro",
                               status: device.status
@@ -2000,7 +2013,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                         required
                         value={deviceFormData.deviceCode}
                         onChange={(e) => setDeviceFormData({ ...deviceFormData, deviceCode: e.target.value.toUpperCase() })}
-                        placeholder="KIOSK-SOH-MAIN"
+                        placeholder="KIOSK-MAIN-01"
                         className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold text-indigo-900 outline-hidden"
                       />
                     </div>
@@ -2040,7 +2053,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   <div className="p-3.5 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-3">
                     <div className="font-extrabold text-xs text-indigo-950 flex items-center gap-1.5">
                       <KeyRound className="w-4 h-4 text-indigo-600" />
-                      <span>بيانات تسجيل الدخول للتابلت (Username & Password)</span>
+                      <span>بيانات تسجيل الدخول للتابلت (Username, Email & Password)</span>
                     </div>
 
                     <div>
@@ -2051,9 +2064,30 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                         type="text"
                         required
                         value={deviceFormData.username}
-                        onChange={(e) => setDeviceFormData({ ...deviceFormData, username: e.target.value.toLowerCase().trim() })}
-                        placeholder="مثال: kiosk.sohar"
+                        onChange={(e) => {
+                          const val = e.target.value.toLowerCase().trim();
+                          setDeviceFormData({
+                            ...deviceFormData,
+                            username: val,
+                            email: `${val}@deshalbm.com`
+                          });
+                        }}
+                        placeholder="مثال: kiosk.main"
                         className="w-full px-3.5 py-2.5 bg-white border border-indigo-200 rounded-xl text-xs font-mono font-bold text-indigo-950 outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        البريد الإلكتروني المربوط بالحساب (Email Profile) <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={deviceFormData.email || `${deviceFormData.username}@deshalbm.com`}
+                        onChange={(e) => setDeviceFormData({ ...deviceFormData, email: e.target.value.toLowerCase().trim() })}
+                        placeholder="kiosk.main@deshalbm.com"
+                        className="w-full px-3.5 py-2.5 bg-white border border-indigo-200 rounded-xl text-xs font-mono font-bold text-indigo-900 outline-hidden"
                       />
                     </div>
 
@@ -2125,6 +2159,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                     onClick={async () => {
                       if (!deviceFormData.name.trim() || !deviceFormData.deviceCode.trim() || !deviceFormData.username.trim()) return;
                       const targetBranch = branches.find((b) => b.id === deviceFormData.branchId) || branches[0];
+                      const finalEmail = deviceFormData.email.trim() || `${deviceFormData.username.trim()}@deshalbm.com`;
 
                       if (editingDevice) {
                         let updatedDev: KioskDevice = {
@@ -2135,6 +2170,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                           branchName: targetBranch?.name || editingDevice.branchName,
                           location: deviceFormData.location,
                           username: deviceFormData.username.toLowerCase().trim(),
+                          email: finalEmail.toLowerCase(),
                           plainPassword: deviceFormData.plainPassword,
                           model: deviceFormData.model,
                           status: deviceFormData.status,
@@ -2153,6 +2189,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                           branchName: targetBranch?.name || "الفرع الرئيسي",
                           location: deviceFormData.location || "المدخل الرئيسي",
                           username: deviceFormData.username.toLowerCase().trim(),
+                          email: finalEmail.toLowerCase(),
                           plainPassword: deviceFormData.plainPassword || "123456",
                           deviceToken: `dsh_kiosk_tok_${randomCode}_${Date.now().toString(36)}`,
                           activationCode: `DSH-K-${randomCode}`,

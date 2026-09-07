@@ -149,6 +149,29 @@ export const DEFAULT_MOVEMENT_TYPES: MovementTypeConfig[] = [
 
 export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
   {
+    id: "dev-main-kiosk",
+    deviceCode: "KIOSK-MAIN-01",
+    name: "آيباد الكشك الرئيسي (kiosk.main)",
+    companyName: "ديشال لإدارة الأعمال",
+    branchId: "branch-sohar",
+    branchName: "المقر الرئيسي",
+    location: "المدخل الرئيسي والفرع التنفيذي",
+    username: "kiosk.main",
+    email: "kiosk.main@deshalbm.com",
+    plainPassword: "123456",
+    deviceToken: "dsh_kiosk_tok_main_881920",
+    activationCode: "DSH-K-881920",
+    status: "ACTIVE",
+    lastPing: new Date().toISOString(),
+    ipAddress: "192.168.1.100",
+    model: "Apple iPad Pro 12.9-inch",
+    appVersion: "Deshal Kiosk v3.4",
+    isLocked: false,
+    notes: "حساب كشك التابلت الرئيسي المسجل باسم kiosk.main@deshalbm.com",
+    createdAt: "2026-06-01T08:00:00Z",
+    updatedAt: new Date().toISOString()
+  },
+  {
     id: "dev-sohar-main",
     deviceCode: "KIOSK-SOH-MAIN",
     name: "آيباد الاستقبال الرئيسي - صحار",
@@ -157,6 +180,7 @@ export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
     branchName: "فرع صحار الرئيسي",
     location: "صالة الاستقبال والمدخل التنفيذي",
     username: "kiosk.sohar",
+    email: "kiosk.sohar@deshalbm.com",
     plainPassword: "123456",
     deviceToken: "dsh_kiosk_tok_849204_soh_main",
     activationCode: "DSH-K-849204",
@@ -179,6 +203,7 @@ export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
     branchName: "فرع صحار الرئيسي",
     location: "بوابة المستودع ومنطقة التحميل",
     username: "kiosk.warehouse",
+    email: "kiosk.warehouse@deshalbm.com",
     plainPassword: "123456",
     deviceToken: "dsh_kiosk_tok_738192_soh_wh",
     activationCode: "DSH-K-738192",
@@ -201,6 +226,7 @@ export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
     branchName: "فرع مسقط - غلا",
     location: "المدخل الرئيسي - الطابق الثالث",
     username: "kiosk.muscat",
+    email: "kiosk.muscat@deshalbm.com",
     plainPassword: "123456",
     deviceToken: "dsh_kiosk_tok_920184_mct_recep",
     activationCode: "DSH-K-920184",
@@ -455,7 +481,9 @@ export function authenticateKioskAccount(
   const normalizedUser = usernameInput.trim().toLowerCase();
   const matched = allDevices.find(
     (d) =>
+      (d.email && d.email.toLowerCase() === normalizedUser) ||
       (d.username && d.username.toLowerCase() === normalizedUser) ||
+      (d.username && `${d.username.toLowerCase()}@deshalbm.com` === normalizedUser) ||
       d.deviceCode.toLowerCase() === normalizedUser ||
       (d.activationCode && d.activationCode.toLowerCase() === normalizedUser)
   );

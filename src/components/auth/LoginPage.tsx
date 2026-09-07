@@ -130,11 +130,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       setIsLoading(false);
       saveActiveKioskDeviceId(kioskAuth.device.id);
       saveIsKioskModeEnabled(true);
+      const kioskEmail = kioskAuth.device.email || `${kioskAuth.device.username}@deshalbm.com`;
       const kioskSession: AuthSession = {
         user: {
           id: kioskAuth.device.id,
           employeeId: kioskAuth.device.id,
-          email: `${kioskAuth.device.username}@kiosk.local`,
+          email: kioskEmail,
           fullName: `حساب كشك: ${kioskAuth.device.name}`,
           fullNameEn: `Kiosk Account: ${kioskAuth.device.name}`,
           role: "KIOSK_TABLET" as any,
@@ -153,7 +154,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           role: "KIOSK_TABLET" as any,
           jobTitle: "Attendance Kiosk Device",
           department: "Attendance",
-          email: `${kioskAuth.device.username}@kiosk.local`,
+          email: kioskEmail,
           phone: "",
           civilId: "",
           hireDate: new Date().toISOString(),

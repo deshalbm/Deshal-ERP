@@ -695,7 +695,8 @@ export interface KioskDevice {
   branchId: string;
   branchName: string;
   location: string; // e.g. "مدخل المقر الرئيسي", "بوابة المستودع A"
-  username: string; // Dedicated login username e.g. "kiosk.sohar.01"
+  username: string; // Dedicated login username e.g. "kiosk.main"
+  email?: string; // Dedicated login email profile e.g. "kiosk.main@deshalbm.com"
   plainPassword?: string; // Plain password for manager reference / email notification
   passwordHash?: string; // SHA-256 salted password hash for authentication
   passwordSalt?: string; // Cryptographic salt for password
