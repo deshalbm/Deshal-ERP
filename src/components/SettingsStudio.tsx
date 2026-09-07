@@ -54,6 +54,7 @@ import {
   saveActiveKioskDeviceId,
   saveIsKioskModeEnabled,
   generateKioskPairingPayload,
+  generateUniversalPairingPayload,
   generateKioskQRDataUrl,
   parseKioskPairingPayload
 } from "../utils/attendanceStorage";
@@ -1798,14 +1799,41 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  const universalPayload = generateUniversalPairingPayload();
+                  const dataUrl = await generateKioskQRDataUrl(universalPayload);
+                  setQrModalDevice({
+                    id: "new-pairing",
+                    deviceCode: "NEW-TABLET-QR",
+                    name: "رمز اقتران جهاز كشك جديد",
+                    branchId: branches[0]?.id || "branch-sohar",
+                    branchName: branches[0]?.name || "المؤسسة العامة",
+                    location: "امسح من كاميرا التابلت المراد إضافته",
+                    deviceToken: "tok_pairing_live",
+                    activationCode: "SCAN-VIA-TABLET-CAM",
+                    status: "ACTIVE",
+                    isLocked: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                  });
+                  setQrModalDataUrl(dataUrl);
+                }}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-extrabold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <QrCode className="w-4 h-4" />
+                <span>{language === "ar" ? "توليد رمز QR لإقتران جهاز جديد" : "Generate Pairing QR"}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setIsCameraScannerOpen(true)}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-extrabold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
               >
-                <Scan className="w-4 h-4" />
-                <span>{language === "ar" ? "اقتران جهاز بمسح QR Code" : "Scan QR Code to Pair"}</span>
+                <Scan className="w-4 h-4 text-amber-400" />
+                <span>{language === "ar" ? "مسح الـ QR للكاميرا" : "Camera Scan"}</span>
               </button>
 
               <button
@@ -1823,10 +1851,10 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   });
                   setIsDeviceModalOpen(true);
                 }}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>{language === "ar" ? "إضافة جهاز كشك جديد" : "Add New Kiosk Device"}</span>
+                <span>{language === "ar" ? "إضافة يدوي" : "Manual Add"}</span>
               </button>
             </div>
           </div>

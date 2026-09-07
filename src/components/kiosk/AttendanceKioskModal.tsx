@@ -143,6 +143,12 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
   // QR Pairing & Tablet Onboarding State
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
   const [isKioskCameraScannerOpen, setIsKioskCameraScannerOpen] = useState<boolean>(false);
+  const [detectedHardware, setDetectedHardware] = useState<{
+    userAgent?: string;
+    platform?: string;
+    screenResolution?: string;
+    deviceId?: string;
+  } | null>(null);
   const [onboardingForm, setOnboardingForm] = useState<{
     name: string;
     branchId: string;
@@ -192,9 +198,12 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
   const handleQRPairingParse = (inputStr: string) => {
     const parsed = parseKioskPairingPayload(inputStr);
     if (!parsed.isValid) {
-      setActivationError("رمز ה-QR غير صحيح أو غير معتمد. يرجى مسح رمز QR من لوحة إعدادات ERP.");
+      setActivationError("رمز الـ QR غير صحيح أو غير معتمد. يرجى مسح رمز QR من لوحة إعدادات ERP.");
       return;
     }
+
+    const hardware = detectDeviceHardwareInfo();
+    setDetectedHardware(hardware);
 
     const code = parsed.activationCode || inputStr;
     const existing = safeKioskDevices.find(
@@ -204,7 +213,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
         d.id === parsed.deviceId
     );
 
-    if (existing) {
+    if (existing && !parsed.isUniversalPair) {
       handlePairDeviceDirectly(existing);
     } else {
       const generatedCode = parsed.activationCode || `KIOSK-${branches[0]?.code || "SOH"}-${safeKioskDevices.length + 1}`;
@@ -1874,6 +1883,19 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                 يرجى إكمال وتحديد اسم الجهاز والموقع والرمز السري لإصدار حساب كشك مخصص مقفل.
               </p>
             </div>
+
+            {detectedHardware && (
+              <div className="p-3 bg-slate-950/90 border border-slate-800 rounded-2xl text-[11px] font-mono text-slate-300 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">معرّف الهاردوير (Hardware UID):</span>
+                  <span className="text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">{detectedHardware.deviceId}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-slate-400 pt-0.5">
+                  <span>المنصة والدقة:</span>
+                  <span>{detectedHardware.platform} ({detectedHardware.screenResolution})</span>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3 text-xs">
               <div>

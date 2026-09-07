@@ -433,6 +433,19 @@ export function detectDeviceHardwareInfo(): {
 }
 
 /**
+ * Generates a universal pairing QR payload for onboarding new devices
+ */
+export function generateUniversalPairingPayload(): string {
+  const payload = {
+    v: 1,
+    action: "DESHAL_NEW_KIOSK_PAIR",
+    pairToken: `PAIR-${Math.random().toString(36).substring(2, 9).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
+    ts: Date.now()
+  };
+  return JSON.stringify(payload);
+}
+
+/**
  * Generates pairing QR code data payload for a kiosk device
  */
 export function generateKioskPairingPayload(device: KioskDevice): string {
@@ -476,6 +489,7 @@ export async function generateKioskQRDataUrl(payload: string): Promise<string> {
  */
 export function parseKioskPairingPayload(payloadStr: string): {
   isValid: boolean;
+  isUniversalPair?: boolean;
   activationCode?: string;
   deviceId?: string;
   name?: string;
@@ -486,9 +500,16 @@ export function parseKioskPairingPayload(payloadStr: string): {
   const trimmed = payloadStr.trim();
   try {
     const parsed = JSON.parse(trimmed);
+    if (parsed && parsed.action === "DESHAL_NEW_KIOSK_PAIR") {
+      return {
+        isValid: true,
+        isUniversalPair: true
+      };
+    }
     if (parsed && (parsed.action === "DESHAL_KIOSK_PAIR" || parsed.activationCode || parsed.id)) {
       return {
         isValid: true,
+        isUniversalPair: false,
         activationCode: parsed.activationCode || parsed.code,
         deviceId: parsed.id,
         name: parsed.name,
