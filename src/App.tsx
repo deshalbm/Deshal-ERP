@@ -2655,6 +2655,7 @@ export default function App() {
             onSwitchToDocWizard={() => setActiveTab("doc-wizard")}
             customers={customersList}
             branches={branchesList}
+            companySettings={companySettings}
             onQuickSaveCustomer={handleSaveCustomer}
           />
         )}

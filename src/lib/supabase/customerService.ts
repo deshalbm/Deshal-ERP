@@ -120,13 +120,32 @@ export async function checkPhoneExists(companyId: string, phone: string, exclude
   return !!data;
 }
 
+export async function findCustomerByPhone(companyId: string, phone: string): Promise<Customer | null> {
+  if (!isSupabaseConfigured || !phone) return null;
+
+  const normalized = normalizePhone(phone);
+  if (!normalized) return null;
+
+  const validCompanyId = ensureValidUuid(companyId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('customers') as any)
+    .select('*')
+    .eq('company_id', validCompanyId)
+    .or(`phone.eq.${phone},normalized_phone.eq.${normalized}`)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return mapRowToCustomer(data);
+}
+
 // ──────────────────────────────────────────────
 // Write
 // ──────────────────────────────────────────────
 
 export async function upsertCustomer(
   customer: Customer,
-  companyId: string
+  companyId: string,
+  allowDuplicatePhone: boolean = false
 ): Promise<{ success: boolean; data?: Customer; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
@@ -138,13 +157,13 @@ export async function upsertCustomer(
     normalizedPhone: normalizePhone(customer.phone),
   };
 
-  // Check phone uniqueness if phone is provided
-  if (normalizedCustomer.phone) {
+  // Check phone uniqueness if phone is provided and duplicates are not explicitly allowed
+  if (normalizedCustomer.phone && !allowDuplicatePhone) {
     const isDuplicate = await checkPhoneExists(validCompanyId, normalizedCustomer.phone, validCustomerId);
     if (isDuplicate) {
       return {
         success: false,
-        error: `رقم الهاتف (${normalizedCustomer.phone}) مسجل مسبقاً لعميل آخر. رقم الهاتف هو المفتاح الأساسي لمنع التكرار.`,
+        error: `رقم الهاتف (${normalizedCustomer.phone}) مسجل مسبقاً لعميل آخر.`,
       };
     }
   }

@@ -52,6 +52,9 @@ import {
   Coins
 } from "lucide-react";
 
+import { loadCompanySettings } from "../utils/storage";
+import { CompanySettings } from "../types";
+
 interface VoucherFormProps {
   voucher: ReceiptVoucher;
   onChange: (updated: ReceiptVoucher) => void;
@@ -62,6 +65,7 @@ interface VoucherFormProps {
   customers?: Customer[];
   branches?: Branch[];
   companyId?: string;
+  companySettings?: CompanySettings;
   onQuickSaveCustomer?: (customer: Customer) => void;
 }
 
@@ -75,9 +79,11 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
   customers = [],
   branches = [],
   companyId = "00000000-0000-0000-0000-000000000001",
+  companySettings,
   onQuickSaveCustomer
 }) => {
   const { language, t, dir, isRTL } = useLanguage();
+  const settings = companySettings || loadCompanySettings();
 
   // State for Number editing lock ✎
   const [isNumberLocked, setIsNumberLocked] = useState(true);
@@ -467,19 +473,38 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
           {/* Paper Letterhead Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-6 gap-6">
             
-            {/* Branding Details */}
-            <div className="space-y-1.5 max-w-sm">
-              <div className="flex items-center gap-2">
-                <div className={`p-2 rounded-xl ${currentTheme.lightBg} ${currentTheme.text}`}>
-                  <Building2 className="w-6 h-6" />
-                </div>
+            {/* Dynamic Company Branding & Logo Details */}
+            <div className="space-y-1.5 max-w-md">
+              <div className="flex items-center gap-3">
+                {settings.logoUrl ? (
+                  <img
+                    src={settings.logoUrl}
+                    alt={settings.companyName || "Logo"}
+                    className="h-12 w-auto object-contain max-w-[160px] shrink-0"
+                  />
+                ) : (
+                  <div className={`p-2.5 rounded-2xl ${currentTheme.lightBg} ${currentTheme.text} shrink-0`}>
+                    <Building2 className="w-6 h-6" />
+                  </div>
+                )}
                 <div>
-                  <h2 className="text-base font-black text-slate-900 tracking-tight">شركة دِشال للحلول الذكية</h2>
-                  <p className="text-[11px] text-slate-500 font-semibold">Deshal Smart Solutions & ERP</p>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight">
+                    {settings.companyName || "شركة دِشال للحلول الذكية"}
+                  </h2>
+                  {settings.tagline && (
+                    <p className="text-[11px] text-slate-500 font-semibold">{settings.tagline}</p>
+                  )}
                 </div>
               </div>
-              <p className="text-[11px] text-slate-600">عمانا بلازا | فلج القبائل | صحار | سلطنة عمان</p>
-              <p className="text-[10px] text-slate-500 font-mono">info@deshalbm.com • 77627500 / 22730630 • VAT: OM-109283</p>
+              <p className="text-[11px] text-slate-600 font-medium">
+                {[settings.address, settings.cityStateZip, settings.country].filter(Boolean).join(" | ")}
+              </p>
+              <div className="text-[10px] text-slate-500 font-mono flex flex-wrap gap-x-2 font-semibold">
+                {settings.email && <span>{settings.email}</span>}
+                {settings.phone && <span>• {settings.phone}</span>}
+                {settings.taxId && <span>• VAT: {settings.taxId}</span>}
+                {settings.crNumber && <span>• CR: {settings.crNumber}</span>}
+              </div>
             </div>
 
             {/* Document Title & Number Badge Input */}
@@ -1117,6 +1142,61 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
               <span>{isRTL ? "اختبار التحقق العامة" : "Public Verification"}</span>
               <ExternalLink className="w-3 h-3" />
             </a>
+          </div>
+
+          {/* Main Action Buttons Bar at the very bottom of the document sheet */}
+          <div className="pt-6 border-t-2 border-slate-300 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/90 -mx-6 sm:-mx-10 -mb-6 sm:-mb-10 p-6 rounded-b-2xl">
+            {/* Clear / Reset Voucher Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm(isRTL ? "هل أنت متأكد من مسح وإعادة تعيين بيانات السند؟" : "Are you sure you want to clear/reset this voucher?")) {
+                  handleFieldChange("lineItems", [{ id: "li-1", description: "", quantity: 1, unitPrice: 0, amount: 0 }]);
+                  handleFieldChange("notes", "");
+                  handleFieldChange("referenceNo", "");
+                  handleFieldChange("receivedFrom", "");
+                  handleFieldChange("paidAmount", 0);
+                  handleFieldChange("remainingAmount", 0);
+                }
+              }}
+              className="w-full sm:w-auto px-4 py-3 rounded-xl border border-rose-300 text-rose-700 bg-rose-50 hover:bg-rose-100 font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>{isRTL ? "مسح السند / إعادة تعيين" : "Clear / Reset Voucher"}</span>
+            </button>
+
+            {/* Save as Draft & Issue Voucher Buttons */}
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  handleFieldChange("status", "DRAFT");
+                  setTimeout(() => {
+                    onSave();
+                  }, 50);
+                }}
+                className="w-1/2 sm:w-auto px-5 py-3 rounded-xl border border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-950 font-black text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <BookmarkPlus className="w-4 h-4 text-amber-600" />
+                <span>{isRTL ? "حفظ كمسودة" : "Save as Draft"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (voucher.status === "DRAFT") {
+                    handleFieldChange("status", "ISSUED");
+                  }
+                  setTimeout(() => {
+                    onSave();
+                  }, 50);
+                }}
+                className="w-1/2 sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 cursor-pointer scale-102"
+              >
+                <CheckCircle2 className="w-4.5 h-4.5" />
+                <span>{isRTL ? "إصدار وتأكيد السند" : "Issue & Confirm Voucher"}</span>
+              </button>
+            </div>
           </div>
 
         </div>
