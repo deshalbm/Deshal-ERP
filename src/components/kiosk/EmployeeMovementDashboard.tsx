@@ -322,6 +322,8 @@ export const EmployeeMovementDashboard: React.FC<EmployeeMovementDashboardProps>
         branchId: deviceFormData.branchId,
         branchName,
         location: deviceFormData.location,
+        username: `kiosk.${deviceFormData.deviceCode.toLowerCase()}`,
+        plainPassword: "123456",
         deviceToken: `dsh_tok_${Math.random().toString(36).substring(2, 10)}_${Date.now()}`,
         status: "ACTIVE",
         lastPing: new Date().toISOString(),

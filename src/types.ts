@@ -695,11 +695,14 @@ export interface KioskDevice {
   branchId: string;
   branchName: string;
   location: string; // e.g. "مدخل المقر الرئيسي", "بوابة المستودع A"
+  username: string; // Dedicated login username e.g. "kiosk.sohar.01"
+  plainPassword?: string; // Plain password for manager reference / email notification
+  passwordHash?: string; // SHA-256 salted password hash for authentication
+  passwordSalt?: string; // Cryptographic salt for password
   deviceToken: string; // Secure token for API/Applet validation
   activationCode?: string; // e.g. "DSH-K-849204"
   devicePinHash?: string; // SHA-256 salted PIN hash for device exit / lock override
   devicePinSalt?: string; // Cryptographic salt for device PIN
-  qrPairingPayload?: string; // Encoded payload string for QR pairing
   hardwareInfo?: {
     userAgent?: string;
     platform?: string;

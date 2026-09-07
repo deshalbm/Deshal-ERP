@@ -34,17 +34,15 @@ import {
   ShieldAlert,
   Mail,
   Send,
-  QrCode,
-  Scan
+  KeyRound
 } from "lucide-react";
 import { EmployeesManager } from "./EmployeesManager";
 import { ActivityLogsManager } from "./ActivityLogsManager";
 import { DigitalSignaturePad } from "./DigitalSignaturePad";
 import { WhatsAppBaileysStudio } from "./WhatsAppBaileysStudio";
-import { QRCameraScanner } from "./kiosk/QRCameraScanner";
 import { AVAILABLE_CURRENCIES, fetchLiveExchangeRates } from "../utils/currencyConverter";
 import { DEFAULT_COMPANY_SETTINGS, DEFAULT_RESEND_SETTINGS } from "../utils/storage";
-import { sendTestEmail, fetchEmailLogs } from "../lib/email/emailService";
+import { sendTestEmail, fetchEmailLogs, sendNotificationEmail } from "../lib/email/emailService";
 import { seedDemoDataToSupabase } from "../lib/supabase/seedDemoData";
 import { useERPData } from "../contexts/ERPDataContext";
 import {
@@ -52,11 +50,7 @@ import {
   saveKioskDevices,
   loadActiveKioskDeviceId,
   saveActiveKioskDeviceId,
-  saveIsKioskModeEnabled,
-  generateKioskPairingPayload,
-  generateUniversalPairingPayload,
-  generateKioskQRDataUrl,
-  parseKioskPairingPayload
+  saveIsKioskModeEnabled
 } from "../utils/attendanceStorage";
 import { setDeviceSecretPin } from "../utils/kioskSecurity";
 
@@ -126,72 +120,28 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
   const [activeDeviceIdState, setActiveDeviceIdState] = useState<string>(() => loadActiveKioskDeviceId());
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
 
-  // Device QR Modal State
-  const [qrModalDevice, setQrModalDevice] = useState<KioskDevice | null>(null);
-  const [qrModalDataUrl, setQrModalDataUrl] = useState<string>("");
-  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState<boolean>(false);
-
-  const handleScanQRSuccess = (scannedText: string) => {
-    setIsCameraScannerOpen(false);
-    const parsed = parseKioskPairingPayload(scannedText);
-    const code = parsed.activationCode || scannedText.trim();
-
-    // Check if code matches an existing device
-    const existing = safeKioskDevices.find(
-      (d) =>
-        d.activationCode?.toUpperCase() === code.toUpperCase() ||
-        d.deviceCode?.toUpperCase() === code.toUpperCase() ||
-        d.id === parsed.deviceId
-    );
-
-    if (existing) {
-      setEditingDevice(existing);
-      setDeviceFormData({
-        name: existing.name,
-        deviceCode: existing.deviceCode,
-        branchId: existing.branchId,
-        location: existing.location,
-        model: existing.model || "Apple iPad Pro",
-        status: existing.status,
-        plainPin: "1234"
-      });
-      setIsDeviceModalOpen(true);
-      alert(`تم قراءة رمز الـ QR بنجاح للجهاز المسجل (${existing.name}). يمكنك مراجعة بياناته أو تعديلها الآن.`);
-    } else {
-      setEditingDevice(null);
-      setDeviceFormData({
-        name: parsed.name || `كشك اللوحي - ${branches[0]?.name || "الفرع الرئيسي"}`,
-        deviceCode: parsed.activationCode || `KIOSK-${branches[0]?.code || "SOH"}-${safeKioskDevices.length + 1}`,
-        branchId: parsed.branchId || branches[0]?.id || "branch-sohar",
-        location: parsed.location || "المدخل الرئيسي",
-        model: "Apple iPad Pro 11-inch",
-        status: "ACTIVE",
-        plainPin: "1234"
-      });
-      setIsDeviceModalOpen(true);
-      alert("تم قراءة رمز الـ QR بنجاح! يرجى مراجعة وتأكيد بيانات الجهاز وإدخال الرمز السري للحفظ.");
-    }
-  };
-
   // Device Modal State
   const [isDeviceModalOpen, setIsDeviceModalOpen] = useState<boolean>(false);
   const [editingDevice, setEditingDevice] = useState<KioskDevice | null>(null);
+  const [sendingEmailDeviceId, setSendingEmailDeviceId] = useState<string | null>(null);
   const [deviceFormData, setDeviceFormData] = useState<{
     name: string;
     deviceCode: string;
     branchId: string;
     location: string;
+    username: string;
+    plainPassword: string;
     model: string;
     status: "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
-    plainPin: string;
   }>({
     name: "",
     deviceCode: "",
     branchId: branches[0]?.id || "branch-sohar",
     location: "",
+    username: "",
+    plainPassword: "123456",
     model: "Apple iPad Pro 11-inch",
-    status: "ACTIVE",
-    plainPin: "1234"
+    status: "ACTIVE"
   });
   const [showSavedNotification, setShowSavedNotification] = useState<boolean>(false);
   const [isUpdatingRates, setIsUpdatingRates] = useState<boolean>(false);
@@ -1784,17 +1734,17 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
                 <Tablet className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  {language === "ar" ? "إدارة أجهزة كشك الحضور والانصراف المعتمدة (Kiosk Devices Catalog)" : "Authorized Attendance Kiosk Devices"}
+                  {language === "ar" ? "إدارة حسابات أجهزة الكشك اللوحي (Attendance Kiosk Accounts)" : "Attendance Kiosk Devices Catalog"}
                 </h2>
                 <p className="text-xs text-slate-500">
                   {language === "ar"
-                    ? "إضافة وتعديل الأجهزة اللوحية المصرح لها بتسجيل الحضور، وتوليد أكواد التفعيل وتوكنات الأمان"
-                    : "Manage, register, and activate hardware tablet devices allowed to log attendance"}
+                    ? "إضافة وتعديل بيانات الدخول (اسم المستخدم وكلمة المرور) لأجهزة الحضور اللوحية بالكامل بدون تعقيد"
+                    : "Manage dedicated login accounts (Username & Password) for tablet attendance kiosks"}
                 </p>
               </div>
             </div>
@@ -1802,59 +1752,26 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={async () => {
-                  const universalPayload = generateUniversalPairingPayload();
-                  const dataUrl = await generateKioskQRDataUrl(universalPayload);
-                  setQrModalDevice({
-                    id: "new-pairing",
-                    deviceCode: "NEW-TABLET-QR",
-                    name: "رمز اقتران جهاز كشك جديد",
-                    branchId: branches[0]?.id || "branch-sohar",
-                    branchName: branches[0]?.name || "المؤسسة العامة",
-                    location: "امسح من كاميرا التابلت المراد إضافته",
-                    deviceToken: "tok_pairing_live",
-                    activationCode: "SCAN-VIA-TABLET-CAM",
-                    status: "ACTIVE",
-                    isLocked: false,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                  });
-                  setQrModalDataUrl(dataUrl);
-                }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-extrabold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
-              >
-                <QrCode className="w-4 h-4" />
-                <span>{language === "ar" ? "توليد رمز QR لإقتران جهاز جديد" : "Generate Pairing QR"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsCameraScannerOpen(true)}
-                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
-              >
-                <Scan className="w-4 h-4 text-amber-400" />
-                <span>{language === "ar" ? "مسح الـ QR للكاميرا" : "Camera Scan"}</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => {
                   setEditingDevice(null);
+                  const nextIndex = safeKioskDevices.length + 1;
+                  const defaultBranch = branches[0] || { id: "branch-sohar", name: "الفرع الرئيسي", code: "SOH" };
                   setDeviceFormData({
-                    name: `كشك اللوحي - ${branches[0]?.name || "الفرع الرئيسي"}`,
-                    deviceCode: `KIOSK-${branches[0]?.code || "SOH"}-${safeKioskDevices.length + 1}`,
-                    branchId: branches[0]?.id || "branch-sohar",
+                    name: `كشك الحضور - ${defaultBranch.name}`,
+                    deviceCode: `KIOSK-${defaultBranch.code || "SOH"}-${nextIndex}`,
+                    branchId: defaultBranch.id,
                     location: "المدخل الرئيسي",
-                    model: "Apple iPad Pro 11-inch",
-                    status: "ACTIVE",
-                    plainPin: "1234"
+                    username: `kiosk.${(defaultBranch.code || "branch").toLowerCase()}.${nextIndex}`,
+                    plainPassword: String(Math.floor(100000 + Math.random() * 900000)),
+                    model: "Apple iPad 10th Gen",
+                    status: "ACTIVE"
                   });
                   setIsDeviceModalOpen(true);
                 }}
-                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-2 transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>{language === "ar" ? "إضافة يدوي" : "Manual Add"}</span>
+                <span>{language === "ar" ? "إضافة حساب كشك جديد" : "Add Kiosk Account"}</span>
               </button>
             </div>
           </div>
@@ -1908,29 +1825,51 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                       </div>
                       <div className="flex justify-between text-slate-600">
                         <span>نوع الجهاز:</span>
-                        <span className="font-bold text-slate-800">{device.model}</span>
+                        <span className="font-bold text-slate-800">{device.model || "آيباد لوحي"}</span>
                       </div>
                     </div>
 
-                    {/* Activation Code Box */}
-                    <div className="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-1.5">
+                    {/* Account Credentials Box */}
+                    <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2">
                       <div className="flex items-center justify-between text-[11px] font-bold text-indigo-900">
-                        <span>كود التفعيل السري (Activation Code):</span>
+                        <span>بيانات الدخول للجهاز اللوحي:</span>
                         <button
                           type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(device.activationCode || device.deviceCode);
-                            setCopiedCodeId(device.id);
-                            setTimeout(() => setCopiedCodeId(null), 2000);
+                          disabled={sendingEmailDeviceId === device.id}
+                          onClick={async () => {
+                            const recipient = localSettings.email || "admin@deshalbm.com";
+                            setSendingEmailDeviceId(device.id);
+                            const res = await sendNotificationEmail({
+                              recipientEmail: recipient,
+                              title: `بيانات حساب كشك الحضور اللوحي: ${device.name}`,
+                              recipientName: device.name,
+                              message: `بيانات حساب الدخول الخاص بالكشك اللوحي (${device.name}):\n\n- اسم المستند: ${device.name}\n- الموقع: ${device.location} (${device.branchName})\n- اسم المستخدم: ${device.username || device.deviceCode}\n- كلمة المرور: ${device.plainPassword || "123456"}`,
+                              companyName: localSettings.companyName || "ديشال"
+                            });
+                            setSendingEmailDeviceId(null);
+                            if (res.success) {
+                              alert(`تم إرسال البيانات بالبريد بنجاح إلى: ${recipient}`);
+                            } else {
+                              alert(`تعذر إرسال البريد: ${res.error || "خطأ في الاتصال"}`);
+                            }
                           }}
-                          className="px-2 py-0.5 bg-white text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[10px] font-bold border border-indigo-200 transition-colors cursor-pointer flex items-center gap-1"
+                          className="px-2 py-1 bg-white text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[10px] font-bold border border-indigo-200 transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+                          title="إرسال اسم المستخدم وكلمة المرور إلى بريد الشركة"
                         >
-                          {copiedCodeId === device.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedCodeId === device.id ? "تم النسخ" : "نسخ الكود"}</span>
+                          <Mail className="w-3 h-3 text-indigo-600" />
+                          <span>{sendingEmailDeviceId === device.id ? "جاري الإرسال..." : "إرسال بالبريد"}</span>
                         </button>
                       </div>
-                      <div className="font-mono text-sm font-black text-indigo-950 bg-white p-1.5 rounded-lg border border-indigo-100 text-center tracking-wider">
-                        {device.activationCode || device.deviceCode}
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-white p-2 rounded-lg border border-indigo-100">
+                          <span className="text-[10px] text-slate-400 block font-bold">اسم المستخدم</span>
+                          <span className="font-mono font-black text-indigo-950 truncate block">{device.username || device.deviceCode}</span>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg border border-indigo-100">
+                          <span className="text-[10px] text-slate-400 block font-bold">كلمة المرور</span>
+                          <span className="font-mono font-black text-slate-900 truncate block">{device.plainPassword || "123456"}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1976,21 +1915,6 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={async () => {
-                            const payload = generateKioskPairingPayload(device);
-                            const dataUrl = await generateKioskQRDataUrl(payload);
-                            setQrModalDevice(device);
-                            setQrModalDataUrl(dataUrl);
-                          }}
-                          className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer flex items-center gap-1 font-bold text-[11px]"
-                          title="عرض QR الاقتران"
-                        >
-                          <QrCode className="w-4 h-4" />
-                          <span>QR الاقتران</span>
-                        </button>
-
-                        <button
-                          type="button"
                           onClick={() => {
                             setEditingDevice(device);
                             setDeviceFormData({
@@ -1998,22 +1922,24 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                               deviceCode: device.deviceCode,
                               branchId: device.branchId,
                               location: device.location,
+                              username: device.username || `kiosk.${device.deviceCode.toLowerCase()}`,
+                              plainPassword: device.plainPassword || "123456",
                               model: device.model || "Apple iPad Pro",
-                              status: device.status,
-                              plainPin: "1234"
+                              status: device.status
                             });
                             setIsDeviceModalOpen(true);
                           }}
-                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                          title="تعديل البيانات والرمز السري"
+                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                          title="تعديل الحساب والرمز السري"
                         >
                           <Edit2 className="w-4 h-4" />
+                          <span>تعديل</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm(language === "ar" ? `هل أنت متأكد من حذف جهاز الكشك (${device.name})؟` : `Delete kiosk device ${device.name}?`)) {
+                            if (confirm(language === "ar" ? `هل أنت متأكد من حذف حساب الكشك (${device.name})؟` : `Delete kiosk device ${device.name}?`)) {
                               const updated = safeKioskDevices.filter((d) => d.id !== device.id);
                               handleSaveKioskDevices(updated);
                             }
@@ -2038,7 +1964,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70 shrink-0">
                   <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
                     <Tablet className="w-4 h-4 text-indigo-600" />
-                    <span>{editingDevice ? (language === "ar" ? "تعديل جهاز كشك" : "Edit Kiosk Device") : (language === "ar" ? "إضافة جهاز كشك جديد" : "Add New Kiosk Device")}</span>
+                    <span>{editingDevice ? (language === "ar" ? "تعديل حساب كشك لوحي" : "Edit Kiosk Account") : (language === "ar" ? "إضافة حساب كشك لوحي جديد" : "Add New Kiosk Account")}</span>
                   </h3>
                   <button
                     type="button"
@@ -2050,31 +1976,9 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                 </div>
 
                 <div className="p-6 space-y-4 text-xs overflow-y-auto flex-1">
-                  {/* Quick QR Scanner Banner */}
-                  <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-center justify-between gap-2">
-                    <div className="space-y-0.5 text-right">
-                      <div className="font-bold text-amber-950 text-xs flex items-center gap-1.5">
-                        <QrCode className="w-4 h-4 text-amber-600" />
-                        <span>اقتران سريع عبر مسح الـ QR Code</span>
-                      </div>
-                      <p className="text-[11px] text-amber-800">اقرأ رمز الـ QR المعروض على شاشة الجهاز اللوحي مباشرة</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsDeviceModalOpen(false);
-                        setIsCameraScannerOpen(true);
-                      }}
-                      className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-extrabold text-[11px] flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer transition-all"
-                    >
-                      <Scan className="w-4 h-4" />
-                      <span>مسح الكاميرا</span>
-                    </button>
-                  </div>
-
                   <div>
                     <label className="text-xs font-bold text-slate-800 block mb-1">
-                      اسم الجهاز المعرف <span className="text-rose-500">*</span>
+                      اسم الجهاز / الكشك <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -2132,6 +2036,52 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                     />
                   </div>
 
+                  {/* Kiosk Login Credentials Section */}
+                  <div className="p-3.5 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-3">
+                    <div className="font-extrabold text-xs text-indigo-950 flex items-center gap-1.5">
+                      <KeyRound className="w-4 h-4 text-indigo-600" />
+                      <span>بيانات تسجيل الدخول للتابلت (Username & Password)</span>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        اسم المستخدم للدخول <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={deviceFormData.username}
+                        onChange={(e) => setDeviceFormData({ ...deviceFormData, username: e.target.value.toLowerCase().trim() })}
+                        placeholder="مثال: kiosk.sohar"
+                        className="w-full px-3.5 py-2.5 bg-white border border-indigo-200 rounded-xl text-xs font-mono font-bold text-indigo-950 outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1 flex items-center justify-between">
+                        <span>كلمة المرور / الرمز السري</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPass = String(Math.floor(100000 + Math.random() * 900000));
+                            setDeviceFormData({ ...deviceFormData, plainPassword: newPass });
+                          }}
+                          className="text-[10px] text-indigo-600 font-bold hover:underline cursor-pointer"
+                        >
+                          ⚡ توليد تلقائي
+                        </button>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={deviceFormData.plainPassword}
+                        onChange={(e) => setDeviceFormData({ ...deviceFormData, plainPassword: e.target.value })}
+                        placeholder="123456"
+                        className="w-full px-3.5 py-2.5 bg-white border border-indigo-200 rounded-xl text-xs font-mono font-bold text-slate-900 tracking-wider outline-hidden"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-xs font-bold text-slate-800 block mb-1">
                       نوع الهاردوير / الموديل
@@ -2140,23 +2090,8 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                       type="text"
                       value={deviceFormData.model}
                       onChange={(e) => setDeviceFormData({ ...deviceFormData, model: e.target.value })}
-                      placeholder="Apple iPad Pro 11-inch / Samsung Galaxy Tab"
+                      placeholder="Apple iPad 10th Gen / Samsung Galaxy Tab"
                       className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 outline-hidden"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1 flex items-center justify-between">
-                      <span>الرمز السري الخاص بالجهاز (Master/Device PIN)</span>
-                      <span className="text-[10px] text-slate-400 font-normal">(افتراضي: 1234)</span>
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={deviceFormData.plainPin}
-                      onChange={(e) => setDeviceFormData({ ...deviceFormData, plainPin: e.target.value })}
-                      placeholder="1234"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold text-indigo-950 tracking-widest outline-hidden"
                     />
                   </div>
 
@@ -2188,7 +2123,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!deviceFormData.name.trim() || !deviceFormData.deviceCode.trim()) return;
+                      if (!deviceFormData.name.trim() || !deviceFormData.deviceCode.trim() || !deviceFormData.username.trim()) return;
                       const targetBranch = branches.find((b) => b.id === deviceFormData.branchId) || branches[0];
 
                       if (editingDevice) {
@@ -2199,13 +2134,12 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                           branchId: deviceFormData.branchId,
                           branchName: targetBranch?.name || editingDevice.branchName,
                           location: deviceFormData.location,
+                          username: deviceFormData.username.toLowerCase().trim(),
+                          plainPassword: deviceFormData.plainPassword,
                           model: deviceFormData.model,
                           status: deviceFormData.status,
                           updatedAt: new Date().toISOString()
                         };
-                        if (deviceFormData.plainPin) {
-                          updatedDev = await setDeviceSecretPin(updatedDev, deviceFormData.plainPin);
-                        }
                         const updated = safeKioskDevices.map((d) => (d.id === editingDevice.id ? updatedDev : d));
                         handleSaveKioskDevices(updated);
                       } else {
@@ -2218,6 +2152,8 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                           branchId: deviceFormData.branchId,
                           branchName: targetBranch?.name || "الفرع الرئيسي",
                           location: deviceFormData.location || "المدخل الرئيسي",
+                          username: deviceFormData.username.toLowerCase().trim(),
+                          plainPassword: deviceFormData.plainPassword || "123456",
                           deviceToken: `dsh_kiosk_tok_${randomCode}_${Date.now().toString(36)}`,
                           activationCode: `DSH-K-${randomCode}`,
                           status: deviceFormData.status,
@@ -2229,116 +2165,17 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                           createdAt: new Date().toISOString(),
                           updatedAt: new Date().toISOString()
                         };
-                        if (deviceFormData.plainPin) {
-                          newDev = await setDeviceSecretPin(newDev, deviceFormData.plainPin);
-                        }
                         handleSaveKioskDevices([...safeKioskDevices, newDev]);
                       }
                       setIsDeviceModalOpen(false);
                     }}
                     className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold shadow-md transition-all cursor-pointer"
                   >
-                    {editingDevice ? (language === "ar" ? "حفظ التعديلات" : "Save Changes") : (language === "ar" ? "حفظ وتوليد الكود" : "Save & Generate Code")}
+                    {editingDevice ? (language === "ar" ? "حفظ التعديلات" : "Save Changes") : (language === "ar" ? "إصدار وحفظ الحساب" : "Save Kiosk Account")}
                   </button>
                 </div>
               </div>
             </div>
-          )}
-
-          {/* QR Pairing Code Modal */}
-          {qrModalDevice && (
-            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col p-6 space-y-4 text-center">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                    <QrCode className="w-4 h-4 text-indigo-600" />
-                    <span>رمز اقتران QR الكشك</span>
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setQrModalDevice(null)}
-                    className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
-                  >
-                    <XCircle className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-1">
-                  <h4 className="font-bold text-sm text-slate-900">{qrModalDevice.name}</h4>
-                  <p className="text-xs text-slate-500">{qrModalDevice.branchName} • {qrModalDevice.location}</p>
-                </div>
-
-                {qrModalDataUrl ? (
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-center items-center">
-                    <img src={qrModalDataUrl} alt="Kiosk Pairing QR Code" className="w-56 h-56 rounded-xl shadow-xs" />
-                  </div>
-                ) : (
-                  <div className="py-10 text-xs text-slate-400">جاري توليد الرمز...</div>
-                )}
-
-                <p className="text-[11px] text-slate-600 leading-relaxed bg-indigo-50/60 p-3 rounded-xl border border-indigo-100 text-right">
-                  💡 <strong>طريقة الاستخدام:</strong> افتح كشك الحضور على الجهاز اللوحي، ثم امسح هذا الرمز باستخدام الكاميرا لربطه وتفعيله ككشك مخصص.
-                </p>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const printWin = window.open("", "_blank");
-                      if (printWin) {
-                        printWin.document.write(`
-                          <html>
-                            <head>
-                              <title>رمز اقتران كشك - ${qrModalDevice.name}</title>
-                              <style>
-                                body { font-family: system-ui, sans-serif; text-align: center; padding: 40px; }
-                                .card { border: 2px solid #0f172a; padding: 30px; border-radius: 20px; display: inline-block; max-width: 400px; }
-                                h2 { margin-bottom: 5px; color: #0f172a; }
-                                p { color: #475569; font-size: 14px; margin-top: 0; }
-                                img { width: 250px; height: 250px; margin: 20px 0; }
-                                .code { font-family: monospace; font-size: 18px; font-weight: bold; background: #f1f5f9; padding: 8px 16px; border-radius: 8px; }
-                              </style>
-                            </head>
-                            <body>
-                              <div class="card">
-                                <h2>${qrModalDevice.name}</h2>
-                                <p>${qrModalDevice.branchName} - ${qrModalDevice.location}</p>
-                                <img src="${qrModalDataUrl}" />
-                                <div style="margin-top:15px;">كود التفعيل: <span class="code">${qrModalDevice.activationCode || qrModalDevice.deviceCode}</span></div>
-                              </div>
-                              <script>window.print();</script>
-                            </body>
-                          </html>
-                        `);
-                        printWin.document.close();
-                      }
-                    }}
-                    className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <Printer className="w-4 h-4" />
-                    <span>طباعة بطاقة QR</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setQrModalDevice(null)}
-                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer"
-                  >
-                    إلغاء
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Camera QR Scanner Modal */}
-          {isCameraScannerOpen && (
-            <QRCameraScanner
-              title="مسح QR Code الجهاز اللوحي"
-              description="وجه كاميرا الجهاز نحو رمز الـ QR المعروض على التابلت للاقتران أو التعديل الفوري"
-              onScan={handleScanQRSuccess}
-              onClose={() => setIsCameraScannerOpen(false)}
-            />
           )}
         </div>
       )}

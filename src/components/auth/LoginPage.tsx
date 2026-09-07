@@ -44,6 +44,7 @@ import {
   DEFAULT_USER_ACCOUNTS
 } from "../../utils/authManager";
 import { loadEmployees, DEFAULT_COMPANY_SETTINGS } from "../../utils/storage";
+import { authenticateKioskAccount, saveActiveKioskDeviceId, saveIsKioskModeEnabled } from "../../utils/attendanceStorage";
 import { useLanguage } from "../../utils/LanguageContext";
 import { signInWithEmail, signUpWithEmail } from "../../lib/supabase/authService";
 import { isSupabaseConfigured } from "../../lib/supabase/client";
@@ -122,6 +123,70 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setErrorMessage("");
     setSuccessMessage("");
     setIsLoading(true);
+
+    // 0. Check if credentials match a Kiosk Tablet Account
+    const kioskAuth = authenticateKioskAccount(email, password);
+    if (kioskAuth.success && kioskAuth.device) {
+      setIsLoading(false);
+      saveActiveKioskDeviceId(kioskAuth.device.id);
+      saveIsKioskModeEnabled(true);
+      const kioskSession: AuthSession = {
+        user: {
+          id: kioskAuth.device.id,
+          employeeId: kioskAuth.device.id,
+          email: `${kioskAuth.device.username}@kiosk.local`,
+          fullName: `حساب كشك: ${kioskAuth.device.name}`,
+          fullNameEn: `Kiosk Account: ${kioskAuth.device.name}`,
+          role: "KIOSK_TABLET" as any,
+          passwordHash: "",
+          twoFactorEnabled: false,
+          failedLoginAttempts: 0,
+          isLocked: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        employee: {
+          id: kioskAuth.device.id,
+          employeeCode: kioskAuth.device.deviceCode,
+          fullName: kioskAuth.device.name,
+          fullNameEn: kioskAuth.device.name,
+          role: "KIOSK_TABLET" as any,
+          jobTitle: "Attendance Kiosk Device",
+          department: "Attendance",
+          email: `${kioskAuth.device.username}@kiosk.local`,
+          phone: "",
+          civilId: "",
+          hireDate: new Date().toISOString(),
+          basicSalary: 0,
+          allowances: 0,
+          currency: "OMR",
+          status: "ACTIVE",
+          branchId: kioskAuth.device.branchId,
+          permissions: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        token: kioskAuth.device.deviceToken,
+        loginMethod: "PASSWORD",
+        authenticatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        isLocked: false,
+        activeBranchId: kioskAuth.device.branchId
+      };
+      saveAuthSession(kioskSession);
+      if (onAuditLog) {
+        onAuditLog(
+          "LOGIN",
+          "SECURITY",
+          kioskAuth.device.id,
+          kioskAuth.device.name,
+          `تسجيل دخول ناجح لحساب الكشك اللوحي (${kioskAuth.device.name}) عبر اسم المستخدم (${kioskAuth.device.username})`,
+          `Kiosk account ${kioskAuth.device.name} logged in successfully`
+        );
+      }
+      onLoginSuccess(kioskSession);
+      return;
+    }
 
     if (isSupabaseConfigured) {
       const supaRes = await signInWithEmail(email, password);

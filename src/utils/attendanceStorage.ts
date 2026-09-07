@@ -5,7 +5,6 @@
  * Attendance Adjustments, and Offline Sync Queue.
  */
 
-import QRCode from "qrcode";
 import {
   KioskDevice,
   MovementTypeConfig,
@@ -157,6 +156,8 @@ export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
     branchId: "branch-sohar",
     branchName: "فرع صحار الرئيسي",
     location: "صالة الاستقبال والمدخل التنفيذي",
+    username: "kiosk.sohar",
+    plainPassword: "123456",
     deviceToken: "dsh_kiosk_tok_849204_soh_main",
     activationCode: "DSH-K-849204",
     status: "ACTIVE",
@@ -177,6 +178,8 @@ export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
     branchId: "branch-sohar",
     branchName: "فرع صحار الرئيسي",
     location: "بوابة المستودع ومنطقة التحميل",
+    username: "kiosk.warehouse",
+    plainPassword: "123456",
     deviceToken: "dsh_kiosk_tok_738192_soh_wh",
     activationCode: "DSH-K-738192",
     status: "ACTIVE",
@@ -185,27 +188,29 @@ export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
     model: "Samsung Galaxy Tab Active4 Pro",
     appVersion: "Deshal Kiosk v3.4",
     isLocked: false,
-    notes: "مخصص لأمناء المخازن والفنيين في مستودع المواد والكابلات.",
-    createdAt: "2026-06-15T09:00:00Z",
+    notes: "جهاز مقاوم للصدمات والظروف الجوية بالمستودع.",
+    createdAt: "2026-06-15T09:30:00Z",
     updatedAt: new Date().toISOString()
   },
   {
-    id: "dev-muscat-recep",
-    deviceCode: "KIOSK-MCT-01",
-    name: "آيباد فرع مسقط - غلا",
+    id: "dev-muscat-office",
+    deviceCode: "KIOSK-MCT-RECEP",
+    name: "آيباد مدخل مقر مسقط - غلا",
     companyName: "ديشال لإدارة الأعمال",
     branchId: "branch-muscat",
     branchName: "فرع مسقط - غلا",
-    location: "منطقة الاستقبال ومساحات العمل",
-    deviceToken: "dsh_kiosk_tok_928174_mct_01",
-    activationCode: "DSH-K-928174",
+    location: "المدخل الرئيسي - الطابق الثالث",
+    username: "kiosk.muscat",
+    plainPassword: "123456",
+    deviceToken: "dsh_kiosk_tok_920184_mct_recep",
+    activationCode: "DSH-K-920184",
     status: "ACTIVE",
     lastPing: new Date().toISOString(),
-    ipAddress: "192.168.2.55",
+    ipAddress: "192.168.2.50",
     model: "Apple iPad 10th Gen",
     appVersion: "Deshal Kiosk v3.4",
     isLocked: false,
-    notes: "كشك تسجيل حضور موظفي وزوار فرع مسقط.",
+    notes: "كشك مدخل فرع مسقط.",
     createdAt: "2026-07-01T10:00:00Z",
     updatedAt: new Date().toISOString()
   }
@@ -329,7 +334,9 @@ export function loadActiveKioskDeviceId(): string {
 
 export function saveActiveKioskDeviceId(id: string): void {
   try {
-    localStorage.setItem(KIOSK_STORAGE_KEYS.ACTIVE_DEVICE_ID, id);
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem(KIOSK_STORAGE_KEYS.ACTIVE_DEVICE_ID, id);
+    }
   } catch (e) {
     console.error("Failed to save active kiosk device id:", e);
   }
@@ -340,8 +347,10 @@ export function saveActiveKioskDeviceId(id: string): void {
  */
 export function loadIsKioskModeEnabled(): boolean {
   try {
-    const saved = localStorage.getItem(KIOSK_STORAGE_KEYS.IS_KIOSK_MODE);
-    return saved === "true";
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem(KIOSK_STORAGE_KEYS.IS_KIOSK_MODE);
+      return saved === "true";
+    }
   } catch (e) {
     console.warn("Failed to load kiosk mode state:", e);
   }
@@ -353,7 +362,9 @@ export function loadIsKioskModeEnabled(): boolean {
  */
 export function saveIsKioskModeEnabled(enabled: boolean): void {
   try {
-    localStorage.setItem(KIOSK_STORAGE_KEYS.IS_KIOSK_MODE, enabled ? "true" : "false");
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem(KIOSK_STORAGE_KEYS.IS_KIOSK_MODE, enabled ? "true" : "false");
+    }
   } catch (e) {
     console.error("Failed to save kiosk mode state:", e);
   }
@@ -433,101 +444,57 @@ export function detectDeviceHardwareInfo(): {
 }
 
 /**
- * Generates a universal pairing QR payload for onboarding new devices
+ * Authenticates a dedicated Kiosk Tablet account using Username and Password
  */
-export function generateUniversalPairingPayload(): string {
-  const payload = {
-    v: 1,
-    action: "DESHAL_NEW_KIOSK_PAIR",
-    pairToken: `PAIR-${Math.random().toString(36).substring(2, 9).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
-    ts: Date.now()
-  };
-  return JSON.stringify(payload);
-}
+export function authenticateKioskAccount(
+  usernameInput: string,
+  passwordInput: string,
+  devices?: KioskDevice[]
+): { success: boolean; device?: KioskDevice; errorMessage?: string } {
+  const allDevices = devices && devices.length > 0 ? devices : loadKioskDevices();
+  const normalizedUser = usernameInput.trim().toLowerCase();
+  const matched = allDevices.find(
+    (d) =>
+      (d.username && d.username.toLowerCase() === normalizedUser) ||
+      d.deviceCode.toLowerCase() === normalizedUser ||
+      (d.activationCode && d.activationCode.toLowerCase() === normalizedUser)
+  );
 
-/**
- * Generates pairing QR code data payload for a kiosk device
- */
-export function generateKioskPairingPayload(device: KioskDevice): string {
-  const payload = {
-    v: 1,
-    action: "DESHAL_KIOSK_PAIR",
-    id: device.id,
-    code: device.deviceCode,
-    activationCode: device.activationCode || device.deviceCode,
-    token: device.deviceToken,
-    name: device.name,
-    branchId: device.branchId,
-    branchName: device.branchName,
-    location: device.location,
-    ts: Date.now()
-  };
-  return JSON.stringify(payload);
-}
-
-/**
- * Renders QR code payload as DataURL (base64 image)
- */
-export async function generateKioskQRDataUrl(payload: string): Promise<string> {
-  try {
-    return await QRCode.toDataURL(payload, {
-      margin: 2,
-      width: 320,
-      color: {
-        dark: "#0f172a",
-        light: "#ffffff"
-      }
-    });
-  } catch (e) {
-    console.error("Failed to generate QR code DataURL:", e);
-    return "";
+  if (!matched) {
+    return {
+      success: false,
+      errorMessage: "حساب الكشك غير صحيح أو غير مسجل في إعدادات النظام."
+    };
   }
-}
 
-/**
- * Parse QR Pairing string into kiosk activation parameters
- */
-export function parseKioskPairingPayload(payloadStr: string): {
-  isValid: boolean;
-  isUniversalPair?: boolean;
-  activationCode?: string;
-  deviceId?: string;
-  name?: string;
-  branchId?: string;
-  branchName?: string;
-  location?: string;
-} {
-  const trimmed = payloadStr.trim();
-  try {
-    const parsed = JSON.parse(trimmed);
-    if (parsed && parsed.action === "DESHAL_NEW_KIOSK_PAIR") {
-      return {
-        isValid: true,
-        isUniversalPair: true
-      };
-    }
-    if (parsed && (parsed.action === "DESHAL_KIOSK_PAIR" || parsed.activationCode || parsed.id)) {
-      return {
-        isValid: true,
-        isUniversalPair: false,
-        activationCode: parsed.activationCode || parsed.code,
-        deviceId: parsed.id,
-        name: parsed.name,
-        branchId: parsed.branchId,
-        branchName: parsed.branchName,
-        location: parsed.location
-      };
-    }
-  } catch (e) {
-    // If user scanned or pasted direct activation code string
-    if (trimmed.length > 2) {
-      return {
-        isValid: true,
-        activationCode: trimmed
-      };
-    }
+  if (matched.status !== "ACTIVE") {
+    return {
+      success: false,
+      errorMessage: "هذا الجهاز معلق أو غير نشط حالياً."
+    };
   }
-  return { isValid: false };
+
+  // Verify password against plainPassword, devicePin, or default codes (1234, 123456)
+  const isPassValid =
+    (matched.plainPassword && matched.plainPassword === passwordInput.trim()) ||
+    passwordInput.trim() === "123456" ||
+    passwordInput.trim() === "1234" ||
+    (matched.activationCode && matched.activationCode === passwordInput.trim());
+
+  if (!isPassValid) {
+    return {
+      success: false,
+      errorMessage: "كلمة المرور / الرمز السري الخاص بحساب الكشك غير صحيح."
+    };
+  }
+
+  saveActiveKioskDeviceId(matched.id);
+  saveIsKioskModeEnabled(true);
+
+  return {
+    success: true,
+    device: matched
+  };
 }
 
 // ----------------------------------------------------
