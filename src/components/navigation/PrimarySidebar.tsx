@@ -16,7 +16,13 @@ import {
   ChevronLeft,
   X,
   FileCheck,
-  Globe
+  FileCheck2,
+  Globe,
+  Repeat,
+  Network,
+  Layers,
+  Compass,
+  Tablet
 } from 'lucide-react';
 import { useLanguage } from '../../utils/LanguageContext';
 import { AuthSession } from '../../types';
@@ -102,6 +108,14 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             labelAr: 'الرئيسية ومساحة العمل',
             labelEn: 'ERP Workspace',
             icon: TrendingUp
+          },
+          {
+            id: 'doc-wizard',
+            labelAr: 'معالج المستندات الذكي',
+            labelEn: 'Smart Doc Wizard',
+            icon: Sparkles,
+            badge: 'ذكي',
+            badgeColor: 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
           }
         ]
       },
@@ -123,6 +137,12 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             labelEn: 'Voucher History',
             badge: counts.vouchers,
             icon: FileText
+          },
+          {
+            id: 'schedules',
+            labelAr: 'الأقساط والتحصيل الدوري',
+            labelEn: 'Recurring Schedules',
+            icon: Repeat
           }
         ]
       },
@@ -134,13 +154,13 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
         items: [
           {
             id: 'pos',
-            labelAr: 'نقطة البيع (POS)',
+            labelAr: 'نقطة البيع الكاشير (POS)',
             labelEn: 'Point of Sale (POS)',
             icon: CreditCard
           },
           {
             id: 'crm',
-            labelAr: 'إدارة العملاء والعلاقات',
+            labelAr: 'إدارة العملاء والعلاقات 360°',
             labelEn: 'CRM & Customers',
             icon: Users,
             badge: counts.customers
@@ -150,13 +170,13 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
       {
         id: 'group_supply',
         groupKey: 'DESHAL SUPPLY & INVENTORY',
-        titleAr: 'المخزون والمشتريات',
+        titleAr: 'المخزون وسلسلة التوريد',
         titleEn: 'Deshal Supply Chain',
         items: [
           {
             id: 'inventory',
             labelAr: 'المخزون والمستودعات',
-            labelEn: 'Inventory',
+            labelEn: 'Inventory & Items',
             badge: counts.lowStock ? `${counts.lowStock} نقص` : undefined,
             badgeColor: 'bg-rose-500 text-white',
             icon: Boxes
@@ -166,14 +186,20 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             labelAr: 'المشتريات والموردين',
             labelEn: 'Purchases & Vendors',
             icon: Truck
+          },
+          {
+            id: 'branches',
+            labelAr: 'الفروع والمناقلات',
+            labelEn: 'Branches & Transfers',
+            icon: Network
           }
         ]
       },
       {
         id: 'group_hr',
         groupKey: 'DESHAL HR & PEOPLE',
-        titleAr: 'الموارد البشرية والرواتب',
-        titleEn: 'Deshal HR',
+        titleAr: 'الموارد البشرية والطلبات',
+        titleEn: 'Deshal HR & People',
         items: [
           {
             id: 'employees',
@@ -181,19 +207,25 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             labelEn: 'HR & Payroll',
             badge: counts.employees,
             icon: UserCheck
+          },
+          {
+            id: 'requests',
+            labelAr: 'طلبات ونماذج الموظفين',
+            labelEn: 'Staff Requests & Forms',
+            icon: FileCheck2
           }
         ]
       },
       {
         id: 'group_spaces',
-        groupKey: 'DESHAL SPACES & REAL ESTATE',
-        titleAr: 'المساحات والعقارات',
-        titleEn: 'Deshal Spaces',
+        groupKey: 'DESHAL SPACES & SERVICES',
+        titleAr: 'المساحات والخدمات والعقارات',
+        titleEn: 'Deshal Spaces & Services',
         items: [
           {
             id: 'spaces',
-            labelAr: 'المساحات التأجيرية',
-            labelEn: 'Rental Spaces',
+            labelAr: 'المساحات والقاعات التأجيرية',
+            labelEn: 'Rental Spaces & Halls',
             icon: Building2
           },
           {
@@ -201,26 +233,18 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             labelAr: 'عقود الإيجار والخدمات',
             labelEn: 'Leases & Contracts',
             icon: FileCheck
-          }
-        ]
-      },
-      {
-        id: 'group_admin',
-        groupKey: 'DESHAL ADMIN & SUPPORT',
-        titleAr: 'النظام والمساندة',
-        titleEn: 'Deshal Admin',
-        items: [
-          {
-            id: 'help',
-            labelAr: 'مركز المساعدة والدليل',
-            labelEn: 'Help & User Guide',
-            icon: HelpCircle
           },
           {
-            id: 'settings',
-            labelAr: 'إعدادات النظام والمؤسسة',
-            labelEn: 'System Settings',
-            icon: Settings
+            id: 'services',
+            labelAr: 'الخدمات الاستشارية والباقات',
+            labelEn: 'Services & Packages',
+            icon: Layers
+          },
+          {
+            id: 'portal',
+            labelAr: 'بوابة الحجز الذاتي للعملاء',
+            labelEn: 'Client Booking Portal',
+            icon: Compass
           }
         ]
       },
@@ -234,13 +258,33 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             id: 'website',
             labelAr: 'الموقع الإلكتروني والمعاينة',
             labelEn: 'Public Website',
-            icon: Globe
+            icon: Tablet
           },
           {
             id: 'cms',
             labelAr: 'إدارة المواقع والمحتوى (CMS)',
             labelEn: 'Website & CMS Manager',
             icon: Globe
+          }
+        ]
+      },
+      {
+        id: 'group_admin',
+        groupKey: 'DESHAL ADMIN & SUPPORT',
+        titleAr: 'النظام والمساندة',
+        titleEn: 'Deshal Admin & Support',
+        items: [
+          {
+            id: 'help',
+            labelAr: 'مركز المساعدة والدليل',
+            labelEn: 'Help & User Guide',
+            icon: HelpCircle
+          },
+          {
+            id: 'settings',
+            labelAr: 'إعدادات النظام والمؤسسة',
+            labelEn: 'System Settings',
+            icon: Settings
           }
         ]
       }
