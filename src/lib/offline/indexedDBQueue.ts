@@ -139,10 +139,34 @@ export async function getPendingOperations(companyId?: string): Promise<OfflineO
       if (companyId) {
         ops = ops.filter((o) => o.company_id === companyId);
       }
-      // Return pending or failed (retryable) operations sorted chronologically
+      const ENTITY_TIERS: Record<string, number> = {
+        BRANCH: 1,
+        INVENTORY_ITEM: 1,
+        CUSTOMER: 1,
+        EMPLOYEE: 1,
+        SUPPLIER: 1,
+        POS_ORDER: 2,
+        CASHIER_SHIFT: 2,
+        ATTENDANCE_RECORD: 2,
+        ATTENDANCE_MOVEMENT_LOG: 2,
+        LEAVE_REQUEST: 2,
+        PAYROLL_SLIP: 2,
+        JOURNAL_ENTRY: 2,
+        VOUCHER: 2,
+        PURCHASE_INVOICE: 2,
+        SERVICE_BOOKING: 2,
+        EMPLOYEE_REQUEST: 2,
+      };
+
+      // Return pending or failed (retryable) operations sorted by entity dependency tier then chronologically
       const pending = ops
         .filter((o) => o.status === 'PENDING' || (o.status === 'FAILED' && o.retry_count < o.max_retries))
-        .sort((a, b) => a.client_timestamp - b.client_timestamp);
+        .sort((a, b) => {
+          const tierA = ENTITY_TIERS[a.entity_type] ?? 2;
+          const tierB = ENTITY_TIERS[b.entity_type] ?? 2;
+          if (tierA !== tierB) return tierA - tierB;
+          return a.client_timestamp - b.client_timestamp;
+        });
       resolve(pending);
     };
 

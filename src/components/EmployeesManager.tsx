@@ -1047,16 +1047,18 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
   };
 
   // Generate Monthly Payroll Batch
+  // Generate Monthly Payroll Batch
   const handleGeneratePayrollBatch = () => {
     const activeStaff = employees.filter((e) => e.status === "ACTIVE" || e.status === "ON_LEAVE");
     const newSlips: PayrollSlip[] = activeStaff.map((emp, index) => {
       const basic = Number(emp.basicSalary) || 0;
-      const housing = Math.round(Number(emp.allowances) * 0.6) || 100;
-      const transport = Math.round(Number(emp.allowances) * 0.4) || 50;
+      const totalAllowances = Number(emp.allowances) || 0;
+      const housing = Math.round(totalAllowances * 0.6);
+      const transport = totalAllowances - housing;
       const socialSecurity = Number((basic * 0.07).toFixed(3)); // 7% PASI
       const bonus = 0;
       const deductions = 0;
-      const net = basic + housing + transport + bonus - (socialSecurity + deductions);
+      const net = Number((basic + housing + transport + bonus - (socialSecurity + deductions)).toFixed(3));
 
       return {
         id: `pay-${selectedPayrollMonth}-${emp.id}`,
@@ -1093,6 +1095,17 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
     if (onSavePayrollSlips) {
       onSavePayrollSlips(updated);
     }
+
+    if (onAuditLog) {
+      onAuditLog(
+        "GENERATE_PAYROLL",
+        "PAYROLL",
+        `payroll-batch-${selectedPayrollMonth}`,
+        `مسير رواتب ${selectedPayrollMonth}`,
+        `توليد مسير رواتب شهر ${selectedPayrollMonth} لعدد ${newSlips.length} موظف`,
+        `Generated monthly payroll batch for ${selectedPayrollMonth} for ${newSlips.length} employees`
+      );
+    }
   };
 
   // Export WPS File (Wage Protection System for Banks)
@@ -1121,11 +1134,11 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
       `"${s.employeeName}"`,
       `"${s.bankName || 'Bank Muscat'}"`,
       s.bankIban || "N/A",
-      s.basicSalary.toFixed(3),
-      (s.housingAllowance + s.transportAllowance + s.otherAllowances).toFixed(3),
-      (s.basicSalary + s.housingAllowance + s.transportAllowance + s.otherAllowances + s.bonus).toFixed(3),
-      (s.deductions + s.socialSecurityDeduction).toFixed(3),
-      s.netSalary.toFixed(3),
+      Number(s.basicSalary || 0).toFixed(3),
+      (Number(s.housingAllowance || 0) + Number(s.transportAllowance || 0) + Number(s.otherAllowances || 0)).toFixed(3),
+      (Number(s.basicSalary || 0) + Number(s.housingAllowance || 0) + Number(s.transportAllowance || 0) + Number(s.otherAllowances || 0) + Number(s.bonus || 0)).toFixed(3),
+      (Number(s.deductions || 0) + Number(s.socialSecurityDeduction || 0)).toFixed(3),
+      Number(s.netSalary || 0).toFixed(3),
       companySettings.currency || "OMR",
       s.payrollMonth
     ]);
