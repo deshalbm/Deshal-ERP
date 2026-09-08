@@ -563,18 +563,29 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
     try {
       const reader = new FileReader();
       reader.onload = async (event) => {
-        const base64 = event.target?.result as string;
-        if (base64) {
-          const filePath = `avatars/emp_${formData.employeeCode || Date.now()}_${Date.now()}.png`;
-          const res = await uploadImageToStorage("company_assets", filePath, base64);
-          const finalUrl = res.publicUrl || base64;
-          setFormData((prev) => ({ ...prev, avatarUrl: finalUrl }));
+        try {
+          const base64 = event.target?.result as string;
+          if (base64) {
+            const filePath = `avatars/emp_${formData.employeeCode || Date.now()}_${Date.now()}.png`;
+            const res = await uploadImageToStorage("company_assets", filePath, base64);
+            const finalUrl = res.publicUrl || base64;
+            setFormData((prev) => ({ ...prev, avatarUrl: finalUrl }));
+          }
+        } catch (uploadErr) {
+          console.error("Storage upload failed:", uploadErr);
+          alert(language === "ar" ? "تعذر رفع الصورة إلى التخزين السحابي، تم الاستعانة بالمعاينة المحلية" : "Cloud avatar upload failed, using local preview");
+        } finally {
+          setIsUploadingAvatar(false);
         }
+      };
+      reader.onerror = () => {
+        alert(language === "ar" ? "فشل قراءة ملف الصورة" : "Failed to read image file");
         setIsUploadingAvatar(false);
       };
       reader.readAsDataURL(file);
     } catch (err) {
       console.error("Avatar upload failed:", err);
+      alert(language === "ar" ? "تعذر رفع صورة الموظف" : "Failed to upload avatar image");
       setIsUploadingAvatar(false);
     }
   };
