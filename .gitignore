@@ -8,3 +8,5 @@ coverage/
 !.env.example
 extracted_website/
 *.zip
+test-results/
+playwright-report/

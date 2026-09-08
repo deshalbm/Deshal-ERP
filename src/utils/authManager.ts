@@ -21,6 +21,44 @@ export const AUTH_STORAGE_KEYS = {
 // Initial default user accounts linked to system employees
 export const DEFAULT_USER_ACCOUNTS: UserAccount[] = [];
 
+export const FALLBACK_EMPLOYEE: Employee = {
+  id: "00000000-0000-0000-0000-000000000000",
+  employeeCode: "EMP-000",
+  fullName: "النظام الإداري",
+  fullNameEn: "System Admin",
+  civilId: "00000000",
+  email: "admin@deshalbm.com",
+  phone: "+968 00000000",
+  role: "ADMIN",
+  jobTitle: "مسؤول النظام",
+  department: "الإدارة العليا",
+  branchId: "branch-sohar",
+  branchName: "فرع صحار الرئيسي",
+  status: "ACTIVE",
+  hireDate: "2024-01-01",
+  contractType: "FULL_TIME",
+  basicSalary: 0,
+  allowances: 0,
+  currency: "OMR",
+  permissions: [
+    'create_vouchers',
+    'edit_vouchers',
+    'delete_vouchers',
+    'print_export_vouchers',
+    'apply_discounts',
+    'view_reports',
+    'manage_inventory',
+    'manage_transfers',
+    'manage_purchases',
+    'manage_suppliers',
+    'manage_customers',
+    'manage_employees',
+    'edit_settings'
+  ],
+  createdAt: "2024-01-01T08:00:00Z",
+  updatedAt: "2026-09-08T08:00:00Z"
+};
+
 // Helper to load accounts
 export function loadUserAccounts(): UserAccount[] {
   try {
@@ -159,7 +197,7 @@ export function verifyMagicLink(token: string): { user: UserAccount; employee: E
     }
 
     const employees = loadEmployees();
-    const employee = employees.find((e) => e.id === user.employeeId) || DEFAULT_EMPLOYEES[0];
+    const employee = employees.find((e) => e.id === user.employeeId) || FALLBACK_EMPLOYEE;
 
     // Reset failed attempts & update last login
     user.failedLoginAttempts = 0;
@@ -485,7 +523,7 @@ export function authenticateUser(
   user.lastLoginMethod = isPin ? "PIN" : "PASSWORD";
   saveUserAccounts(users);
 
-  const employee = employees.find((e) => e.id === user.employeeId) || DEFAULT_EMPLOYEES[0];
+  const employee = employees.find((e) => e.id === user.employeeId) || FALLBACK_EMPLOYEE;
 
   const session: AuthSession = {
     user,
@@ -525,7 +563,7 @@ export function verify2FACode(userId: string, code: string): { success: boolean;
   }
 
   const employees = loadEmployees();
-  const employee = employees.find((e) => e.id === user.employeeId) || DEFAULT_EMPLOYEES[0];
+  const employee = employees.find((e) => e.id === user.employeeId) || FALLBACK_EMPLOYEE;
 
   const session: AuthSession = {
     user,

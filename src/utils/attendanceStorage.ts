@@ -148,100 +148,8 @@ export const DEFAULT_MOVEMENT_TYPES: MovementTypeConfig[] = [
 // DEFAULT KIOSK DEVICES (أجهزة الكشك اللوحية المعتمدة)
 // ----------------------------------------------------
 
-export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
-  {
-    id: "dev-main-kiosk",
-    deviceCode: "KIOSK-MAIN-01",
-    name: "آيباد الكشك الرئيسي (kiosk.main)",
-    companyName: "ديشال لإدارة الأعمال",
-    branchId: "branch-sohar",
-    branchName: "المقر الرئيسي",
-    location: "المدخل الرئيسي والفرع التنفيذي",
-    username: "kiosk.main",
-    email: "kiosk.main@deshalbm.com",
-    plainPassword: "123456",
-    deviceToken: "dsh_kiosk_tok_main_881920",
-    activationCode: "DSH-K-881920",
-    status: "ACTIVE",
-    lastPing: new Date().toISOString(),
-    ipAddress: "192.168.1.100",
-    model: "Apple iPad Pro 12.9-inch",
-    appVersion: "Deshal Kiosk v3.4",
-    isLocked: false,
-    notes: "حساب كشك التابلت الرئيسي المسجل باسم kiosk.main@deshalbm.com",
-    createdAt: "2026-06-01T08:00:00Z",
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "dev-sohar-main",
-    deviceCode: "KIOSK-SOH-MAIN",
-    name: "آيباد الاستقبال الرئيسي - صحار",
-    companyName: "ديشال لإدارة الأعمال",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    location: "صالة الاستقبال والمدخل التنفيذي",
-    username: "kiosk.sohar",
-    email: "kiosk.sohar@deshalbm.com",
-    plainPassword: "123456",
-    deviceToken: "dsh_kiosk_tok_849204_soh_main",
-    activationCode: "DSH-K-849204",
-    status: "ACTIVE",
-    lastPing: new Date().toISOString(),
-    ipAddress: "192.168.1.104",
-    model: "Apple iPad Pro 11-inch (M2)",
-    appVersion: "Deshal Kiosk v3.4",
-    isLocked: false,
-    notes: "جهاز كشك معلق على الحائط بمدخل الاستقبال مزود بكاميرا عالية الدقة.",
-    createdAt: "2026-06-01T08:00:00Z",
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "dev-sohar-warehouse",
-    deviceCode: "KIOSK-SOH-WH",
-    name: "تابلت بوابة المستودع المركزي",
-    companyName: "ديشال لإدارة الأعمال",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    location: "بوابة المستودع ومنطقة التحميل",
-    username: "kiosk.warehouse",
-    email: "kiosk.warehouse@deshalbm.com",
-    plainPassword: "123456",
-    deviceToken: "dsh_kiosk_tok_738192_soh_wh",
-    activationCode: "DSH-K-738192",
-    status: "ACTIVE",
-    lastPing: new Date().toISOString(),
-    ipAddress: "192.168.1.109",
-    model: "Samsung Galaxy Tab Active4 Pro",
-    appVersion: "Deshal Kiosk v3.4",
-    isLocked: false,
-    notes: "جهاز مقاوم للصدمات والظروف الجوية بالمستودع.",
-    createdAt: "2026-06-15T09:30:00Z",
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "dev-muscat-office",
-    deviceCode: "KIOSK-MCT-RECEP",
-    name: "آيباد مدخل مقر مسقط - غلا",
-    companyName: "ديشال لإدارة الأعمال",
-    branchId: "branch-muscat",
-    branchName: "فرع مسقط - غلا",
-    location: "المدخل الرئيسي - الطابق الثالث",
-    username: "kiosk.muscat",
-    email: "kiosk.muscat@deshalbm.com",
-    plainPassword: "123456",
-    deviceToken: "dsh_kiosk_tok_920184_mct_recep",
-    activationCode: "DSH-K-920184",
-    status: "ACTIVE",
-    lastPing: new Date().toISOString(),
-    ipAddress: "192.168.2.50",
-    model: "Apple iPad 10th Gen",
-    appVersion: "Deshal Kiosk v3.4",
-    isLocked: false,
-    notes: "كشك مدخل فرع مسقط.",
-    createdAt: "2026-07-01T10:00:00Z",
-    updatedAt: new Date().toISOString()
-  }
-];
+export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [];
+
 
 // ----------------------------------------------------
 // DEFAULT ATTENDANCE MOVEMENT LOGS (سجل الحركات الأولي)
@@ -249,192 +157,8 @@ export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
 
 const TODAY_STR = new Date().toISOString().split("T")[0];
 
-export const DEFAULT_ATTENDANCE_MOVEMENT_LOGS: AttendanceMovementLog[] = [
-  {
-    id: "mov-log-1",
-    employeeId: ensureValidUuid("emp-1"),
-    employeeCode: "EMP-001",
-    employeeName: "سعيد بن راشد الشحي",
-    department: "الإدارة العليا",
-    jobTitle: "المدير التنفيذي العام",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    movementTypeCode: "CHECK_IN",
-    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
-    movementTypeNameEn: "Clock In (Start of Shift)",
-    movementCategory: "CHECK_IN",
-    timestamp: `${TODAY_STR}T07:55:00Z`,
-    date: TODAY_STR,
-    time: "07:55:00",
-    deviceId: "dev-sohar-main",
-    deviceName: "آيباد الاستقبال الرئيسي - صحار",
-    location: "صالة الاستقبال والمدخل التنفيذي",
-    syncStatus: "SYNCED",
-    notes: "تسجيل حضور بداية الدوام",
-    createdAt: `${TODAY_STR}T07:55:00Z`
-  },
-  {
-    id: "mov-log-2",
-    employeeId: ensureValidUuid("emp-1"),
-    employeeCode: "EMP-001",
-    employeeName: "سعيد بن راشد الشحي",
-    department: "الإدارة العليا",
-    jobTitle: "المدير التنفيذي العام",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    movementTypeCode: "CHECK_OUT",
-    movementTypeNameAr: "تسجيل انصراف (نهاية الدوام)",
-    movementTypeNameEn: "Clock Out (End of Shift)",
-    movementCategory: "CHECK_OUT",
-    timestamp: `${TODAY_STR}T16:30:00Z`,
-    date: TODAY_STR,
-    time: "16:30:00",
-    deviceId: "dev-sohar-main",
-    deviceName: "آيباد الاستقبال الرئيسي - صحار",
-    location: "صالة الاستقبال والمدخل التنفيذي",
-    syncStatus: "SYNCED",
-    notes: "تسجيل انصراف نهاية الدوام",
-    createdAt: `${TODAY_STR}T16:30:00Z`
-  },
-  {
-    id: "mov-log-3",
-    employeeId: ensureValidUuid("emp-2"),
-    employeeCode: "EMP-002",
-    employeeName: "فاطمة بنت ناصر البلوشي",
-    department: "المالية والمحاسبة",
-    jobTitle: "رئيسة قسم المحاسبة والمالية",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    movementTypeCode: "CHECK_IN",
-    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
-    movementTypeNameEn: "Clock In (Start of Shift)",
-    movementCategory: "CHECK_IN",
-    timestamp: `${TODAY_STR}T08:00:00Z`,
-    date: TODAY_STR,
-    time: "08:00:00",
-    deviceId: "dev-sohar-main",
-    deviceName: "آيباد الاستقبال الرئيسي - صحار",
-    location: "صالة الاستقبال والمدخل التنفيذي",
-    syncStatus: "SYNCED",
-    notes: "تسجيل حضور بداية الدوام",
-    createdAt: `${TODAY_STR}T08:00:00Z`
-  },
-  {
-    id: "mov-log-4",
-    employeeId: ensureValidUuid("emp-2"),
-    employeeCode: "EMP-002",
-    employeeName: "فاطمة بنت ناصر البلوشي",
-    department: "المالية والمحاسبة",
-    jobTitle: "رئيسة قسم المحاسبة والمالية",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    movementTypeCode: "CHECK_OUT",
-    movementTypeNameAr: "تسجيل انصراف (نهاية الدوام)",
-    movementTypeNameEn: "Clock Out (End of Shift)",
-    movementCategory: "CHECK_OUT",
-    timestamp: `${TODAY_STR}T16:00:00Z`,
-    date: TODAY_STR,
-    time: "16:00:00",
-    deviceId: "dev-sohar-main",
-    deviceName: "آيباد الاستقبال الرئيسي - صحار",
-    location: "صالة الاستقبال والمدخل التنفيذي",
-    syncStatus: "SYNCED",
-    notes: "تسجيل انصراف نهاية الدوام",
-    createdAt: `${TODAY_STR}T16:00:00Z`
-  },
-  {
-    id: "mov-log-5",
-    employeeId: ensureValidUuid("emp-3"),
-    employeeCode: "EMP-003",
-    employeeName: "طارق بن سالم المعمري",
-    department: "المبيعات والمشاريع",
-    jobTitle: "مشرف مبيعات وتنفيذي عقود",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    movementTypeCode: "CHECK_IN",
-    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
-    movementTypeNameEn: "Clock In (Start of Shift)",
-    movementCategory: "CHECK_IN",
-    timestamp: `${TODAY_STR}T08:20:00Z`,
-    date: TODAY_STR,
-    time: "08:20:00",
-    deviceId: "dev-sohar-main",
-    deviceName: "آيباد الاستقبال الرئيسي - صحار",
-    location: "صالة الاستقبال والمدخل التنفيذي",
-    syncStatus: "SYNCED",
-    notes: "تسجيل حضور متأخر (20 دقيقة)",
-    createdAt: `${TODAY_STR}T08:20:00Z`
-  },
-  {
-    id: "mov-log-6",
-    employeeId: ensureValidUuid("emp-4"),
-    employeeCode: "EMP-004",
-    employeeName: "خالد بن خلفان الحوسني",
-    department: "المستودعات واللوجستيات",
-    jobTitle: "أمين المستودعات المركزية",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    movementTypeCode: "CHECK_IN",
-    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
-    movementTypeNameEn: "Clock In (Start of Shift)",
-    movementCategory: "CHECK_IN",
-    timestamp: `${TODAY_STR}T07:50:00Z`,
-    date: TODAY_STR,
-    time: "07:50:00",
-    deviceId: "dev-sohar-warehouse",
-    deviceName: "تابلت بوابة المستودع المركزي",
-    location: "بوابة المستودع ومنطقة التحميل",
-    syncStatus: "SYNCED",
-    notes: "تسجيل حضور بداية الدوام",
-    createdAt: `${TODAY_STR}T07:50:00Z`
-  },
-  {
-    id: "mov-log-7",
-    employeeId: ensureValidUuid("emp-4"),
-    employeeCode: "EMP-004",
-    employeeName: "خالد بن خلفان الحوسني",
-    department: "المستودعات واللوجستيات",
-    jobTitle: "أمين المستودعات المركزية",
-    branchId: "branch-sohar",
-    branchName: "فرع صحار الرئيسي",
-    movementTypeCode: "CHECK_OUT",
-    movementTypeNameAr: "تسجيل انصراف (نهاية الدوام)",
-    movementTypeNameEn: "Clock Out (End of Shift)",
-    movementCategory: "CHECK_OUT",
-    timestamp: `${TODAY_STR}T16:15:00Z`,
-    date: TODAY_STR,
-    time: "16:15:00",
-    deviceId: "dev-sohar-warehouse",
-    deviceName: "تابلت بوابة المستودع المركزي",
-    location: "بوابة المستودع ومنطقة التحميل",
-    syncStatus: "SYNCED",
-    notes: "تسجيل انصراف نهاية الدوام",
-    createdAt: `${TODAY_STR}T16:15:00Z`
-  },
-  {
-    id: "mov-log-8",
-    employeeId: ensureValidUuid("emp-5"),
-    employeeCode: "EMP-005",
-    employeeName: "مريم بنت حمد الكعبي",
-    department: "خدمة العملاء والاستقبال",
-    jobTitle: "مسؤولة الاستقبال والخدمات",
-    branchId: "branch-muscat",
-    branchName: "فرع مسقط - الغبرة",
-    movementTypeCode: "CHECK_IN",
-    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
-    movementTypeNameEn: "Clock In (Start of Shift)",
-    movementCategory: "CHECK_IN",
-    timestamp: `${TODAY_STR}T08:00:00Z`,
-    date: TODAY_STR,
-    time: "08:00:00",
-    deviceId: "dev-muscat-office",
-    deviceName: "آيباد مدخل مقر مسقط - غلا",
-    location: "المدخل الرئيسي - الطابق الثالث",
-    syncStatus: "SYNCED",
-    notes: "تسجيل حضور بداية الدوام",
-    createdAt: `${TODAY_STR}T08:00:00Z`
-  }
-];
+export const DEFAULT_ATTENDANCE_MOVEMENT_LOGS: AttendanceMovementLog[] = [];
+
 
 // ----------------------------------------------------
 // DEFAULT ATTENDANCE ADJUSTMENTS (تعديلات الحركات مع التاريخ)
@@ -473,13 +197,12 @@ export function loadKioskDevices(): KioskDevice[] {
     const raw = localStorage.getItem(KIOSK_STORAGE_KEYS.DEVICES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {
     console.warn("Failed to load kiosk devices:", e);
   }
-  saveKioskDevices(DEFAULT_KIOSK_DEVICES);
-  return DEFAULT_KIOSK_DEVICES;
+  return [];
 }
 
 export function saveKioskDevices(devices: KioskDevice[]): void {
@@ -495,13 +218,12 @@ export function loadAttendanceMovementLogs(): AttendanceMovementLog[] {
     const raw = localStorage.getItem(KIOSK_STORAGE_KEYS.MOVEMENT_LOGS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {
     console.warn("Failed to load movement logs:", e);
   }
-  saveAttendanceMovementLogs(DEFAULT_ATTENDANCE_MOVEMENT_LOGS);
-  return DEFAULT_ATTENDANCE_MOVEMENT_LOGS;
+  return [];
 }
 
 export function saveAttendanceMovementLogs(logs: AttendanceMovementLog[]): void {

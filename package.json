@@ -12,6 +12,7 @@
     "test:finance": "npx tsx src/tests/financialAccounting.test.ts",
     "test:integration": "npx tsx src/tests/supabaseDataIntegration.test.ts",
     "test:vouchers": "npx tsx src/tests/vouchersAndInvoicing.test.ts",
+    "test:e2e": "playwright test",
     "test": "npx tsx src/tests/financialAccounting.test.ts && npx tsx src/tests/supabaseDataIntegration.test.ts && npx tsx src/tests/vouchersAndInvoicing.test.ts"
   },
   "dependencies": {
@@ -38,6 +39,7 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@types/qrcode": "^1.5.6",
