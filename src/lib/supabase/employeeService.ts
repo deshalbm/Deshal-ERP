@@ -3,7 +3,7 @@
  * Maps between app Employee type (src/types.ts) and Supabase 'employees' table.
  */
 
-import { supabase, isSupabaseConfigured } from './client';
+import { supabase, isSupabaseConfigured, handleSupabaseError } from './client';
 import type { Employee } from '../../types';
 import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
@@ -23,7 +23,7 @@ export async function getEmployees(companyId: string): Promise<Employee[]> {
     .order('full_name', { ascending: true });
 
   if (error) {
-    console.error('[EmployeeService] getEmployees:', error.message);
+    handleSupabaseError('EmployeeService.getEmployees', error);
     return [];
   }
 

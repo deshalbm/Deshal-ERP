@@ -55,3 +55,25 @@ export async function checkSupabaseConnection(): Promise<{ ok: boolean; message:
     return { ok: false, message: err.message || 'Connection failed' };
   }
 }
+
+/**
+ * Graceful error logging for Supabase client queries.
+ * Converts permission/unauthorized errors into informative warnings rather than noisy console errors.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function handleSupabaseError(context: string, error: any): void {
+  if (!error) return;
+  const msg = typeof error === 'string' ? error : error.message || String(error);
+  const code = error?.code || '';
+  if (
+    code === '42501' ||
+    msg.includes('auth_user_company_ids') ||
+    msg.includes('permission denied') ||
+    msg.includes('Unauthorized')
+  ) {
+    console.warn(`[Supabase Permission Notice] ${context}: ${msg}. (To sync Supabase DB, execute 0032_grant_function_permissions.sql in Supabase SQL Editor)`);
+  } else {
+    console.error(`[${context}]`, msg);
+  }
+}
+
