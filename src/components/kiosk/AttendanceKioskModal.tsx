@@ -1008,48 +1008,43 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                 </button>
               </div>
 
-              {/* Quick Demo Helper Hint */}
+              {/* Employee Code Helper */}
               <div className="flex flex-col items-center gap-2">
                 <button
                   onClick={() => setShowDemoPinHelper(!showDemoPinHelper)}
-                  className="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1.5 transition-colors underline underline-offset-4"
+                  className="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1.5 transition-colors underline underline-offset-4 cursor-pointer"
                 >
                   <HelpCircle className="w-4 h-4" />
-                  {showDemoPinHelper ? "إخفاء قائمة الأرقام الوظيفية للموظفين" : "عرض الأرقام الوظيفية التجريبية للموظفين"}
+                  {showDemoPinHelper ? "إخفاء دليل الأرقام الوظيفية" : "عرض دليل الأرقام الوظيفية للموظفين"}
                 </button>
 
                 {showDemoPinHelper && (
                   <div className="mt-3 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 max-w-xl text-right">
                     <div className="font-bold text-amber-400 mb-2 flex items-center gap-1">
                       <Info className="w-4 h-4" />
-                      الأرقام الوظيفية المعتمدة للموظفين (تسجيل الدخول بالرقم الوظيفي):
+                      الأرقام الوظيفية المسجلة للنظام:
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono">
-                      <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">سعيد الشحي (مدير عام)</span>
-                        <strong className="text-amber-300">EMP-001 (أو 1)</strong>
+                    {employees.filter((e) => e.status === "ACTIVE").length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono">
+                        {employees
+                          .filter((e) => e.status === "ACTIVE")
+                          .map((emp) => (
+                            <div key={emp.id} className="bg-slate-800 p-2 rounded-lg border border-slate-700">
+                              <span className="text-slate-400 block text-[10px] truncate">{emp.fullName}</span>
+                              <strong className="text-amber-300">{emp.employeeCode}</strong>
+                            </div>
+                          ))}
+                        <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
+                          <span className="text-slate-400 block text-[10px]">خروج المشرف (أدمن)</span>
+                          <strong className="text-rose-300">9900</strong>
+                        </div>
                       </div>
-                      <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">فاطمة البلوشي (محاسب)</span>
-                        <strong className="text-amber-300">EMP-002 (أو 2)</strong>
+                    ) : (
+                      <div className="text-slate-400 text-xs text-center py-2">
+                        لا يوجد موظفون مسجلون حالياً. أضف موظفين من لوحة التحكم.
+                        <div className="mt-1 text-rose-300 font-mono">رمز خروج المسؤول: 9900</div>
                       </div>
-                      <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">طارق المعمري (مبيعات)</span>
-                        <strong className="text-amber-300">EMP-003 (أو 3)</strong>
-                      </div>
-                      <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">خالد الحوسني (مستودع)</span>
-                        <strong className="text-amber-300">EMP-004 (أو 4)</strong>
-                      </div>
-                      <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">مريم الكعبي (استقبال)</span>
-                        <strong className="text-amber-300">EMP-005 (أو 5)</strong>
-                      </div>
-                      <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">خروج المشرف (أدمن)</span>
-                        <strong className="text-rose-300">9900</strong>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>

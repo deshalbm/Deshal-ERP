@@ -197,7 +197,19 @@ export function loadKioskDevices(): KioskDevice[] {
     const raw = localStorage.getItem(KIOSK_STORAGE_KEYS.DEVICES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        // Filter out legacy demo/dummy kiosk devices
+        const filtered = parsed.filter(
+          (d: any) =>
+            d &&
+            !['kiosk-sohar-01', 'kiosk-sohar-02', 'kiosk-muscat-01', 'kiosk-default'].includes(d.id) &&
+            !['SO-KIOSK-01', 'SO-KIOSK-02', 'MC-KIOSK-01', 'KIOSK-TABLET'].includes(d.deviceCode)
+        );
+        if (filtered.length !== parsed.length) {
+          saveKioskDevices(filtered);
+        }
+        return filtered;
+      }
     }
   } catch (e) {
     console.warn("Failed to load kiosk devices:", e);

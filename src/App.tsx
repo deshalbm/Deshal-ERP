@@ -289,9 +289,15 @@ export default function App() {
       ]) => {
         setCustomersList(custs);
 
-        if (emps && emps.length > 0) {
-          setEmployeesList(emps);
-          saveEmployees(emps);
+        if (Array.isArray(emps)) {
+          const cleanEmps = emps.filter(
+            (e: any) =>
+              e &&
+              !['emp-1', 'emp-2', 'emp-3', 'emp-4', 'emp-5'].includes(e.id) &&
+              !['EMP-001', 'EMP-002', 'EMP-003', 'EMP-004', 'EMP-005'].includes(e.employeeCode)
+          );
+          setEmployeesList(cleanEmps);
+          saveEmployees(cleanEmps);
         } else {
           const localEmps = loadEmployees();
           setEmployeesList(localEmps);

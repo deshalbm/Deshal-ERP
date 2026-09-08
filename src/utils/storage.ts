@@ -1092,7 +1092,17 @@ export function loadEmployees(): Employee[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed;
+        // Filter out legacy demo employee records
+        const filtered = parsed.filter(
+          (e: any) =>
+            e &&
+            !['emp-1', 'emp-2', 'emp-3', 'emp-4', 'emp-5'].includes(e.id) &&
+            !['EMP-001', 'EMP-002', 'EMP-003', 'EMP-004', 'EMP-005'].includes(e.employeeCode)
+        );
+        if (filtered.length !== parsed.length) {
+          saveEmployees(filtered);
+        }
+        return filtered;
       }
     }
   } catch (e) {

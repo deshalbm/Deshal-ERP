@@ -377,9 +377,15 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
 
       setCustomersListState(customers);
 
-      if (employees && employees.length > 0) {
-        setEmployeesListState(employees);
-        saveEmployees(employees);
+      if (Array.isArray(employees)) {
+        const cleanEmps = employees.filter(
+          (e: any) =>
+            e &&
+            !['emp-1', 'emp-2', 'emp-3', 'emp-4', 'emp-5'].includes(e.id) &&
+            !['EMP-001', 'EMP-002', 'EMP-003', 'EMP-004', 'EMP-005'].includes(e.employeeCode)
+        );
+        setEmployeesListState(cleanEmps);
+        saveEmployees(cleanEmps);
       } else {
         const localEmps = loadEmployees();
         setEmployeesListState(localEmps);
