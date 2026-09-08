@@ -274,7 +274,11 @@ export async function upsertAttendanceRecord(
       );
 
     if (error) {
-      console.error('[HRService] upsertAttendanceRecord error:', error.message);
+      if (error.code === '42501' || error.message?.includes('row-level security') || error.message?.includes('401')) {
+        console.warn('[HRService] upsertAttendanceRecord RLS policy restriction:', error.message);
+      } else {
+        console.error('[HRService] upsertAttendanceRecord error:', error.message);
+      }
       return { success: false, error: error.message };
     }
     return { success: true };
@@ -485,7 +489,11 @@ export async function upsertPayrollSlip(
       );
 
     if (error) {
-      console.error('[HRService] upsertPayrollSlip error:', error.message);
+      if (error.code === '42501' || error.message?.includes('row-level security') || error.message?.includes('401')) {
+        console.warn('[HRService] upsertPayrollSlip RLS policy restriction:', error.message);
+      } else {
+        console.error('[HRService] upsertPayrollSlip error:', error.message);
+      }
       return { success: false, error: error.message };
     }
     return { success: true };
@@ -529,10 +537,9 @@ export async function getLeaveRequests(companyId: string): Promise<LeaveRequest[
     daysCount: Number(row.total_days ?? row.days_count) || 1,
     reason: row.reason ?? '',
     status: row.status ?? 'PENDING',
-    appliedAt: row.applied_at ?? row.created_at ?? new Date().toISOString(),
-    reviewedBy: row.approved_by ?? row.reviewed_by ?? undefined,
-    reviewedAt: row.reviewed_at ?? undefined,
-    reviewNotes: row.review_notes ?? undefined,
+    appliedAt: row.created_at ?? new Date().toISOString(),
+    reviewedBy: row.approved_by ?? undefined,
+    reviewedAt: row.updated_at ?? undefined,
   }));
 }
 
@@ -568,21 +575,21 @@ export async function upsertLeaveRequest(
           leave_type: req.leaveType ?? 'ANNUAL',
           start_date: req.startDate || new Date().toISOString().split('T')[0],
           end_date: req.endDate || new Date().toISOString().split('T')[0],
-          days_count: daysCount,
           total_days: daysCount,
           reason: req.reason ?? '',
           status: req.status ?? 'PENDING',
-          applied_at: req.appliedAt ?? new Date().toISOString(),
-          reviewed_by: req.reviewedBy ? ensureNullableUuid(req.reviewedBy) : null,
-          reviewed_at: req.reviewedAt ?? null,
-          review_notes: req.reviewNotes ?? null,
+          approved_by: req.reviewedBy ? ensureNullableUuid(req.reviewedBy) : null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'id' }
       );
 
     if (error) {
-      console.error('[HRService] upsertLeaveRequest error:', error.message);
+      if (error.code === '42501' || error.message?.includes('row-level security') || error.message?.includes('401')) {
+        console.warn('[HRService] upsertLeaveRequest RLS policy restriction:', error.message);
+      } else {
+        console.error('[HRService] upsertLeaveRequest error:', error.message);
+      }
       return { success: false, error: error.message };
     }
     return { success: true };

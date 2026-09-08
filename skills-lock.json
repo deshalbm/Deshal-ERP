@@ -1,6 +1,36 @@
 {
   "version": 1,
   "skills": {
+    "agent-md-setup": {
+      "source": "ismail9k/skills",
+      "sourceType": "github",
+      "skillPath": "skills/agent-md-setup/SKILL.md",
+      "computedHash": "45bb8f7563bf3e38cea59cc2c23d8c9dd977988fe823092f1c76db6e38317cde"
+    },
+    "anti-koshary": {
+      "source": "ismail9k/skills",
+      "sourceType": "github",
+      "skillPath": "skills/anti-koshary/SKILL.md",
+      "computedHash": "5eeabb1cab2459d9f63469a348f4ef4ec7828075cbcc2fbfddc34dcb840cdc05"
+    },
+    "brainstorm-to-issue": {
+      "source": "ismail9k/skills",
+      "sourceType": "github",
+      "skillPath": "skills/brainstorm-to-issue/SKILL.md",
+      "computedHash": "4e3ff5846e1ced5fd2af0c1cf5329fb5590036d49663f1fbabc11589d5cbd1d8"
+    },
+    "configure-issue-tracker": {
+      "source": "ismail9k/skills",
+      "sourceType": "github",
+      "skillPath": "skills/configure-issue-tracker/SKILL.md",
+      "computedHash": "2a22bc9bce41f94cc55811fd167324bb9a8eca9494f81014140da98ffda662a6"
+    },
+    "fetch-github-issues": {
+      "source": "ismail9k/skills",
+      "sourceType": "github",
+      "skillPath": "skills/fetch-github-issues/SKILL.md",
+      "computedHash": "4fdd39f304062a1b6eb0cc9076a5ddf18adbcf9d7d8c6a44283caa9ed8cbf48c"
+    },
     "supabase": {
       "source": "supabase/agent-skills",
       "sourceType": "github",
@@ -12,6 +42,12 @@
       "sourceType": "github",
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
       "computedHash": "e14e276241805c97dbcfe40dcbea1a3035269cc7293cac4b1832dda41a835e60"
+    },
+    "superpowers-issue-bridge": {
+      "source": "ismail9k/skills",
+      "sourceType": "github",
+      "skillPath": "skills/superpowers-issue-bridge/SKILL.md",
+      "computedHash": "57b366bc6a9f82661a0f6de155292e29dd7ebdb2e84b33ec7cf3b11c9d08377b"
     }
   }
 }
