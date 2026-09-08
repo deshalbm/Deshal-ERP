@@ -63,7 +63,6 @@ interface VoucherFormProps {
   onSave: () => void;
   onPreview: () => void;
   onOpenAiAssistant: () => void;
-  onSwitchToDocWizard?: () => void;
   customers?: Customer[];
   branches?: Branch[];
   companyId?: string;
@@ -77,7 +76,6 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
   onSave,
   onPreview,
   onOpenAiAssistant,
-  onSwitchToDocWizard,
   customers = [],
   branches = [],
   companyId = "00000000-0000-0000-0000-000000000001",
@@ -401,16 +399,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {onSwitchToDocWizard && (
-            <button
-              onClick={onSwitchToDocWizard}
-              type="button"
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs hover:shadow-md cursor-pointer transition-all"
-            >
-              <WizardIcon className="w-4 h-4 text-amber-300" />
-              <span>{t("tabDocWizard")}</span>
-            </button>
-          )}
+
 
           <button
             onClick={onOpenAiAssistant}

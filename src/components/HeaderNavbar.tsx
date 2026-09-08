@@ -37,8 +37,8 @@ import { AuthSession } from "../types";
 import { useLanguage } from "../utils/LanguageContext";
 
 interface HeaderNavbarProps {
-  activeTab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "schedules" | "settings";
-  setActiveTab: (tab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "schedules" | "settings") => void;
+  activeTab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "schedules" | "settings";
+  setActiveTab: (tab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "schedules" | "settings") => void;
   onPrint: () => void;
   onExportPdf: () => void;
   onNewVoucher: () => void;
@@ -128,7 +128,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
   }, []);
 
   // Helpers to detect active category
-  const isFinanceActive = ["pos", "doc-wizard", "editor", "preview", "history", "schedules"].includes(activeTab);
+  const isFinanceActive = ["pos", "editor", "preview", "history", "schedules"].includes(activeTab);
   const isSpacesActive = ["spaces", "contracts"].includes(activeTab);
   const isServicesActive = ["services", "portal"].includes(activeTab);
   const isSupplyActive = ["inventory", "purchases", "branches"].includes(activeTab);
@@ -279,26 +279,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                     </div>
                   </button>
 
-                  <button
-                    onClick={() => {
-                      setActiveTab("doc-wizard");
-                      setShowFinanceDropdown(false);
-                    }}
-                    className={`w-full px-3 py-2 text-start rtl:text-end hover:bg-slate-50 flex items-center space-x-2.5 rtl:space-x-reverse transition-colors cursor-pointer ${
-                      activeTab === "doc-wizard" ? "bg-purple-50/70 text-purple-700 font-bold" : "text-slate-700"
-                    }`}
-                  >
-                    <div className="p-1.5 rounded-lg bg-purple-50 text-purple-600 shrink-0">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
-                        <span className="text-xs font-semibold">{t("tabDocWizard")}</span>
-                        <span className="px-1 py-0.2 text-[9px] bg-purple-100 text-purple-700 rounded font-bold">Smart</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400">{language === "ar" ? "معالج خطوة بخطوة ذكي" : "Step-by-step wizard"}</p>
-                    </div>
-                  </button>
+
 
                   <button
                     onClick={() => {

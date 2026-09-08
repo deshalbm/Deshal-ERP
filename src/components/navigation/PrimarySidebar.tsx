@@ -108,14 +108,6 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             labelAr: 'الرئيسية ومساحة العمل',
             labelEn: 'ERP Workspace',
             icon: TrendingUp
-          },
-          {
-            id: 'doc-wizard',
-            labelAr: 'معالج المستندات الذكي',
-            labelEn: 'Smart Doc Wizard',
-            icon: Sparkles,
-            badge: 'ذكي',
-            badgeColor: 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
           }
         ]
       },

@@ -1659,7 +1659,6 @@ export type QuickLauncherId =
   | 'pos'
   | 'accounting'
   | 'spaces'
-  | 'doc-wizard'
   | 'inventory'
   | 'purchases'
   | 'branches'

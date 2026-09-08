@@ -10,8 +10,8 @@ import {
 import { useLanguage } from "../utils/LanguageContext";
 
 interface MobileBottomNavProps {
-  activeTab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "schedules" | "settings";
-  setActiveTab: (tab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "schedules" | "settings") => void;
+  activeTab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "schedules" | "settings";
+  setActiveTab: (tab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "schedules" | "settings") => void;
   onNewVoucher: () => void;
   onOpenAiAssistant: () => void;
   onOpenDrawer: () => void;

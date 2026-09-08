@@ -126,7 +126,6 @@ import { numberToWords } from "./utils/numberToWords";
 import { generateUuid } from "./utils/uuid";
 import { HeaderNavbar } from "./components/HeaderNavbar";
 import { VoucherForm } from "./components/VoucherForm";
-import { DocWizardView } from "./components/DocWizardView";
 import { ReceiptPreview } from "./components/ReceiptPreview";
 import { SettingsStudio } from "./components/SettingsStudio";
 import { VoucherHistory } from "./components/VoucherHistory";
@@ -180,7 +179,7 @@ import { WebsiteLayout } from "./components/website/WebsiteLayout";
 import CmsManagerView from "./components/cms/CmsManagerView";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings" | "help" | "website" | "cms">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings" | "help" | "website" | "cms">("home");
   const [userName, setUserName] = useState<string>(() => {
     if (typeof window !== "undefined") {
       const activeSession = loadAuthSession();
@@ -547,8 +546,7 @@ export default function App() {
         return [{ label: "عقود الإيجار والخدمات", active: true }];
       case "history":
         return [{ label: "سجل السندات والفواتير", active: true }];
-      case "doc-wizard":
-        return [{ label: "السندات والفواتير", onClick: () => handleNavigateWithHistory("history") }, { label: "منشئ المستندات", active: true }];
+
       case "editor":
         return [{ label: "السندات والفواتير", onClick: () => handleNavigateWithHistory("history") }, { label: "محرر السند المالي", active: true }];
       case "preview":
@@ -2660,27 +2658,6 @@ export default function App() {
           />
         )}
 
-        {activeTab === "doc-wizard" && (
-          <DocWizardView
-            voucher={activeVoucher}
-            onChange={setActiveVoucher}
-            onSave={handleSaveActiveVoucher}
-            onPreview={() => setActiveTab("preview")}
-            onPrint={handlePrint}
-            onExportPdf={handleExportPdf}
-            onSwitchToFullEditor={() => setActiveTab("editor")}
-            onOpenAiAssistant={() => setIsAiModalOpen(true)}
-            customers={customersList}
-            suppliers={suppliersList}
-            branches={branchesList}
-            companySettings={companySettings}
-            designTheme={designTheme}
-            onUpdateDesignTheme={handleSaveDesignTheme}
-            onQuickSaveCustomer={handleSaveCustomer}
-            onAuditLog={triggerAuditLog}
-          />
-        )}
-
         {activeTab === "editor" && (
           <VoucherForm
             voucher={activeVoucher}
@@ -2688,7 +2665,6 @@ export default function App() {
             onSave={handleSaveActiveVoucher}
             onPreview={() => setActiveTab("preview")}
             onOpenAiAssistant={() => setIsAiModalOpen(true)}
-            onSwitchToDocWizard={() => setActiveTab("doc-wizard")}
             customers={customersList}
             branches={branchesList}
             companySettings={companySettings}

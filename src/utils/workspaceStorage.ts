@@ -62,17 +62,6 @@ export const ALL_QUICK_LAUNCHERS: QuickLauncherMetadata[] = [
     colorTheme: "from-blue-700 via-indigo-700 to-indigo-900"
   },
   {
-    id: "doc-wizard",
-    labelAr: "معالج السندات الذكي",
-    labelEn: "Doc Wizard",
-    descAr: "إنشاء سندات واختيار النماذج الضريبية والمعتمدة بنقرة واحدة.",
-    descEn: "Generate tax-compliant vouchers with dynamic wizard templates.",
-    iconName: "Sparkles",
-    badgeAr: "معالج السندات",
-    badgeEn: "Doc Wizard",
-    colorTheme: "from-purple-700 via-indigo-700 to-slate-900"
-  },
-  {
     id: "inventory",
     labelAr: "المخزون والمخازن",
     labelEn: "Inventory System",
@@ -341,7 +330,7 @@ export const ALL_REPORT_WIDGETS: ReportWidgetMetadata[] = [
 ];
 
 export const DEFAULT_WORKSPACE_CONFIG: WorkspaceConfig = {
-  quickLaunchers: ["pos", "accounting", "spaces", "doc-wizard", "inventory", "purchases", "branches", "schedules"],
+  quickLaunchers: ["pos", "accounting", "spaces", "inventory", "purchases", "branches", "schedules"],
   quickActions: ["RECEIPT", "TAX_INVOICE", "QUOTATION", "PAYMENT"],
   reportWidgets: [
     "kpi_collections",

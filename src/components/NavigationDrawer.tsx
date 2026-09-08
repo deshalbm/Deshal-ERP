@@ -42,7 +42,7 @@ import {
 import { useLanguage } from "../utils/LanguageContext";
 import { AuthSession } from "../types";
 
-export type NavTabType = "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings" | "website" | "cms";
+export type NavTabType = "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings" | "website" | "cms";
 
 interface NavigationDrawerProps {
   isOpen: boolean;
@@ -162,18 +162,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           colorClass: "text-emerald-600",
           bgClass: "bg-emerald-50"
         },
-        {
-          id: "doc-wizard",
-          labelAr: "معالج السندات والفواتير الذكي",
-          labelEn: "Smart Doc Wizard",
-          descAr: "إنشاء سندات قبض، صرف، فواتير وعروض أسعار في 4 خطوات",
-          descEn: "Create receipts, payments, tax invoices & quotes in 4 steps",
-          icon: Sparkles,
-          badge: language === "ar" ? "معالج ذكي" : "Smart",
-          badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
-          colorClass: "text-purple-600",
-          bgClass: "bg-purple-50"
-        },
+
         {
           id: "editor",
           labelAr: "محرر السندات المتقدم",

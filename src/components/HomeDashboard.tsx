@@ -62,7 +62,6 @@ const LAUNCHER_ROLES: Record<QuickLauncherId, WorkspaceRoleCategory[]> = {
   pos: ["sales"],
   accounting: ["accounting"],
   spaces: ["sales", "accounting"],
-  "doc-wizard": ["accounting"],
   inventory: ["inventory"],
   purchases: ["inventory", "accounting"],
   branches: ["inventory"],
@@ -110,7 +109,7 @@ interface HomeDashboardProps {
   purchases?: PurchaseInvoice[];
   branches?: Branch[];
   onSelectAction: (actionType: VoucherType) => void;
-  onNavigateTab: (tab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "doc-wizard" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings") => void;
+  onNavigateTab: (tab: "home" | "pos" | "accounting" | "spaces" | "contracts" | "services" | "portal" | "editor" | "preview" | "history" | "crm" | "inventory" | "purchases" | "branches" | "employees" | "requests" | "schedules" | "settings") => void;
   onViewVoucher: (voucher: ReceiptVoucher) => void;
   onQuickCreateForCustomer: (customer: Customer) => void;
 }
@@ -421,41 +420,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-bold text-blue-100">
               <span>{language === "ar" ? "إدارة وطلب الحجوزات" : "Manage & Book"}</span>
               <div className="p-1.5 bg-emerald-400 text-slate-950 rounded-lg group-hover:bg-emerald-300 transition-colors">
-                <ArrowIcon className="w-4 h-4" />
-              </div>
-            </div>
-          </div>
-        );
-
-      case "doc-wizard":
-        return (
-          <div
-            key="doc-wizard"
-            onClick={() => onNavigateTab("doc-wizard")}
-            className="relative overflow-hidden bg-gradient-to-r from-purple-700 via-indigo-700 to-slate-900 rounded-2xl p-5 text-white shadow-md hover:shadow-xl transition-all cursor-pointer group border border-purple-500/40 flex flex-col justify-between"
-          >
-            <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
-            <div className="relative z-10 flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform shadow-inner">
-                <Sparkles className="w-6 h-6 text-amber-300" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full shadow-xs">
-                    {language === "ar" ? "معالج السندات" : "Doc Wizard"}
-                  </span>
-                </div>
-                <h3 className="text-base font-black tracking-tight text-white mt-1">
-                  {t("docWizardTitle")}
-                </h3>
-                <p className="text-xs text-purple-100/90 mt-0.5 line-clamp-2">
-                  {t("docWizardSubtitle")}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-bold text-purple-100">
-              <span>{language === "ar" ? "إصدار مستند مالي" : "Launch Doc Wizard"}</span>
-              <div className="p-1.5 bg-amber-400 text-slate-950 rounded-lg group-hover:bg-amber-300 transition-colors">
                 <ArrowIcon className="w-4 h-4" />
               </div>
             </div>
