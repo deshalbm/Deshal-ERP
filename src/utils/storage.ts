@@ -243,15 +243,14 @@ const STORAGE_KEYS = {
 export function clearAllLocalStorage(): void {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      Object.values(STORAGE_KEYS).forEach((key) => {
-        localStorage.removeItem(key);
-      });
-      // Also clear accounting storage keys
-      localStorage.removeItem("deshal_accounts");
-      localStorage.removeItem("deshal_journal_entries");
-      localStorage.removeItem("deshal_fiscal_periods");
-      localStorage.removeItem("deshal_cost_centers");
-      localStorage.removeItem("deshal_audit_logs");
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('deshal_') || key.startsWith('rv_studio_'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
     }
   } catch (e) {
     console.warn("Failed to clear local storage keys:", e);

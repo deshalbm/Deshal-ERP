@@ -8,17 +8,10 @@ import type { Customer } from '../../types';
 import { enqueueOperation } from '../offline/indexedDBQueue';
 import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
+import { normalizeOmaniPhone } from '../../utils/phone';
+
 export function normalizePhone(phone: string): string {
-  if (!phone || !phone.trim()) return '';
-  const digits = phone.replace(/[^0-9]/g, '');
-  if (digits.length === 11 && digits.startsWith('968')) {
-    return '+' + digits;
-  } else if (digits.length === 8) {
-    return '+968' + digits;
-  } else if (digits.length > 8) {
-    return '+' + digits;
-  }
-  return digits;
+  return normalizeOmaniPhone(phone);
 }
 
 // ──────────────────────────────────────────────
