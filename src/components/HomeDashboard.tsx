@@ -56,6 +56,50 @@ import { WorkspaceCustomizerModal } from "./workspace/WorkspaceCustomizerModal";
 import { DashboardAnalytics } from "./DashboardAnalytics";
 import { DueDatesAlertsCenter } from "./DueDatesAlertsCenter";
 
+type WorkspaceRoleCategory = "all" | "accounting" | "sales" | "inventory" | "hr";
+
+const LAUNCHER_ROLES: Record<QuickLauncherId, WorkspaceRoleCategory[]> = {
+  pos: ["sales"],
+  accounting: ["accounting"],
+  spaces: ["sales", "accounting"],
+  "doc-wizard": ["accounting"],
+  inventory: ["inventory"],
+  purchases: ["inventory", "accounting"],
+  branches: ["inventory"],
+  schedules: ["accounting"],
+  crm: ["sales"],
+  employees: ["hr"],
+  requests: ["hr", "accounting"],
+  settings: ["all"]
+};
+
+const ACTION_ROLES: Record<QuickActionId, WorkspaceRoleCategory[]> = {
+  RECEIPT: ["accounting", "sales"],
+  TAX_INVOICE: ["accounting", "sales"],
+  QUOTATION: ["sales"],
+  PAYMENT: ["accounting"],
+  PETTY_CASH: ["accounting"]
+};
+
+const REPORT_ROLES: Record<ReportWidgetId, WorkspaceRoleCategory[]> = {
+  kpi_collections: ["accounting", "sales"],
+  kpi_payments: ["accounting"],
+  kpi_purchases: ["inventory", "accounting"],
+  kpi_inventory: ["inventory"],
+  smart_alerts: ["all", "accounting", "sales", "inventory", "hr"],
+  visual_analytics: ["accounting", "sales"],
+  recent_vouchers: ["accounting", "sales"],
+  customer_directory: ["sales"]
+};
+
+const ALL_ROLE_BUTTONS: { id: WorkspaceRoleCategory; labelAr: string; labelEn: string }[] = [
+  { id: "all", labelAr: "الرئيسية الشاملة", labelEn: "Executive All-in-One" },
+  { id: "accounting", labelAr: "المحاسبة والمالية", labelEn: "Accounting & Finance" },
+  { id: "sales", labelAr: "المبيعات ونقاط البيع", labelEn: "Sales & POS" },
+  { id: "inventory", labelAr: "المخزون والمشتريات", labelEn: "Inventory & Supply" },
+  { id: "hr", labelAr: "الموارد البشرية والرواتب", labelEn: "HR & Personnel" }
+];
+
 interface HomeDashboardProps {
   userName?: string;
   onUpdateUserName?: (name: string) => void;
@@ -140,6 +184,65 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     const resetConfig = await resetWorkspaceConfig(userId, userEmail);
     setWorkspaceConfig(resetConfig);
   };
+
+  // Dynamically filter available role buttons based on user's active workspaceConfig
+  const availableRoleButtons = React.useMemo(() => {
+    return ALL_ROLE_BUTTONS.filter((role) => {
+      if (role.id === "all") return true;
+
+      const hasLauncher = workspaceConfig.quickLaunchers.some((id) =>
+        LAUNCHER_ROLES[id]?.includes(role.id)
+      );
+      if (hasLauncher) return true;
+
+      const hasAction = workspaceConfig.quickActions.some((id) =>
+        ACTION_ROLES[id]?.includes(role.id)
+      );
+      if (hasAction) return true;
+
+      const hasReport = workspaceConfig.reportWidgets.some(
+        (id) => id !== "smart_alerts" && REPORT_ROLES[id]?.includes(role.id)
+      );
+      if (hasReport) return true;
+
+      return false;
+    });
+  }, [workspaceConfig]);
+
+  // Ensure current workspaceRole is valid for available buttons
+  useEffect(() => {
+    if (!availableRoleButtons.some((b) => b.id === workspaceRole)) {
+      setWorkspaceRole("all");
+    }
+  }, [availableRoleButtons, workspaceRole]);
+
+  // Filter launchers, actions, and report widgets by workspaceRole
+  const filteredQuickLaunchers = React.useMemo(() => {
+    if (workspaceRole === "all") return workspaceConfig.quickLaunchers;
+    return workspaceConfig.quickLaunchers.filter(
+      (id) => LAUNCHER_ROLES[id]?.includes(workspaceRole) || LAUNCHER_ROLES[id]?.includes("all")
+    );
+  }, [workspaceConfig.quickLaunchers, workspaceRole]);
+
+  const filteredQuickActions = React.useMemo(() => {
+    if (workspaceRole === "all") return workspaceConfig.quickActions;
+    return workspaceConfig.quickActions.filter((id) =>
+      ACTION_ROLES[id]?.includes(workspaceRole)
+    );
+  }, [workspaceConfig.quickActions, workspaceRole]);
+
+  const filteredReportWidgets = React.useMemo(() => {
+    if (workspaceRole === "all") return workspaceConfig.reportWidgets;
+    return workspaceConfig.reportWidgets.filter(
+      (id) => REPORT_ROLES[id]?.includes(workspaceRole) || REPORT_ROLES[id]?.includes("all")
+    );
+  }, [workspaceConfig.reportWidgets, workspaceRole]);
+
+  const hasAnyReportKpi =
+    filteredReportWidgets.includes("kpi_collections") ||
+    filteredReportWidgets.includes("kpi_payments") ||
+    filteredReportWidgets.includes("kpi_purchases") ||
+    filteredReportWidgets.includes("kpi_inventory");
 
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
@@ -773,11 +876,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     }
   };
 
-  const hasAnyReportKpi =
-    workspaceConfig.reportWidgets.includes("kpi_collections") ||
-    workspaceConfig.reportWidgets.includes("kpi_payments") ||
-    workspaceConfig.reportWidgets.includes("kpi_purchases") ||
-    workspaceConfig.reportWidgets.includes("kpi_inventory");
+
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20" dir={dir}>
@@ -926,16 +1025,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         <span className="text-xs font-bold text-slate-500 ps-1 shrink-0">
           {isRTL ? "مساحة العمل المتخصصة:" : "Workspace View:"}
         </span>
-        {[
-          { id: "all", labelAr: "الرئيسية الشاملة", labelEn: "Executive All-in-One" },
-          { id: "accounting", labelAr: "المحاسبة والمالية", labelEn: "Accounting & Finance" },
-          { id: "sales", labelAr: "المبيعات ونقاط البيع", labelEn: "Sales & POS" },
-          { id: "inventory", labelAr: "المخزون والمشتريات", labelEn: "Inventory & Supply" },
-          { id: "hr", labelAr: "الموارد البشرية والرواتب", labelEn: "HR & Personnel" }
-        ].map((role) => (
+        {availableRoleButtons.map((role) => (
           <button
             key={role.id}
-            onClick={() => setWorkspaceRole(role.id as any)}
+            onClick={() => setWorkspaceRole(role.id)}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border ${
               workspaceRole === role.id
                 ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
@@ -948,14 +1041,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       </div>
 
       {/* DYNAMIC QUICK LAUNCHERS SECTION */}
-      {workspaceConfig.quickLaunchers.length > 0 && (
+      {filteredQuickLaunchers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {workspaceConfig.quickLaunchers.map((launcherId) => renderLauncherCard(launcherId))}
+          {filteredQuickLaunchers.map((launcherId) => renderLauncherCard(launcherId))}
         </div>
       )}
 
       {/* SMART ALERTS CENTER WIDGET */}
-      {workspaceConfig.reportWidgets.includes("smart_alerts") && (
+      {filteredReportWidgets.includes("smart_alerts") && (
         <DueDatesAlertsCenter
           vouchers={vouchers}
           purchases={purchases}
@@ -966,7 +1059,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       )}
 
       {/* DYNAMIC CORE CREATION ACTIONS SECTION */}
-      {workspaceConfig.quickActions.length > 0 && (
+      {filteredQuickActions.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -985,7 +1078,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {workspaceConfig.quickActions.map((actionId) => renderActionCard(actionId))}
+            {filteredQuickActions.map((actionId) => renderActionCard(actionId))}
           </div>
         </div>
       )}
@@ -1016,7 +1109,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* Total Revenue Collections */}
-            {workspaceConfig.reportWidgets.includes("kpi_collections") && (
+            {filteredReportWidgets.includes("kpi_collections") && (
               <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-1">
                 <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                   <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
@@ -1033,7 +1126,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             )}
 
             {/* Total Expenses / Payments */}
-            {workspaceConfig.reportWidgets.includes("kpi_payments") && (
+            {filteredReportWidgets.includes("kpi_payments") && (
               <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-100 space-y-1">
                 <span className="text-xs font-bold text-rose-800 flex items-center gap-1.5">
                   <ArrowUpRight className="w-4 h-4 text-rose-600" />
@@ -1050,7 +1143,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             )}
 
             {/* Total Purchases */}
-            {workspaceConfig.reportWidgets.includes("kpi_purchases") && (
+            {filteredReportWidgets.includes("kpi_purchases") && (
               <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-1">
                 <span className="text-xs font-bold text-indigo-800 flex items-center gap-1.5">
                   <ShoppingCart className="w-4 h-4 text-indigo-600" />
@@ -1070,7 +1163,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             )}
 
             {/* Inventory Valuation */}
-            {workspaceConfig.reportWidgets.includes("kpi_inventory") && (
+            {filteredReportWidgets.includes("kpi_inventory") && (
               <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-1">
                 <span className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
                   <Boxes className="w-4 h-4 text-amber-600" />
@@ -1094,7 +1187,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       )}
 
       {/* DYNAMIC VISUAL ANALYTICS SECTION */}
-      {workspaceConfig.reportWidgets.includes("visual_analytics") && (
+      {filteredReportWidgets.includes("visual_analytics") && (
         <DashboardAnalytics
           vouchers={vouchers}
           purchases={purchases}
@@ -1105,12 +1198,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       )}
 
       {/* DYNAMIC DUAL SECTION: RECENT DOCUMENTS & CLIENT PICKER */}
-      {(workspaceConfig.reportWidgets.includes("recent_vouchers") || workspaceConfig.reportWidgets.includes("customer_directory")) && (
+      {(filteredReportWidgets.includes("recent_vouchers") || filteredReportWidgets.includes("customer_directory")) && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Recent Transactions (2 cols if both enabled, or full width if only recent vouchers enabled) */}
-          {workspaceConfig.reportWidgets.includes("recent_vouchers") && (
-            <div className={`${workspaceConfig.reportWidgets.includes("customer_directory") ? "lg:col-span-2" : "lg:col-span-3"} bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4`}>
+          {filteredReportWidgets.includes("recent_vouchers") && (
+            <div className={`${filteredReportWidgets.includes("customer_directory") ? "lg:col-span-2" : "lg:col-span-3"} bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-slate-500" />
@@ -1194,8 +1287,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           )}
 
           {/* Quick Customer Directory */}
-          {workspaceConfig.reportWidgets.includes("customer_directory") && (
-            <div className={`${workspaceConfig.reportWidgets.includes("recent_vouchers") ? "lg:col-span-1" : "lg:col-span-3"} bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between`}>
+          {filteredReportWidgets.includes("customer_directory") && (
+            <div className={`${filteredReportWidgets.includes("recent_vouchers") ? "lg:col-span-1" : "lg:col-span-3"} bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between`}>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
