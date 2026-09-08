@@ -36,21 +36,28 @@ async function ensureEmployeeExists(
       .maybeSingle();
 
     if (!data) {
+      const code =
+        employeeCode && employeeCode.trim() !== '' && (employeeCode !== 'EMP-001' || empId === ensureValidUuid('emp-1'))
+          ? employeeCode.trim()
+          : `EMP-${empId.slice(-8).toUpperCase()}`;
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from('employees') as any).upsert({
+      const { error } = await (supabase.from('employees') as any).upsert({
         id: empId,
         company_id: cId,
-        employee_code: employeeCode || 'EMP-001',
+        employee_code: code,
         full_name: employeeName || 'موظف',
         job_title: jobTitle || 'موظف',
         department: department || 'عام',
         status: 'ACTIVE',
         basic_salary: 0,
-        housing_allowance: 0,
-        transport_allowance: 0,
-        other_allowances: 0,
+        allowances: 0,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' });
+
+      if (error) {
+        console.error('[HRService] ensureEmployeeExists error:', error.message);
+      }
     }
   } catch (err) {
     console.error('[HRService] ensureEmployeeExists error:', err);
@@ -114,7 +121,7 @@ async function resolveValidKioskDeviceId(
       id: dId,
       company_id: cId,
       branch_id: validBranchId,
-      device_code: `DEV-${dId.slice(0, 6)}`,
+      device_code: `DEV-${dId.slice(0, 6).toUpperCase()}`,
       name: deviceName || 'كشك الحضور اللوحي',
       location: 'الفرع الرئيسي',
       is_active: true,
@@ -209,53 +216,58 @@ export async function upsertAttendanceRecord(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
-  const cId = ensureValidUuid(companyId);
-  const recId = ensureValidUuid(record.id);
-  const empId = ensureValidUuid(record.employeeId);
-  const validBranchId = await resolveValidBranchId(record.branchId);
+  try {
+    const cId = ensureValidUuid(companyId);
+    const recId = ensureValidUuid(record.id);
+    const empId = ensureValidUuid(record.employeeId);
+    const validBranchId = await resolveValidBranchId(record.branchId);
 
-  await ensureEmployeeExists(empId, cId, record.employeeCode, record.employeeName, record.jobTitle, record.department);
+    await ensureEmployeeExists(empId, cId, record.employeeCode, record.employeeName, record.jobTitle, record.department);
 
-  const dateStr = record.date || new Date().toISOString().split('T')[0];
+    const dateStr = record.date || new Date().toISOString().split('T')[0];
 
-  const checkInIso = record.checkIn
-    ? (record.checkIn.includes('T') ? record.checkIn : `${dateStr}T${record.checkIn.length === 5 ? record.checkIn + ':00' : record.checkIn}Z`)
-    : null;
+    const checkInIso = record.checkIn
+      ? (record.checkIn.includes('T') ? record.checkIn : `${dateStr}T${record.checkIn.length === 5 ? record.checkIn + ':00' : record.checkIn}Z`)
+      : null;
 
-  const checkOutIso = record.checkOut
-    ? (record.checkOut.includes('T') ? record.checkOut : `${dateStr}T${record.checkOut.length === 5 ? record.checkOut + ':00' : record.checkOut}Z`)
-    : null;
+    const checkOutIso = record.checkOut
+      ? (record.checkOut.includes('T') ? record.checkOut : `${dateStr}T${record.checkOut.length === 5 ? record.checkOut + ':00' : record.checkOut}Z`)
+      : null;
 
-  const workMinutes = Math.round((record.workingHours || 0) * 60);
+    const workMinutes = Math.round((record.workingHours || 0) * 60);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('attendance_records') as any)
-    .upsert(
-      {
-        id: recId,
-        company_id: cId,
-        employee_id: empId,
-        branch_id: validBranchId,
-        attendance_date: dateStr,
-        check_in_at: checkInIso,
-        check_out_at: checkOutIso,
-        status: record.status || 'PRESENT',
-        total_work_minutes: workMinutes,
-        regular_work_minutes: workMinutes,
-        overtime_minutes: Math.round((record.overtimeHours || 0) * 60),
-        late_minutes: record.lateMinutes || 0,
-        source: 'KIOSK',
-        notes: record.notes ?? '',
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'id' }
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('attendance_records') as any)
+      .upsert(
+        {
+          id: recId,
+          company_id: cId,
+          employee_id: empId,
+          branch_id: validBranchId,
+          attendance_date: dateStr,
+          check_in_at: checkInIso,
+          check_out_at: checkOutIso,
+          status: record.status || 'PRESENT',
+          total_work_minutes: workMinutes,
+          regular_work_minutes: workMinutes,
+          overtime_minutes: Math.round((record.overtimeHours || 0) * 60),
+          late_minutes: record.lateMinutes || 0,
+          source: 'KIOSK',
+          notes: record.notes ?? '',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
 
-  if (error) {
-    console.error('[HRService] upsertAttendanceRecord error:', error.message);
-    return { success: false, error: error.message };
+    if (error) {
+      console.error('[HRService] upsertAttendanceRecord error:', error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('[HRService] upsertAttendanceRecord exception:', err);
+    return { success: false, error: err?.message || String(err) };
   }
-  return { success: true };
 }
 
 // ──────────────────────────────────────────────
@@ -314,44 +326,49 @@ export async function addAttendanceMovementLog(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
-  const cId = ensureValidUuid(companyId);
-  const logId = ensureValidUuid(log.id);
-  const empId = ensureValidUuid(log.employeeId);
-  const validDeviceId = await resolveValidKioskDeviceId(log.deviceId, cId, log.deviceName, log.branchId);
+  try {
+    const cId = ensureValidUuid(companyId);
+    const logId = ensureValidUuid(log.id);
+    const empId = ensureValidUuid(log.employeeId);
+    const validDeviceId = await resolveValidKioskDeviceId(log.deviceId, cId, log.deviceName, log.branchId);
 
-  await ensureEmployeeExists(empId, cId, log.employeeCode, log.employeeName, log.jobTitle, log.department);
+    await ensureEmployeeExists(empId, cId, log.employeeCode, log.employeeName, log.jobTitle, log.department);
 
-  let finalPhotoUrl = log.photoUrl || null;
-  if (log.photoUrl && log.photoUrl.startsWith('data:image/')) {
-    const fileName = `kiosk_${empId}_${Date.now()}.jpg`;
-    const uploadRes = await uploadImageToStorage('attendance_photos', fileName, log.photoUrl);
-    if (uploadRes.publicUrl) {
-      finalPhotoUrl = uploadRes.publicUrl;
+    let finalPhotoUrl = log.photoUrl || null;
+    if (log.photoUrl && log.photoUrl.startsWith('data:image/')) {
+      const fileName = `kiosk_${empId}_${Date.now()}.jpg`;
+      const uploadRes = await uploadImageToStorage('attendance_photos', fileName, log.photoUrl);
+      if (uploadRes.publicUrl) {
+        finalPhotoUrl = uploadRes.publicUrl;
+      }
     }
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('attendance_movement_logs') as any).upsert({
-    id: logId,
-    company_id: cId,
-    employee_id: empId,
-    kiosk_device_id: validDeviceId,
-    movement_type_code: log.movementTypeCode || log.movementCategory || 'CHECK_IN',
-    movement_category: log.movementCategory || 'CHECK_IN',
-    timestamp: log.timestamp || new Date().toISOString(),
-    date: log.date || new Date().toISOString().split('T')[0],
-    time: log.time || '08:00:00',
-    photo_url: finalPhotoUrl,
-    reason: log.reason || null,
-    sync_status: log.syncStatus || 'SYNCED',
-    created_at: log.createdAt || new Date().toISOString(),
-  }, { onConflict: 'id' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('attendance_movement_logs') as any).upsert({
+      id: logId,
+      company_id: cId,
+      employee_id: empId,
+      kiosk_device_id: validDeviceId,
+      movement_type_code: log.movementTypeCode || log.movementCategory || 'CHECK_IN',
+      movement_category: log.movementCategory || 'CHECK_IN',
+      timestamp: log.timestamp || new Date().toISOString(),
+      date: log.date || new Date().toISOString().split('T')[0],
+      time: log.time || '08:00:00',
+      photo_url: finalPhotoUrl,
+      reason: log.reason || null,
+      sync_status: log.syncStatus || 'SYNCED',
+      created_at: log.createdAt || new Date().toISOString(),
+    }, { onConflict: 'id' });
 
-  if (error) {
-    console.error('[HRService] addAttendanceMovementLog error:', error.message);
-    return { success: false, error: error.message };
+    if (error) {
+      console.error('[HRService] addAttendanceMovementLog error:', error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('[HRService] addAttendanceMovementLog exception:', err);
+    return { success: false, error: err?.message || String(err) };
   }
-  return { success: true };
 }
 
 // ──────────────────────────────────────────────
@@ -361,11 +378,13 @@ export async function addAttendanceMovementLog(
 export async function getPayrollSlips(companyId: string): Promise<PayrollSlip[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('payroll_slips') as any)
     .select('*')
-    .eq('company_id', companyId)
-    .order('month', { ascending: false });
+    .eq('company_id', cId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('[HRService] getPayrollSlips:', error.message);
@@ -375,7 +394,7 @@ export async function getPayrollSlips(companyId: string): Promise<PayrollSlip[]>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data ?? []).map((row: any): PayrollSlip => ({
     id: row.id,
-    payrollMonth: row.payroll_month ?? '',
+    payrollMonth: row.payroll_month ?? row.month ?? '',
     employeeId: row.employee_id,
     employeeCode: row.employee_code ?? '',
     employeeName: row.employee_name ?? '',
@@ -408,43 +427,78 @@ export async function upsertPayrollSlip(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('payroll_slips') as any)
-    .upsert(
-      {
-        id: slip.id,
-        company_id: companyId,
-        payroll_month: slip.payrollMonth,
-        employee_id: slip.employeeId,
-        employee_code: slip.employeeCode,
-        employee_name: slip.employeeName,
-        full_name_en: slip.fullNameEn,
-        job_title: slip.jobTitle,
-        department: slip.department,
-        civil_id: slip.civilId,
-        bank_name: slip.bankName,
-        bank_iban: slip.bankIban,
-        branch_name: slip.branchName,
-        basic_salary: slip.basicSalary ?? 0,
-        housing_allowance: slip.housingAllowance ?? 0,
-        transport_allowance: slip.transportAllowance ?? 0,
-        other_allowances: slip.otherAllowances ?? 0,
-        bonus: slip.bonus ?? 0,
-        deductions: slip.deductions ?? 0,
-        social_security_deduction: slip.socialSecurityDeduction ?? 0,
-        net_salary: slip.netSalary ?? 0,
-        status: slip.status ?? 'DRAFT',
-        payment_date: slip.paymentDate ?? null,
-        payment_method: slip.paymentMethod ?? null,
-        notes: slip.notes ?? '',
-        generated_at: slip.generatedAt ?? new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'id' }
+  try {
+    const cId = ensureValidUuid(companyId);
+    const slipId = ensureValidUuid(slip.id);
+    const empId = ensureValidUuid(slip.employeeId);
+
+    await ensureEmployeeExists(
+      empId,
+      cId,
+      slip.employeeCode,
+      slip.employeeName,
+      slip.jobTitle,
+      slip.department
     );
 
-  if (error) return { success: false, error: error.message };
-  return { success: true };
+    const monthStr = slip.payrollMonth || new Date().toISOString().slice(0, 7);
+    const housing = slip.housingAllowance ?? 0;
+    const transport = slip.transportAllowance ?? 0;
+    const other = slip.otherAllowances ?? 0;
+    const bonus = slip.bonus ?? 0;
+    const totalAllowances = housing + transport + other + bonus;
+    const baseDeductions = slip.deductions ?? 0;
+    const pasiDeduction = slip.socialSecurityDeduction ?? 0;
+    const totalDeductions = baseDeductions + pasiDeduction;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('payroll_slips') as any)
+      .upsert(
+        {
+          id: slipId,
+          company_id: cId,
+          employee_id: empId,
+          month: monthStr,
+          payroll_month: monthStr,
+          employee_code: slip.employeeCode ?? '',
+          employee_name: slip.employeeName ?? '',
+          full_name_en: slip.fullNameEn ?? '',
+          job_title: slip.jobTitle ?? '',
+          department: slip.department ?? '',
+          civil_id: slip.civilId ?? '',
+          bank_name: slip.bankName ?? '',
+          bank_iban: slip.bankIban ?? '',
+          branch_name: slip.branchName ?? '',
+          basic_salary: slip.basicSalary ?? 0,
+          housing_allowance: housing,
+          transport_allowance: transport,
+          other_allowances: other,
+          total_allowances: totalAllowances,
+          bonus: bonus,
+          deductions: baseDeductions,
+          total_deductions: totalDeductions,
+          social_security_deduction: pasiDeduction,
+          net_salary: slip.netSalary ?? 0,
+          status: slip.status ?? 'DRAFT',
+          payment_status: slip.status === 'PAID' ? 'DISBURSED' : 'PENDING',
+          payment_date: slip.paymentDate ?? null,
+          payment_method: slip.paymentMethod ?? null,
+          notes: slip.notes ?? '',
+          generated_at: slip.generatedAt ?? new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
+
+    if (error) {
+      console.error('[HRService] upsertPayrollSlip error:', error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('[HRService] upsertPayrollSlip exception:', err);
+    return { success: false, error: err?.message || String(err) };
+  }
 }
 
 // ──────────────────────────────────────────────
@@ -454,10 +508,12 @@ export async function upsertPayrollSlip(
 export async function getLeaveRequests(companyId: string): Promise<LeaveRequest[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = ensureValidUuid(companyId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('leave_requests') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -492,32 +548,56 @@ export async function upsertLeaveRequest(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('leave_requests') as any)
-    .upsert(
-      {
-        id: req.id,
-        company_id: companyId,
-        employee_id: req.employeeId,
-        employee_name: req.employeeName,
-        employee_code: req.employeeCode,
-        job_title: req.jobTitle,
-        department: req.department,
-        leave_type: req.leaveType,
-        start_date: req.startDate,
-        end_date: req.endDate,
-        days_count: req.daysCount ?? 0,
-        reason: req.reason ?? '',
-        status: req.status ?? 'PENDING',
-        applied_at: req.appliedAt ?? new Date().toISOString(),
-        reviewed_by: req.reviewedBy ?? null,
-        reviewed_at: req.reviewedAt ?? null,
-        review_notes: req.reviewNotes ?? null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'id' }
+  try {
+    const cId = ensureValidUuid(companyId);
+    const reqId = ensureValidUuid(req.id);
+    const empId = ensureValidUuid(req.employeeId);
+
+    await ensureEmployeeExists(
+      empId,
+      cId,
+      req.employeeCode,
+      req.employeeName,
+      req.jobTitle,
+      req.department
     );
 
-  if (error) return { success: false, error: error.message };
-  return { success: true };
+    const daysCount = req.daysCount ?? 1;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('leave_requests') as any)
+      .upsert(
+        {
+          id: reqId,
+          company_id: cId,
+          employee_id: empId,
+          employee_name: req.employeeName ?? '',
+          employee_code: req.employeeCode ?? '',
+          job_title: req.jobTitle ?? '',
+          department: req.department ?? '',
+          leave_type: req.leaveType ?? 'ANNUAL',
+          start_date: req.startDate || new Date().toISOString().split('T')[0],
+          end_date: req.endDate || new Date().toISOString().split('T')[0],
+          days_count: daysCount,
+          total_days: daysCount,
+          reason: req.reason ?? '',
+          status: req.status ?? 'PENDING',
+          applied_at: req.appliedAt ?? new Date().toISOString(),
+          reviewed_by: req.reviewedBy ? ensureNullableUuid(req.reviewedBy) : null,
+          reviewed_at: req.reviewedAt ?? null,
+          review_notes: req.reviewNotes ?? null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
+
+    if (error) {
+      console.error('[HRService] upsertLeaveRequest error:', error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('[HRService] upsertLeaveRequest exception:', err);
+    return { success: false, error: err?.message || String(err) };
+  }
 }
