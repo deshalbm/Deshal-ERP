@@ -240,21 +240,21 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
 
   // All entity states — initialized from localStorage as fallback
   const [customersList, setCustomersListState] = useState<Customer[]>([]);
-  const [employeesList, setEmployeesListState] = useState<Employee[]>([]);
+  const [employeesList, setEmployeesListState] = useState<Employee[]>(() => loadEmployees());
   const [inventoryList, setInventoryListState] = useState<InventoryItem[]>([]);
   const [suppliersList, setSuppliersListState] = useState<Supplier[]>([]);
   const [branchesList, setBranchesListState] = useState<Branch[]>([]);
   const [stockMovementsList, setStockMovementsListState] = useState<StockMovement[]>([]);
   const [stockTransfersList, setStockTransfersListState] = useState<StockTransfer[]>([]);
-  const [attendanceList, setAttendanceListState] = useState<AttendanceRecord[]>([]);
+  const [attendanceList, setAttendanceListState] = useState<AttendanceRecord[]>(() => loadAttendanceRecords());
   const [movementLogsList, setMovementLogsListState] = useState<AttendanceMovementLog[]>(() => loadAttendanceMovementLogs());
 
   // inside loadDataFromSupabase
   // Promise.all includes hrSvc.getAttendanceMovementLogs(cId)
   // setMovementLogsListState(movementLogs)
 
-  const [payrollSlipsList, setPayrollSlipsListState] = useState<PayrollSlip[]>([]);
-  const [leaveRequestsList, setLeaveRequestsListState] = useState<LeaveRequest[]>([]);
+  const [payrollSlipsList, setPayrollSlipsListState] = useState<PayrollSlip[]>(() => loadPayrollSlips());
+  const [leaveRequestsList, setLeaveRequestsListState] = useState<LeaveRequest[]>(() => loadLeaveRequests());
   const [vouchersList, setVouchersListState] = useState<ReceiptVoucher[]>([]);
   const [purchasesList, setPurchasesListState] = useState<PurchaseInvoice[]>([]);
   const [rentalSpacesList, setRentalSpacesListState] = useState<RentalSpace[]>([]);
@@ -376,17 +376,64 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
       ]);
 
       setCustomersListState(customers);
-      setEmployeesListState(employees);
+
+      if (employees && employees.length > 0) {
+        setEmployeesListState(employees);
+        saveEmployees(employees);
+      } else {
+        const localEmps = loadEmployees();
+        setEmployeesListState(localEmps);
+        if (localEmps.length > 0) {
+          saveEmployees(localEmps);
+          Promise.all(localEmps.map((emp) => employeeSvc.upsertEmployee(emp, cId))).catch(console.error);
+        }
+      }
+
       setInventoryListState(inventory);
       setSuppliersListState(suppliers);
       setBranchesListState(branches);
       setStockMovementsListState(stockMovements);
       setStockTransfersListState(stockTransfers as StockTransfer[]);
-      setAttendanceListState(attendance);
+
+      if (attendance && attendance.length > 0) {
+        setAttendanceListState(attendance);
+        saveAttendanceRecords(attendance);
+      } else {
+        const localAtt = loadAttendanceRecords();
+        setAttendanceListState(localAtt);
+        if (localAtt.length > 0) {
+          saveAttendanceRecords(localAtt);
+          Promise.all(localAtt.map((rec) => hrSvc.upsertAttendanceRecord(rec, cId))).catch(console.error);
+        }
+      }
+
       setMovementLogsListState(movementLogs);
       saveAttendanceMovementLogs(movementLogs);
-      setPayrollSlipsListState(payroll);
-      setLeaveRequestsListState(leaves);
+
+      if (payroll && payroll.length > 0) {
+        setPayrollSlipsListState(payroll);
+        savePayrollSlips(payroll);
+      } else {
+        const localPayroll = loadPayrollSlips();
+        setPayrollSlipsListState(localPayroll);
+        if (localPayroll.length > 0) {
+          savePayrollSlips(localPayroll);
+          Promise.all(localPayroll.map((slip) => hrSvc.upsertPayrollSlip(slip, cId))).catch(console.error);
+        }
+      }
+
+      if (leaves && leaves.length > 0) {
+        setLeaveRequestsListState(leaves);
+        saveLeaveRequests(leaves);
+      } else {
+        const localLeaves = loadLeaveRequests();
+        setLeaveRequestsListState(localLeaves);
+        if (localLeaves.length > 0) {
+          saveLeaveRequests(localLeaves);
+          Promise.all(localLeaves.map((req) => hrSvc.upsertLeaveRequest(req, cId))).catch(console.error);
+        }
+      }
+
       setVouchersListState(vouchers);
       setPurchasesListState(purchases);
       setRentalSpacesListState(spaces);
@@ -638,7 +685,12 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
         table: 'employees',
         filter: `company_id=eq.${companyId}`,
       }, () => {
-        employeeSvc.getEmployees(companyId).then(setEmployeesListState);
+        employeeSvc.getEmployees(companyId).then((fetched) => {
+          if (fetched && fetched.length > 0) {
+            setEmployeesListState(fetched);
+            saveEmployees(fetched);
+          }
+        });
       })
       .on('postgres_changes', {
         event: '*',

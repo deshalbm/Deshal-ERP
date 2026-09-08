@@ -13,6 +13,7 @@ import {
   EmployeeMovementStatus,
   MovementCategory
 } from "../types";
+import { ensureValidUuid } from "./uuid";
 
 export const KIOSK_STORAGE_KEYS = {
   DEVICES: "deshal_kiosk_devices_v1",
@@ -248,7 +249,192 @@ export const DEFAULT_KIOSK_DEVICES: KioskDevice[] = [
 
 const TODAY_STR = new Date().toISOString().split("T")[0];
 
-export const DEFAULT_ATTENDANCE_MOVEMENT_LOGS: AttendanceMovementLog[] = [];
+export const DEFAULT_ATTENDANCE_MOVEMENT_LOGS: AttendanceMovementLog[] = [
+  {
+    id: "mov-log-1",
+    employeeId: ensureValidUuid("emp-1"),
+    employeeCode: "EMP-001",
+    employeeName: "سعيد بن راشد الشحي",
+    department: "الإدارة العليا",
+    jobTitle: "المدير التنفيذي العام",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    movementTypeCode: "CHECK_IN",
+    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
+    movementTypeNameEn: "Clock In (Start of Shift)",
+    movementCategory: "CHECK_IN",
+    timestamp: `${TODAY_STR}T07:55:00Z`,
+    date: TODAY_STR,
+    time: "07:55:00",
+    deviceId: "dev-sohar-main",
+    deviceName: "آيباد الاستقبال الرئيسي - صحار",
+    location: "صالة الاستقبال والمدخل التنفيذي",
+    syncStatus: "SYNCED",
+    notes: "تسجيل حضور بداية الدوام",
+    createdAt: `${TODAY_STR}T07:55:00Z`
+  },
+  {
+    id: "mov-log-2",
+    employeeId: ensureValidUuid("emp-1"),
+    employeeCode: "EMP-001",
+    employeeName: "سعيد بن راشد الشحي",
+    department: "الإدارة العليا",
+    jobTitle: "المدير التنفيذي العام",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    movementTypeCode: "CHECK_OUT",
+    movementTypeNameAr: "تسجيل انصراف (نهاية الدوام)",
+    movementTypeNameEn: "Clock Out (End of Shift)",
+    movementCategory: "CHECK_OUT",
+    timestamp: `${TODAY_STR}T16:30:00Z`,
+    date: TODAY_STR,
+    time: "16:30:00",
+    deviceId: "dev-sohar-main",
+    deviceName: "آيباد الاستقبال الرئيسي - صحار",
+    location: "صالة الاستقبال والمدخل التنفيذي",
+    syncStatus: "SYNCED",
+    notes: "تسجيل انصراف نهاية الدوام",
+    createdAt: `${TODAY_STR}T16:30:00Z`
+  },
+  {
+    id: "mov-log-3",
+    employeeId: ensureValidUuid("emp-2"),
+    employeeCode: "EMP-002",
+    employeeName: "فاطمة بنت ناصر البلوشي",
+    department: "المالية والمحاسبة",
+    jobTitle: "رئيسة قسم المحاسبة والمالية",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    movementTypeCode: "CHECK_IN",
+    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
+    movementTypeNameEn: "Clock In (Start of Shift)",
+    movementCategory: "CHECK_IN",
+    timestamp: `${TODAY_STR}T08:00:00Z`,
+    date: TODAY_STR,
+    time: "08:00:00",
+    deviceId: "dev-sohar-main",
+    deviceName: "آيباد الاستقبال الرئيسي - صحار",
+    location: "صالة الاستقبال والمدخل التنفيذي",
+    syncStatus: "SYNCED",
+    notes: "تسجيل حضور بداية الدوام",
+    createdAt: `${TODAY_STR}T08:00:00Z`
+  },
+  {
+    id: "mov-log-4",
+    employeeId: ensureValidUuid("emp-2"),
+    employeeCode: "EMP-002",
+    employeeName: "فاطمة بنت ناصر البلوشي",
+    department: "المالية والمحاسبة",
+    jobTitle: "رئيسة قسم المحاسبة والمالية",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    movementTypeCode: "CHECK_OUT",
+    movementTypeNameAr: "تسجيل انصراف (نهاية الدوام)",
+    movementTypeNameEn: "Clock Out (End of Shift)",
+    movementCategory: "CHECK_OUT",
+    timestamp: `${TODAY_STR}T16:00:00Z`,
+    date: TODAY_STR,
+    time: "16:00:00",
+    deviceId: "dev-sohar-main",
+    deviceName: "آيباد الاستقبال الرئيسي - صحار",
+    location: "صالة الاستقبال والمدخل التنفيذي",
+    syncStatus: "SYNCED",
+    notes: "تسجيل انصراف نهاية الدوام",
+    createdAt: `${TODAY_STR}T16:00:00Z`
+  },
+  {
+    id: "mov-log-5",
+    employeeId: ensureValidUuid("emp-3"),
+    employeeCode: "EMP-003",
+    employeeName: "طارق بن سالم المعمري",
+    department: "المبيعات والمشاريع",
+    jobTitle: "مشرف مبيعات وتنفيذي عقود",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    movementTypeCode: "CHECK_IN",
+    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
+    movementTypeNameEn: "Clock In (Start of Shift)",
+    movementCategory: "CHECK_IN",
+    timestamp: `${TODAY_STR}T08:20:00Z`,
+    date: TODAY_STR,
+    time: "08:20:00",
+    deviceId: "dev-sohar-main",
+    deviceName: "آيباد الاستقبال الرئيسي - صحار",
+    location: "صالة الاستقبال والمدخل التنفيذي",
+    syncStatus: "SYNCED",
+    notes: "تسجيل حضور متأخر (20 دقيقة)",
+    createdAt: `${TODAY_STR}T08:20:00Z`
+  },
+  {
+    id: "mov-log-6",
+    employeeId: ensureValidUuid("emp-4"),
+    employeeCode: "EMP-004",
+    employeeName: "خالد بن خلفان الحوسني",
+    department: "المستودعات واللوجستيات",
+    jobTitle: "أمين المستودعات المركزية",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    movementTypeCode: "CHECK_IN",
+    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
+    movementTypeNameEn: "Clock In (Start of Shift)",
+    movementCategory: "CHECK_IN",
+    timestamp: `${TODAY_STR}T07:50:00Z`,
+    date: TODAY_STR,
+    time: "07:50:00",
+    deviceId: "dev-sohar-warehouse",
+    deviceName: "تابلت بوابة المستودع المركزي",
+    location: "بوابة المستودع ومنطقة التحميل",
+    syncStatus: "SYNCED",
+    notes: "تسجيل حضور بداية الدوام",
+    createdAt: `${TODAY_STR}T07:50:00Z`
+  },
+  {
+    id: "mov-log-7",
+    employeeId: ensureValidUuid("emp-4"),
+    employeeCode: "EMP-004",
+    employeeName: "خالد بن خلفان الحوسني",
+    department: "المستودعات واللوجستيات",
+    jobTitle: "أمين المستودعات المركزية",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    movementTypeCode: "CHECK_OUT",
+    movementTypeNameAr: "تسجيل انصراف (نهاية الدوام)",
+    movementTypeNameEn: "Clock Out (End of Shift)",
+    movementCategory: "CHECK_OUT",
+    timestamp: `${TODAY_STR}T16:15:00Z`,
+    date: TODAY_STR,
+    time: "16:15:00",
+    deviceId: "dev-sohar-warehouse",
+    deviceName: "تابلت بوابة المستودع المركزي",
+    location: "بوابة المستودع ومنطقة التحميل",
+    syncStatus: "SYNCED",
+    notes: "تسجيل انصراف نهاية الدوام",
+    createdAt: `${TODAY_STR}T16:15:00Z`
+  },
+  {
+    id: "mov-log-8",
+    employeeId: ensureValidUuid("emp-5"),
+    employeeCode: "EMP-005",
+    employeeName: "مريم بنت حمد الكعبي",
+    department: "خدمة العملاء والاستقبال",
+    jobTitle: "مسؤولة الاستقبال والخدمات",
+    branchId: "branch-muscat",
+    branchName: "فرع مسقط - الغبرة",
+    movementTypeCode: "CHECK_IN",
+    movementTypeNameAr: "تسجيل حضور (بداية الدوام)",
+    movementTypeNameEn: "Clock In (Start of Shift)",
+    movementCategory: "CHECK_IN",
+    timestamp: `${TODAY_STR}T08:00:00Z`,
+    date: TODAY_STR,
+    time: "08:00:00",
+    deviceId: "dev-muscat-office",
+    deviceName: "آيباد مدخل مقر مسقط - غلا",
+    location: "المدخل الرئيسي - الطابق الثالث",
+    syncStatus: "SYNCED",
+    notes: "تسجيل حضور بداية الدوام",
+    createdAt: `${TODAY_STR}T08:00:00Z`
+  }
+];
 
 // ----------------------------------------------------
 // DEFAULT ATTENDANCE ADJUSTMENTS (تعديلات الحركات مع التاريخ)
@@ -606,8 +792,6 @@ export interface EmployeeLiveStatusInfo {
   checkedInTime?: string;
   checkedOutTime?: string;
 }
-
-import { ensureValidUuid } from "./uuid";
 
 /**
  * Calculates current real-time movement status of an employee based on today's logs

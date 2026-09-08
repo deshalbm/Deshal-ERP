@@ -57,7 +57,7 @@ import {
   LeaveStatus
 } from "../types";
 import { numberToWords } from "./numberToWords";
-import { generateUuid } from "./uuid";
+import { generateUuid, ensureValidUuid } from "./uuid";
 
 export const DEFAULT_WHATSAPP_SETTINGS: WhatsAppSettings = {
   enabled: true,
@@ -1180,21 +1180,208 @@ export const PERMISSION_CONFIG: {
   }
 ];
 
-export const DEFAULT_EMPLOYEES: Employee[] = [];
+export const DEFAULT_EMPLOYEES: Employee[] = [
+  {
+    id: ensureValidUuid("emp-1"),
+    employeeCode: "EMP-001",
+    fullName: "سعيد بن راشد الشحي",
+    fullNameEn: "Said Rashid Al-Shehhi",
+    civilId: "109847291",
+    email: "said.shehhi@deshalbm.com",
+    phone: "+968 99123456",
+    role: "ADMIN",
+    jobTitle: "المدير التنفيذي العام",
+    department: "الإدارة العليا",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    status: "ACTIVE",
+    hireDate: "2024-01-01",
+    contractType: "FULL_TIME",
+    basicSalary: 1200,
+    allowances: 300,
+    currency: "OMR",
+    bankName: "بنك مسقط",
+    bankIban: "OM4500010000000012345678901",
+    permissions: [
+      'create_vouchers',
+      'edit_vouchers',
+      'delete_vouchers',
+      'print_export_vouchers',
+      'apply_discounts',
+      'view_reports',
+      'manage_inventory',
+      'manage_transfers',
+      'manage_purchases',
+      'manage_suppliers',
+      'manage_customers',
+      'manage_branches',
+      'manage_employees',
+      'view_salaries',
+      'edit_settings',
+      'attendance_view',
+      'attendance_create',
+      'attendance_edit',
+      'attendance_delete',
+      'attendance_approve',
+      'attendance_reports',
+      'attendance_photos',
+      'attendance_devices',
+      'movement_types_mgmt',
+      'employee_pin_mgmt',
+      'attendance_settings'
+    ],
+    notes: "المدير التنفيذي العام للشركة وصاحب جميع الصلاحيات",
+    createdAt: "2024-01-01T08:00:00Z",
+    updatedAt: "2026-09-08T08:00:00Z"
+  },
+  {
+    id: ensureValidUuid("emp-2"),
+    employeeCode: "EMP-002",
+    fullName: "فاطمة بنت ناصر البلوشي",
+    fullNameEn: "Fatima Nasser Al-Balushi",
+    civilId: "118274910",
+    email: "fatima.balushi@deshalbm.com",
+    phone: "+968 99234567",
+    role: "ACCOUNTANT",
+    jobTitle: "رئيسة قسم المحاسبة والمالية",
+    department: "المالية والمحاسبة",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    status: "ACTIVE",
+    hireDate: "2024-03-15",
+    contractType: "FULL_TIME",
+    basicSalary: 850,
+    allowances: 150,
+    currency: "OMR",
+    bankName: "بنك ظفار",
+    bankIban: "OM960111000000001041112233001",
+    permissions: [
+      'create_vouchers',
+      'edit_vouchers',
+      'print_export_vouchers',
+      'view_reports',
+      'manage_purchases',
+      'manage_suppliers',
+      'manage_customers',
+      'view_salaries',
+      'attendance_view',
+      'attendance_reports'
+    ],
+    notes: "مسؤولة الحسابات والإدارة المالية والقيود المحاسبية",
+    createdAt: "2024-03-15T08:00:00Z",
+    updatedAt: "2026-09-08T08:00:00Z"
+  },
+  {
+    id: ensureValidUuid("emp-3"),
+    employeeCode: "EMP-003",
+    fullName: "طارق بن سالم المعمري",
+    fullNameEn: "Tariq Salem Al-Maamari",
+    civilId: "103847294",
+    email: "tariq.maamari@deshalbm.com",
+    phone: "+968 99345678",
+    role: "SALES",
+    jobTitle: "مشرف مبيعات وتنفيذي عقود",
+    department: "المبيعات والمشاريع",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    status: "ACTIVE",
+    hireDate: "2024-06-01",
+    contractType: "FULL_TIME",
+    basicSalary: 650,
+    allowances: 120,
+    currency: "OMR",
+    bankName: "البنك الوطني العماني",
+    bankIban: "OM2300020000000098765432101",
+    permissions: [
+      'create_vouchers',
+      'print_export_vouchers',
+      'apply_discounts',
+      'manage_customers',
+      'attendance_view'
+    ],
+    notes: "متابعة المبيعات وإغلاق العقود والتواصل مع العملاء",
+    createdAt: "2024-06-01T08:00:00Z",
+    updatedAt: "2026-09-08T08:00:00Z"
+  },
+  {
+    id: ensureValidUuid("emp-4"),
+    employeeCode: "EMP-004",
+    fullName: "خالد بن خلفان الحوسني",
+    fullNameEn: "Khalid Khalfan Al-Hosni",
+    civilId: "129847119",
+    email: "khalid.hosni@deshalbm.com",
+    phone: "+968 99456789",
+    role: "STOREKEEPER",
+    jobTitle: "أمين المستودعات المركزية",
+    department: "المستودعات واللوجستيات",
+    branchId: "branch-sohar",
+    branchName: "فرع صحار الرئيسي",
+    status: "ACTIVE",
+    hireDate: "2024-09-01",
+    contractType: "FULL_TIME",
+    basicSalary: 550,
+    allowances: 100,
+    currency: "OMR",
+    bankName: "بنك مسقط",
+    bankIban: "OM4500010000000055443322110",
+    permissions: [
+      'manage_inventory',
+      'manage_transfers',
+      'manage_purchases',
+      'manage_suppliers',
+      'attendance_view'
+    ],
+    notes: "إدارة المخزون والمذكرة المخزنية وحركات الاستلام والتسليم",
+    createdAt: "2024-09-01T08:00:00Z",
+    updatedAt: "2026-09-08T08:00:00Z"
+  },
+  {
+    id: ensureValidUuid("emp-5"),
+    employeeCode: "EMP-005",
+    fullName: "مريم بنت حمد الكعبي",
+    fullNameEn: "Maryam Hamad Al-Kaabi",
+    civilId: "134857201",
+    email: "maryam.kaabi@deshalbm.com",
+    phone: "+968 99567890",
+    role: "RECEPTIONIST",
+    jobTitle: "مسؤولة الاستقبال والخدمات",
+    department: "خدمة العملاء والاستقبال",
+    branchId: "branch-muscat",
+    branchName: "فرع مسقط - الغبرة",
+    status: "ACTIVE",
+    hireDate: "2025-01-15",
+    contractType: "FULL_TIME",
+    basicSalary: 500,
+    allowances: 100,
+    currency: "OMR",
+    bankName: "بنك صحار الدولي",
+    bankIban: "OM7100050000000011223344556",
+    permissions: [
+      'create_vouchers',
+      'print_export_vouchers',
+      'manage_customers',
+      'attendance_view'
+    ],
+    notes: "إدارة الاستقبال والخدمات المساندة ومساحات العمل المشتركة",
+    createdAt: "2025-01-15T08:00:00Z",
+    updatedAt: "2026-09-08T08:00:00Z"
+  }
+];
 
 export function loadEmployees(): Employee[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.EMPLOYEES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load employees from localStorage:", e);
   }
-  return [];
+  saveEmployees(DEFAULT_EMPLOYEES);
+  return DEFAULT_EMPLOYEES;
 }
 
 export function saveEmployees(employees: Employee[]): void {
@@ -1212,7 +1399,7 @@ export function loadActiveEmployeeId(): string {
   } catch (e) {
     console.warn("Failed to load active employee ID:", e);
   }
-  return "emp-1"; // Default to Said Al-Shehhi (Admin)
+  return ensureValidUuid("emp-1"); // Default to Said Al-Shehhi (Admin)
 }
 
 export function saveActiveEmployeeId(id: string): void {
@@ -1230,7 +1417,7 @@ export function saveActiveEmployeeId(id: string): void {
 export const DEFAULT_ATTENDANCE_RECORDS: AttendanceRecord[] = [
   {
     id: "att-1",
-    employeeId: "emp-1",
+    employeeId: ensureValidUuid("emp-1"),
     employeeName: "سعيد بن راشد الشحي",
     employeeCode: "EMP-001",
     jobTitle: "المدير التنفيذي العام",
@@ -1248,7 +1435,7 @@ export const DEFAULT_ATTENDANCE_RECORDS: AttendanceRecord[] = [
   },
   {
     id: "att-2",
-    employeeId: "emp-2",
+    employeeId: ensureValidUuid("emp-2"),
     employeeName: "فاطمة بنت ناصر البلوشي",
     employeeCode: "EMP-002",
     jobTitle: "رئيسة قسم المحاسبة والمالية",
@@ -1266,7 +1453,7 @@ export const DEFAULT_ATTENDANCE_RECORDS: AttendanceRecord[] = [
   },
   {
     id: "att-3",
-    employeeId: "emp-3",
+    employeeId: ensureValidUuid("emp-3"),
     employeeName: "طارق بن سالم المعمري",
     employeeCode: "EMP-003",
     jobTitle: "مشرف مبيعات وتنفيذي عقود",
@@ -1284,7 +1471,7 @@ export const DEFAULT_ATTENDANCE_RECORDS: AttendanceRecord[] = [
   },
   {
     id: "att-4",
-    employeeId: "emp-4",
+    employeeId: ensureValidUuid("emp-4"),
     employeeName: "خالد بن خلفان الحوسني",
     employeeCode: "EMP-004",
     jobTitle: "أمين المستودعات المركزية",
@@ -1302,7 +1489,7 @@ export const DEFAULT_ATTENDANCE_RECORDS: AttendanceRecord[] = [
   },
   {
     id: "att-5",
-    employeeId: "emp-5",
+    employeeId: ensureValidUuid("emp-5"),
     employeeName: "مريم بنت حمد الكعبي",
     employeeCode: "EMP-005",
     jobTitle: "مسؤولة الاستقبال والخدمات",
@@ -1324,7 +1511,7 @@ export const DEFAULT_PAYROLL_SLIPS: PayrollSlip[] = [
   {
     id: "pay-1",
     payrollMonth: "2026-08",
-    employeeId: "emp-1",
+    employeeId: ensureValidUuid("emp-1"),
     employeeCode: "EMP-001",
     employeeName: "سعيد بن راشد الشحي",
     fullNameEn: "Said Rashid Al-Shehhi",
@@ -1352,7 +1539,7 @@ export const DEFAULT_PAYROLL_SLIPS: PayrollSlip[] = [
   {
     id: "pay-2",
     payrollMonth: "2026-08",
-    employeeId: "emp-2",
+    employeeId: ensureValidUuid("emp-2"),
     employeeCode: "EMP-002",
     employeeName: "فاطمة بنت ناصر البلوشي",
     fullNameEn: "Fatima Nasser Al-Balushi",
@@ -1380,7 +1567,7 @@ export const DEFAULT_PAYROLL_SLIPS: PayrollSlip[] = [
   {
     id: "pay-3",
     payrollMonth: "2026-08",
-    employeeId: "emp-3",
+    employeeId: ensureValidUuid("emp-3"),
     employeeCode: "EMP-003",
     employeeName: "طارق بن سالم المعمري",
     fullNameEn: "Tariq Salem Al-Maamari",
@@ -1408,7 +1595,7 @@ export const DEFAULT_PAYROLL_SLIPS: PayrollSlip[] = [
   {
     id: "pay-4",
     payrollMonth: "2026-08",
-    employeeId: "emp-4",
+    employeeId: ensureValidUuid("emp-4"),
     employeeCode: "EMP-004",
     employeeName: "خالد بن خلفان الحوسني",
     fullNameEn: "Khalid Khalfan Al-Hosni",
@@ -1435,7 +1622,7 @@ export const DEFAULT_PAYROLL_SLIPS: PayrollSlip[] = [
   {
     id: "pay-5",
     payrollMonth: "2026-08",
-    employeeId: "emp-5",
+    employeeId: ensureValidUuid("emp-5"),
     employeeCode: "EMP-005",
     employeeName: "مريم بنت حمد الكعبي",
     fullNameEn: "Maryam Hamad Al-Kaabi",
@@ -1464,7 +1651,7 @@ export const DEFAULT_PAYROLL_SLIPS: PayrollSlip[] = [
 export const DEFAULT_LEAVE_REQUESTS: LeaveRequest[] = [
   {
     id: "leave-1",
-    employeeId: "emp-3",
+    employeeId: ensureValidUuid("emp-3"),
     employeeName: "طارق بن سالم المعمري",
     employeeCode: "EMP-003",
     jobTitle: "مشرف مبيعات وتنفيذي عقود",
@@ -1482,7 +1669,7 @@ export const DEFAULT_LEAVE_REQUESTS: LeaveRequest[] = [
   },
   {
     id: "leave-2",
-    employeeId: "emp-5",
+    employeeId: ensureValidUuid("emp-5"),
     employeeName: "مريم بنت حمد الكعبي",
     employeeCode: "EMP-005",
     jobTitle: "مسؤولة الاستقبال والخدمات",

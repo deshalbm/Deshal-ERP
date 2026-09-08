@@ -288,15 +288,61 @@ export default function App() {
         accts, jEntries, periods, logs
       ]) => {
         setCustomersList(custs);
-        setEmployeesList(emps);
+
+        if (emps && emps.length > 0) {
+          setEmployeesList(emps);
+          saveEmployees(emps);
+        } else {
+          const localEmps = loadEmployees();
+          setEmployeesList(localEmps);
+          if (localEmps.length > 0) {
+            saveEmployees(localEmps);
+            Promise.all(localEmps.map((emp) => employeeSvc.upsertEmployee(emp, cId))).catch(console.error);
+          }
+        }
+
         setInventoryList(inv);
         setSuppliersList(supp);
         setBranchesList(branch);
         setStockMovementsList(mvmts);
         setStockTransfersList(trs as StockTransfer[]);
-        setAttendanceList(att);
-        setPayrollSlipsList(payroll);
-        setLeaveRequestsList(leaves);
+
+        if (att && att.length > 0) {
+          setAttendanceList(att);
+          saveAttendanceRecords(att);
+        } else {
+          const localAtt = loadAttendanceRecords();
+          setAttendanceList(localAtt);
+          if (localAtt.length > 0) {
+            saveAttendanceRecords(localAtt);
+            Promise.all(localAtt.map((rec) => hrSvc.upsertAttendanceRecord(rec, cId))).catch(console.error);
+          }
+        }
+
+        if (payroll && payroll.length > 0) {
+          setPayrollSlipsList(payroll);
+          savePayrollSlips(payroll);
+        } else {
+          const localPayroll = loadPayrollSlips();
+          setPayrollSlipsList(localPayroll);
+          if (localPayroll.length > 0) {
+            savePayrollSlips(localPayroll);
+            Promise.all(localPayroll.map((slip) => hrSvc.upsertPayrollSlip(slip, cId))).catch(console.error);
+          }
+        }
+
+        if (leaves && leaves.length > 0) {
+          setLeaveRequestsList(leaves);
+          saveLeaveRequests(leaves);
+        } else {
+          const localLeaves = loadLeaveRequests();
+          setLeaveRequestsList(localLeaves);
+          if (localLeaves.length > 0) {
+            saveLeaveRequests(localLeaves);
+            Promise.all(localLeaves.map((req) => hrSvc.upsertLeaveRequest(req, cId))).catch(console.error);
+          }
+        }
+
         setVouchersList(vouch);
         setPurchasesList(purch);
         setRentalSpacesList(spaces);
