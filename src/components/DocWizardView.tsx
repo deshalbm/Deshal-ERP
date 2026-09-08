@@ -13,7 +13,6 @@ import {
   DesignTheme
 } from "../types";
 import { numberToWords } from "../utils/numberToWords";
-import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
 import { DEFAULT_COMPANY_SETTINGS } from "../utils/storage";
 import { convertCurrency, AVAILABLE_CURRENCIES, formatCurrencyAmount } from "../utils/currencyConverter";
