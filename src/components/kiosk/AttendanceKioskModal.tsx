@@ -1015,38 +1015,38 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                   className="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1.5 transition-colors underline underline-offset-4"
                 >
                   <HelpCircle className="w-4 h-4" />
-                  {showDemoPinHelper ? "إخفاء رموز الـPIN التجريبية" : "عرض رموز الـPIN التجريبية للتجربة السريعة"}
+                  {showDemoPinHelper ? "إخفاء قائمة الأرقام الوظيفية للموظفين" : "عرض الأرقام الوظيفية التجريبية للموظفين"}
                 </button>
 
                 {showDemoPinHelper && (
                   <div className="mt-3 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 max-w-xl text-right">
                     <div className="font-bold text-amber-400 mb-2 flex items-center gap-1">
                       <Info className="w-4 h-4" />
-                      رموز PIN التجريبية للموظفين (مشفرة بـ SHA-256):
+                      الأرقام الوظيفية المعتمدة للموظفين (تسجيل الدخول بالرقم الوظيفي):
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono">
                       <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">مدير النظام (أدمن)</span>
-                        <strong className="text-amber-300">1234</strong>
+                        <span className="text-slate-400 block text-[10px]">سعيد الشحي (مدير عام)</span>
+                        <strong className="text-amber-300">EMP-001 (أو 1)</strong>
                       </div>
                       <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
                         <span className="text-slate-400 block text-[10px]">فاطمة البلوشي (محاسب)</span>
-                        <strong className="text-amber-300">2233</strong>
+                        <strong className="text-amber-300">EMP-002 (أو 2)</strong>
                       </div>
                       <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">أحمد المعمري (مستودع)</span>
-                        <strong className="text-amber-300">3344</strong>
+                        <span className="text-slate-400 block text-[10px]">طارق المعمري (مبيعات)</span>
+                        <strong className="text-amber-300">EMP-003 (أو 3)</strong>
                       </div>
                       <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">محمد الكندي (مبيعات)</span>
-                        <strong className="text-amber-300">4455</strong>
+                        <span className="text-slate-400 block text-[10px]">خالد الحوسني (مستودع)</span>
+                        <strong className="text-amber-300">EMP-004 (أو 4)</strong>
                       </div>
                       <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">مريم المقبالي (استقبال)</span>
-                        <strong className="text-amber-300">5566</strong>
+                        <span className="text-slate-400 block text-[10px]">مريم الكعبي (استقبال)</span>
+                        <strong className="text-amber-300">EMP-005 (أو 5)</strong>
                       </div>
                       <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                        <span className="text-slate-400 block text-[10px]">خروج المشرف</span>
+                        <span className="text-slate-400 block text-[10px]">خروج المشرف (أدمن)</span>
                         <strong className="text-rose-300">9900</strong>
                       </div>
                     </div>
@@ -1058,10 +1058,10 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
         )}
 
         {/* ========================================================================= */}
-        {/* STEP 2: NUMERIC PIN KEYPAD (إدخال رمز PIN الموظف) */}
+        {/* STEP 2: EMPLOYEE CODE ENTRY (إدخال الرقم الوظيفي للموظف) */}
         {/* ========================================================================= */}
         {step === "PIN_ENTRY" && (
-          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur flex flex-col items-center animate-scaleUp">
+          <div className="w-full max-w-lg bg-slate-900/90 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur flex flex-col items-center animate-scaleUp">
             {/* Header */}
             <div className="w-full flex items-center justify-between mb-4">
               <button
@@ -1072,31 +1072,48 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                 <ArrowRight className="w-5 h-5 rtl:rotate-180" />
               </button>
               <div className="text-center">
-                <h3 className="text-xl font-bold text-white">التحقق من الموظف</h3>
-                <p className="text-xs text-slate-400">أدخل رمز PIN السري الخاص بك</p>
+                <h3 className="text-xl font-bold text-white">التحقق بالرقم الوظيفي</h3>
+                <p className="text-xs text-slate-400">أدخل الرقم الوظيفي الخاص بك (مثال: EMP-001 أو 001)</p>
               </div>
               <div className="w-9" /> {/* Spacer */}
             </div>
 
-            {/* PIN Dots Display */}
-            <div className="w-full bg-slate-950 py-4 px-6 rounded-2xl border border-slate-800 mb-4 flex flex-col items-center">
-              <div className="flex items-center justify-center gap-4 my-2">
-                {[0, 1, 2, 3].map((idx) => {
-                  const isFilled = enteredPin.length > idx;
-                  return (
-                    <div
-                      key={idx}
-                      className={`w-6 h-6 rounded-full transition-all duration-200 ${
-                        isFilled
-                          ? "bg-amber-400 scale-110 shadow-lg shadow-amber-400/30"
-                          : "bg-slate-800 border-2 border-slate-700"
-                      }`}
-                    />
-                  );
-                })}
+            {/* Input Form & Display */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (enteredPin.trim()) {
+                  processPinVerification(enteredPin);
+                }
+              }}
+              className="w-full mb-4"
+            >
+              <div className="relative w-full mb-2">
+                <input
+                  type="text"
+                  value={enteredPin}
+                  onChange={(e) => {
+                    setEnteredPin(e.target.value.toUpperCase());
+                    setPinError("");
+                  }}
+                  placeholder="EMP-001 أو 001 أو 1..."
+                  disabled={lockoutRemaining > 0 || isPinVerifying}
+                  className="w-full bg-slate-950 text-white font-mono text-center text-2xl font-bold py-4 px-4 rounded-2xl border-2 border-slate-700 focus:border-amber-400 focus:outline-none transition-all placeholder:text-slate-600 placeholder:text-lg"
+                  autoFocus
+                />
+                {enteredPin && (
+                  <button
+                    type="button"
+                    onClick={handleClearPin}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400"
+                  >
+                    <Delete className="w-4 h-4" />
+                  </button>
+                )}
               </div>
+
               {lockoutRemaining > 0 ? (
-                <div className="text-xs text-rose-400 font-semibold flex items-center gap-1.5 mt-2 animate-pulse">
+                <div className="text-xs text-rose-400 font-semibold flex items-center justify-center gap-1.5 mt-2 animate-pulse">
                   <ShieldAlert className="w-4 h-4" />
                   تم قفل الكشك مؤقتاً: يرجى الانتظار {lockoutRemaining} ثانية
                 </div>
@@ -1105,20 +1122,40 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
                   {pinError}
                 </div>
               ) : (
-                <div className="text-xs text-slate-500 mt-1">
-                  الرمز لا يظهر كنص صريح ويتم مطابقة الـ Hash فورياً
+                <div className="text-xs text-slate-400 mt-1 text-center">
+                  يمكنك الكتابة مباشرة من الكيبورد أو اختيار اسمك أدناه
                 </div>
               )}
-            </div>
 
-            {/* Touch Keypad */}
-            <div className="grid grid-cols-3 gap-3 w-full mb-4">
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={!enteredPin.trim() || lockoutRemaining > 0 || isPinVerifying}
+                className="w-full mt-3 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-[0.99] text-slate-950 font-bold text-base shadow-lg shadow-amber-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              >
+                {isPinVerifying ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    جاري التحقق...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    تأكيد الرقم الوظيفي والمتابعة
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Quick Touch Keypad (digits 0-9) */}
+            <div className="grid grid-cols-3 gap-2.5 w-full mb-4">
               {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
                 <button
                   key={num}
+                  type="button"
                   disabled={lockoutRemaining > 0 || isPinVerifying}
                   onClick={() => handleNumpadPress(num)}
-                  className="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-amber-500 active:text-slate-950 text-2xl font-bold font-mono text-white transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/50"
+                  className="h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-amber-500 active:text-slate-950 text-xl font-bold font-mono text-white transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/50"
                 >
                   {num}
                 </button>
@@ -1126,37 +1163,73 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
 
               {/* Clear */}
               <button
+                type="button"
                 disabled={lockoutRemaining > 0 || isPinVerifying}
                 onClick={handleClearPin}
-                className="h-16 rounded-2xl bg-slate-800/60 hover:bg-rose-500/20 text-rose-400 text-sm font-bold transition-all shadow-md active:scale-95 disabled:opacity-40 border border-slate-800"
+                className="h-14 rounded-2xl bg-slate-800/60 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-40 border border-slate-800"
               >
                 مسح
               </button>
 
               {/* 0 */}
               <button
+                type="button"
                 disabled={lockoutRemaining > 0 || isPinVerifying}
                 onClick={() => handleNumpadPress("0")}
-                className="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-amber-500 active:text-slate-950 text-2xl font-bold font-mono text-white transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/50"
+                className="h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-amber-500 active:text-slate-950 text-xl font-bold font-mono text-white transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/50"
               >
                 0
               </button>
 
               {/* Backspace */}
               <button
+                type="button"
                 disabled={lockoutRemaining > 0 || isPinVerifying}
                 onClick={handleBackspace}
-                className="h-16 rounded-2xl bg-slate-800/60 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all shadow-md active:scale-95 disabled:opacity-40 border border-slate-800"
+                className="h-14 rounded-2xl bg-slate-800/60 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all shadow-md active:scale-95 disabled:opacity-40 border border-slate-800"
               >
-                <Delete className="w-6 h-6" />
+                <Delete className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Helper status */}
-            <div className="text-[11px] text-slate-500 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              تأمين عالي: تشفير أحادي الاتجاه بدون حفظ أرقام PIN بالنظام
-            </div>
+            {/* Direct Quick Tap Employee Directory */}
+            {employees.filter((e) => e.status === "ACTIVE").length > 0 && (
+              <div className="w-full pt-3 border-t border-slate-800">
+                <div className="text-xs text-slate-400 mb-2 flex items-center justify-between">
+                  <span>أو اختر موظف للتسجيل السريع:</span>
+                  <span className="text-[10px] text-amber-400 font-mono">
+                    {employees.filter((e) => e.status === "ACTIVE").length} موظفين نشطين
+                  </span>
+                </div>
+                <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                  {employees
+                    .filter((e) => e.status === "ACTIVE")
+                    .map((emp) => (
+                      <button
+                        key={emp.id}
+                        type="button"
+                        onClick={() => processPinVerification(emp.employeeCode)}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-950 hover:bg-amber-500/10 hover:border-amber-500/30 border border-slate-800 text-right transition-all group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-amber-400 font-bold text-xs">
+                            <User className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                              {emp.fullName}
+                            </div>
+                            <div className="text-[10px] text-slate-400">{emp.jobTitle}</div>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-lg bg-slate-800 text-amber-400 font-mono text-xs font-bold border border-slate-700">
+                          {emp.employeeCode}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

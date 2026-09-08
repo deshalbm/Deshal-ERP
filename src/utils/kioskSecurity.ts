@@ -270,11 +270,77 @@ export function unlockEmployeePin(employeeId: string): boolean {
 }
 
 /**
- * Verify an entered PIN and match with an active employee
- * Returns matched Employee or null with error reason
+ * Verify an entered Employee Code (الرقم الوظيفي) and match with an active employee
+ * Supports full code (e.g. "EMP-001"), numeric prefix/suffix (e.g. "001" or "1"), or Civil ID / Phone.
+ */
+export function verifyKioskEmployeeCode(
+  enteredCode: string,
+  employees: Employee[]
+): {
+  success: boolean;
+  employee?: Employee;
+  errorMessage?: string;
+} {
+  const cleanInput = enteredCode.trim().toUpperCase();
+  if (!cleanInput) {
+    return {
+      success: false,
+      errorMessage: "يرجى إدخال الرقم الوظيفي للموظف."
+    };
+  }
+
+  const activeEmployees = employees.filter((e) => e.status === "ACTIVE");
+
+  // 1. Direct exact match on employeeCode (case-insensitive)
+  let matched = activeEmployees.find(
+    (e) => e.employeeCode && e.employeeCode.trim().toUpperCase() === cleanInput
+  );
+
+  // 2. Match numeric digits (e.g. input "1" or "001" matches "EMP-001")
+  if (!matched) {
+    const inputDigits = cleanInput.replace(/\D/g, "");
+    if (inputDigits.length > 0) {
+      const inputNum = parseInt(inputDigits, 10);
+      matched = activeEmployees.find((e) => {
+        if (!e.employeeCode) return false;
+        const empDigits = e.employeeCode.replace(/\D/g, "");
+        if (empDigits) {
+          const empNum = parseInt(empDigits, 10);
+          return empNum === inputNum;
+        }
+        return false;
+      });
+    }
+  }
+
+  // 3. Fallback match on Civil ID or Phone Number
+  if (!matched) {
+    matched = activeEmployees.find(
+      (e) =>
+        (e.civilId && e.civilId.trim() === cleanInput) ||
+        (e.phone && e.phone.replace(/\D/g, "").endsWith(cleanInput.replace(/\D/g, "")))
+    );
+  }
+
+  if (matched) {
+    resetKioskFailedAttempts();
+    return {
+      success: true,
+      employee: matched
+    };
+  }
+
+  return {
+    success: false,
+    errorMessage: `الرقم الوظيفي (${cleanInput}) غير مسجل أو الموظف غير نشط.`
+  };
+}
+
+/**
+ * Verify an entered Employee Code or PIN and match with an active employee
  */
 export async function verifyKioskPin(
-  enteredPin: string,
+  enteredInput: string,
   employees: Employee[]
 ): Promise<{
   success: boolean;
@@ -294,15 +360,21 @@ export async function verifyKioskPin(
     };
   }
 
+  // 1. Try matching by Employee Code first
+  const codeResult = verifyKioskEmployeeCode(enteredInput, employees);
+  if (codeResult.success && codeResult.employee) {
+    return codeResult;
+  }
+
+  // 2. Try PIN hash matching for backward compatibility
   const pins = loadEmployeePins();
   const activeEmployees = employees.filter((e) => e.status === "ACTIVE");
 
   for (const emp of activeEmployees) {
     const pinRecord = pins[emp.id];
     if (pinRecord && !pinRecord.isLocked) {
-      const computedHash = await hashPin(enteredPin, pinRecord.salt);
+      const computedHash = await hashPin(enteredInput, pinRecord.salt);
       if (computedHash === pinRecord.pinHash) {
-        // Successful match! Reset failed attempts
         resetKioskFailedAttempts();
         return {
           success: true,
@@ -326,7 +398,7 @@ export async function verifyKioskPin(
   const remaining = MAX_FAILED_ATTEMPTS - attempts;
   return {
     success: false,
-    errorMessage: `رمز PIN غير صحيح. يتبقى لديك ${remaining} محاولات قبل القفل المؤقت.`
+    errorMessage: `الرقم الوظيفي أو الرمز غير صحيح. يتبقى لديك ${remaining} محاولات قبل القفل المؤقت.`
   };
 }
 
