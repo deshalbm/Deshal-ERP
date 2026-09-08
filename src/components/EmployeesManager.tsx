@@ -101,7 +101,6 @@ import {
   Banknote,
   TrendingUp,
   LogIn,
-  LogOut,
   Filter,
   CheckCheck,
   Receipt,
@@ -109,13 +108,12 @@ import {
   EyeOff,
   Sliders,
   Coins,
-  Wallet,
   AlertTriangle,
-  Tablet,
-  Hash
+  Tablet
 } from "lucide-react";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
+import { StatusBadge } from "./common/StatusBadge";
 import { OfficialPayslipModal } from "./OfficialPayslipModal";
 import { IndividualSalaryDisbursementModal } from "./IndividualSalaryDisbursementModal";
 import { InstantBonusModal } from "./InstantBonusModal";
@@ -2046,9 +2044,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${roleInfo.bg} ${roleInfo.color}`}>
                           {language === "ar" ? roleInfo.ar : roleInfo.en}
                         </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${statusInfo.bg} ${statusInfo.color}`}>
-                          {statusInfo.ar}
-                        </span>
+                        <StatusBadge status={emp.status} />
                         {emp.branchName && (
                           <span className="text-[10px] font-medium px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">
                             {emp.branchName}
