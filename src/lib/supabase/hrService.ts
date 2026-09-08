@@ -579,7 +579,6 @@ export async function upsertLeaveRequest(
           reason: req.reason ?? '',
           status: req.status ?? 'PENDING',
           approved_by: req.reviewedBy ? ensureNullableUuid(req.reviewedBy) : null,
-          updated_at: new Date().toISOString(),
         },
         { onConflict: 'id' }
       );

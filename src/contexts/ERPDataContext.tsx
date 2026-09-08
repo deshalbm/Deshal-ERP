@@ -383,10 +383,6 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
       } else {
         const localEmps = loadEmployees();
         setEmployeesListState(localEmps);
-        if (localEmps.length > 0) {
-          saveEmployees(localEmps);
-          Promise.all(localEmps.map((emp) => employeeSvc.upsertEmployee(emp, cId))).catch(console.error);
-        }
       }
 
       setInventoryListState(inventory);
@@ -401,10 +397,6 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
       } else {
         const localAtt = loadAttendanceRecords();
         setAttendanceListState(localAtt);
-        if (localAtt.length > 0) {
-          saveAttendanceRecords(localAtt);
-          Promise.all(localAtt.map((rec) => hrSvc.upsertAttendanceRecord(rec, cId))).catch(console.error);
-        }
       }
 
       setMovementLogsListState(movementLogs);
@@ -416,10 +408,6 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
       } else {
         const localPayroll = loadPayrollSlips();
         setPayrollSlipsListState(localPayroll);
-        if (localPayroll.length > 0) {
-          savePayrollSlips(localPayroll);
-          Promise.all(localPayroll.map((slip) => hrSvc.upsertPayrollSlip(slip, cId))).catch(console.error);
-        }
       }
 
       if (leaves && leaves.length > 0) {
@@ -428,10 +416,6 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
       } else {
         const localLeaves = loadLeaveRequests();
         setLeaveRequestsListState(localLeaves);
-        if (localLeaves.length > 0) {
-          saveLeaveRequests(localLeaves);
-          Promise.all(localLeaves.map((req) => hrSvc.upsertLeaveRequest(req, cId))).catch(console.error);
-        }
       }
 
       setVouchersListState(vouchers);
