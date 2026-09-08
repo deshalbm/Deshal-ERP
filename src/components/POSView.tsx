@@ -61,6 +61,7 @@ import {
 } from "../types";
 import { useLanguage } from "../utils/LanguageContext";
 import { numberToWords } from "../utils/numberToWords";
+import { formatOMR, formatCurrency } from "../utils/currencyFormatter";
 import { BarcodeScannerModal } from "./BarcodeScannerModal";
 import { BarcodeRenderer } from "./BarcodeRenderer";
 import {

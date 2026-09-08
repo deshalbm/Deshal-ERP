@@ -16,6 +16,8 @@ import { generateUuid } from "../utils/uuid";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
 import { loadVouchers } from "../utils/storage";
+import { formatOMR, formatCurrency } from "../utils/currencyFormatter";
+import { calculateVoucherTotals } from "../utils/voucherCalculations";
 import { AddCustomerModal } from "./crm/AddCustomerModal";
 import { fetchNextVoucherNumber } from "../lib/supabase/accountingService";
 import { searchCustomersServerSide } from "../lib/supabase/customerService";
@@ -136,32 +138,34 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
     }
   }, [customerSearchQuery, companyId, customers]);
 
-  // Recompute totals with Discount Type (% vs Fixed)
+  // Recompute totals with Discount Type (% vs Fixed) using central calculation engine
   const computeTotals = (
     items: LineItem[],
     taxRate: number,
     discType: DiscountType = voucher.discountType || "FIXED",
     discVal: number = voucher.discountValue || 0
   ) => {
-    const calculatedSubtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const rawSubtotal = items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
 
-    let calculatedDiscountAmt = 0;
+    let calcDiscountAmt = 0;
     if (discType === "PERCENTAGE") {
       const pct = Math.min(100, Math.max(0, discVal));
-      calculatedDiscountAmt = (calculatedSubtotal * pct) / 100;
+      calcDiscountAmt = (rawSubtotal * pct) / 100;
     } else {
-      calculatedDiscountAmt = Math.min(calculatedSubtotal, Math.max(0, discVal));
+      calcDiscountAmt = Math.min(rawSubtotal, Math.max(0, discVal));
     }
 
-    const netAfterDiscount = Math.max(0, calculatedSubtotal - calculatedDiscountAmt);
-    const calculatedTax = (netAfterDiscount * (taxRate || 0)) / 100;
-    const calculatedTotal = Math.max(0, netAfterDiscount + calculatedTax);
+    const totals = calculateVoucherTotals(
+      items.map((i) => ({ unitPrice: i.unitPrice, quantity: i.quantity })),
+      taxRate,
+      calcDiscountAmt
+    );
 
     return {
-      subtotal: calculatedSubtotal,
-      discountAmount: calculatedDiscountAmt,
-      taxAmount: calculatedTax,
-      totalAmount: calculatedTotal
+      subtotal: totals.subtotal,
+      discountAmount: totals.discountAmount,
+      taxAmount: totals.taxAmount,
+      totalAmount: totals.totalAmount
     };
   };
 
