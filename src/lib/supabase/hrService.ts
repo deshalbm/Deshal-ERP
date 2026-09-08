@@ -29,35 +29,49 @@ async function ensureEmployeeExists(
     const empId = ensureValidUuid(employeeId);
     const cId = ensureValidUuid(companyId);
 
+    // 1. Check if employee exists by ID
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.from('employees') as any)
+    const { data: existingById } = await (supabase.from('employees') as any)
       .select('id')
       .eq('id', empId)
       .maybeSingle();
 
-    if (!data) {
-      const code =
-        employeeCode && employeeCode.trim() !== '' && (employeeCode !== 'EMP-001' || empId === ensureValidUuid('emp-1'))
-          ? employeeCode.trim()
-          : `EMP-${empId.slice(-8).toUpperCase()}`;
+    if (existingById) return;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from('employees') as any).upsert({
-        id: empId,
-        company_id: cId,
-        employee_code: code,
-        full_name: employeeName || 'موظف',
-        job_title: jobTitle || 'موظف',
-        department: department || 'عام',
-        status: 'ACTIVE',
-        basic_salary: 0,
-        allowances: 0,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' });
+    // 2. Determine a unique employee code
+    let code = (employeeCode && employeeCode.trim() !== '')
+      ? employeeCode.trim()
+      : `EMP-${empId.slice(-8).toUpperCase()}`;
 
-      if (error) {
-        console.error('[HRService] ensureEmployeeExists error:', error.message);
-      }
+    // Check if another employee already has this code in the company
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingByCode } = await (supabase.from('employees') as any)
+      .select('id')
+      .eq('company_id', cId)
+      .eq('employee_code', code)
+      .maybeSingle();
+
+    if (existingByCode && existingByCode.id !== empId) {
+      // Code collision! Use unique fallback code based on empId hex suffix
+      code = `EMP-${empId.slice(-8).toUpperCase()}`;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('employees') as any).upsert({
+      id: empId,
+      company_id: cId,
+      employee_code: code,
+      full_name: employeeName || 'موظف',
+      job_title: jobTitle || 'موظف',
+      department: department || 'عام',
+      status: 'ACTIVE',
+      basic_salary: 0,
+      allowances: 0,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+
+    if (error) {
+      console.error('[HRService] ensureEmployeeExists error:', error.message);
     }
   } catch (err) {
     console.error('[HRService] ensureEmployeeExists error:', err);
@@ -121,7 +135,7 @@ async function resolveValidKioskDeviceId(
       id: dId,
       company_id: cId,
       branch_id: validBranchId,
-      device_code: `DEV-${dId.slice(0, 6).toUpperCase()}`,
+      device_code: `DEV-${dId.slice(-6).toUpperCase()}`,
       name: deviceName || 'كشك الحضور اللوحي',
       location: 'الفرع الرئيسي',
       is_active: true,
@@ -394,7 +408,7 @@ export async function getPayrollSlips(companyId: string): Promise<PayrollSlip[]>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data ?? []).map((row: any): PayrollSlip => ({
     id: row.id,
-    payrollMonth: row.payroll_month ?? row.month ?? '',
+    payrollMonth: row.month ?? row.payroll_month ?? '',
     employeeId: row.employee_id,
     employeeCode: row.employee_code ?? '',
     employeeName: row.employee_name ?? '',
@@ -405,19 +419,19 @@ export async function getPayrollSlips(companyId: string): Promise<PayrollSlip[]>
     bankName: row.bank_name ?? '',
     bankIban: row.bank_iban ?? '',
     branchName: row.branch_name ?? '',
-    basicSalary: row.basic_salary ?? 0,
-    housingAllowance: row.housing_allowance ?? 0,
-    transportAllowance: row.transport_allowance ?? 0,
-    otherAllowances: row.other_allowances ?? 0,
-    bonus: row.bonus ?? 0,
-    deductions: row.deductions ?? 0,
-    socialSecurityDeduction: row.social_security_deduction ?? 0,
-    netSalary: row.net_salary ?? 0,
-    status: row.status ?? 'DRAFT',
+    basicSalary: Number(row.basic_salary) || 0,
+    housingAllowance: Number(row.housing_allowance) || 0,
+    transportAllowance: Number(row.transport_allowance) || 0,
+    otherAllowances: Number(row.other_allowances) || 0,
+    bonus: Number(row.bonus) || 0,
+    deductions: Number(row.total_deductions ?? row.deductions) || 0,
+    socialSecurityDeduction: Number(row.social_security_deduction) || 0,
+    netSalary: Number(row.net_salary) || 0,
+    status: row.status === 'PAID' || row.payment_status === 'DISBURSED' ? 'PAID' : (row.status ?? 'DRAFT'),
     paymentDate: row.payment_date ?? undefined,
     paymentMethod: row.payment_method ?? undefined,
     notes: row.notes ?? '',
-    generatedAt: row.generated_at ?? new Date().toISOString(),
+    generatedAt: row.created_at ?? new Date().toISOString(),
   }));
 }
 
@@ -459,32 +473,12 @@ export async function upsertPayrollSlip(
           company_id: cId,
           employee_id: empId,
           month: monthStr,
-          payroll_month: monthStr,
-          employee_code: slip.employeeCode ?? '',
-          employee_name: slip.employeeName ?? '',
-          full_name_en: slip.fullNameEn ?? '',
-          job_title: slip.jobTitle ?? '',
-          department: slip.department ?? '',
-          civil_id: slip.civilId ?? '',
-          bank_name: slip.bankName ?? '',
-          bank_iban: slip.bankIban ?? '',
-          branch_name: slip.branchName ?? '',
           basic_salary: slip.basicSalary ?? 0,
-          housing_allowance: housing,
-          transport_allowance: transport,
-          other_allowances: other,
           total_allowances: totalAllowances,
-          bonus: bonus,
-          deductions: baseDeductions,
           total_deductions: totalDeductions,
-          social_security_deduction: pasiDeduction,
           net_salary: slip.netSalary ?? 0,
           status: slip.status ?? 'DRAFT',
           payment_status: slip.status === 'PAID' ? 'DISBURSED' : 'PENDING',
-          payment_date: slip.paymentDate ?? null,
-          payment_method: slip.paymentMethod ?? null,
-          notes: slip.notes ?? '',
-          generated_at: slip.generatedAt ?? new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'id' }
@@ -532,11 +526,11 @@ export async function getLeaveRequests(companyId: string): Promise<LeaveRequest[
     leaveType: row.leave_type ?? 'ANNUAL',
     startDate: row.start_date,
     endDate: row.end_date,
-    daysCount: row.days_count ?? row.total_days ?? 0,
+    daysCount: Number(row.total_days ?? row.days_count) || 1,
     reason: row.reason ?? '',
     status: row.status ?? 'PENDING',
     appliedAt: row.applied_at ?? row.created_at ?? new Date().toISOString(),
-    reviewedBy: row.reviewed_by ?? undefined,
+    reviewedBy: row.approved_by ?? row.reviewed_by ?? undefined,
     reviewedAt: row.reviewed_at ?? undefined,
     reviewNotes: row.review_notes ?? undefined,
   }));
@@ -571,10 +565,6 @@ export async function upsertLeaveRequest(
           id: reqId,
           company_id: cId,
           employee_id: empId,
-          employee_name: req.employeeName ?? '',
-          employee_code: req.employeeCode ?? '',
-          job_title: req.jobTitle ?? '',
-          department: req.department ?? '',
           leave_type: req.leaveType ?? 'ANNUAL',
           start_date: req.startDate || new Date().toISOString().split('T')[0],
           end_date: req.endDate || new Date().toISOString().split('T')[0],
