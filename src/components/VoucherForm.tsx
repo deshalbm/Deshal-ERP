@@ -783,7 +783,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
                         />
                       </td>
                       <td className={`p-2 font-bold font-mono text-slate-900 ${isRTL ? "text-left" : "text-right"}`}>
-                        {item.amount.toFixed(3)}
+                        {(Number(item.amount) || 0).toFixed(3)}
                       </td>
                       <td className="p-2 text-center">
                         <button
@@ -852,7 +852,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
               <div className="flex justify-between text-slate-600">
                 <span className="font-sans font-semibold">{t("subtotal")}:</span>
                 <span className="font-bold text-slate-900">
-                  {voucher.currency} {voucher.subtotal.toFixed(3)}
+                  {voucher.currency} {(Number(voucher.subtotal) || 0).toFixed(3)}
                 </span>
               </div>
 
@@ -877,7 +877,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
                   />
                 </div>
                 <span className="font-bold text-red-600">
-                  - {voucher.currency} {(voucher.discountAmount || 0).toFixed(3)}
+                  - {voucher.currency} {(Number(voucher.discountAmount) || 0).toFixed(3)}
                 </span>
               </div>
 
@@ -895,7 +895,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
                   />
                 </div>
                 <span className="font-bold text-slate-900">
-                  + {voucher.currency} {voucher.taxAmount.toFixed(3)}
+                  + {voucher.currency} {(Number(voucher.taxAmount) || 0).toFixed(3)}
                 </span>
               </div>
 
@@ -903,7 +903,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
               <div className="border-t border-slate-300 pt-3 flex justify-between items-center text-sm font-black text-slate-900">
                 <span className="font-sans uppercase tracking-wider text-xs font-extrabold">{isRTL ? "بلغ الإجمالي:" : "Total Deal Amount:"}</span>
                 <span className={`text-lg font-black ${currentTheme.text}`}>
-                  {voucher.currency} {voucher.totalAmount.toFixed(3)}
+                  {voucher.currency} {(Number(voucher.totalAmount) || 0).toFixed(3)}
                 </span>
               </div>
 
@@ -937,7 +937,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
                         {currentRemainingAmt <= 0 ? (isRTL ? "مُسدد بالكامل" : "Paid") : (isRTL ? "متبقي مستحق" : "Balance Due")}
                       </span>
                       <span className="text-sm font-black font-mono text-amber-950">
-                        {voucher.currency} {currentRemainingAmt.toFixed(3)}
+                        {voucher.currency} {(Number(currentRemainingAmt) || 0).toFixed(3)}
                       </span>
                     </div>
                   </div>

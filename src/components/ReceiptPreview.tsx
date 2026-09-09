@@ -73,6 +73,28 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 
   const isThermal = theme.pageSize === "THERMAL_80MM" || theme.pageSize === "THERMAL_58MM";
 
+  // Safe numerical helpers to prevent runtime TypeError if values are strings or undefined
+  const safeNumber = (val: any): number => {
+    if (typeof val === "number") return isNaN(val) ? 0 : val;
+    if (typeof val === "string") {
+      const parsed = parseFloat(val);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  };
+
+  const safeToFixed = (val: any, decimals = 2): string => {
+    return safeNumber(val).toFixed(decimals);
+  };
+
+  const safeToLocaleString = (val: any, curr = voucher.currency || "OMR"): string => {
+    const decimals = curr === "OMR" || curr === "KWD" || curr === "BHD" ? 3 : 2;
+    return safeNumber(val).toLocaleString(undefined, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    });
+  };
+
   // Helper labels based on PrintLanguage
   const getDocTitle = (type: VoucherType) => {
     if (printLang === "ar") {
@@ -129,9 +151,10 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
     return `${item.ar} / ${item.en}`;
   };
 
-  // Words computation
-  const wordsAr = numberToWords(voucher.totalAmount, voucher.currency, "ar");
-  const wordsEn = numberToWords(voucher.totalAmount, voucher.currency, "en");
+  // Words computation with numeric safety
+  const safeTotalAmount = safeNumber(voucher.totalAmount);
+  const wordsAr = numberToWords(safeTotalAmount, voucher.currency || "OMR", "ar");
+  const wordsEn = numberToWords(safeTotalAmount, voucher.currency || "OMR", "en");
 
   const renderAmountInWords = () => {
     if (printLang === "ar") {
@@ -148,6 +171,8 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
       </div>
     );
   };
+
+  const lineItemsList = voucher.lineItems || [];
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16" dir={dir}>
@@ -292,7 +317,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
               onClick={() =>
                 shareVoucherData({
                   title: `سند رقم ${voucher.voucherNumber}`,
-                  text: `سند مالي رقم ${voucher.voucherNumber} بمبلغ ${voucher.totalAmount.toLocaleString()} ${voucher.currency} لصالح ${voucher.receivedFrom}`,
+                  text: `سند مالي رقم ${voucher.voucherNumber} بمبلغ ${safeNumber(voucher.totalAmount).toLocaleString()} ${voucher.currency} لصالح ${voucher.receivedFrom}`,
                 })
               }
               className="flex items-center gap-1.5 px-3 py-2 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all"
@@ -427,15 +452,15 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                     <span className="w-1/4 text-left">{printLang === "ar" ? "الإجمالي" : "Total"}</span>
                   </div>
                   <div className="space-y-1.5 text-[10px]">
-                    {voucher.lineItems.map((item, idx) => (
+                    {lineItemsList.map((item, idx) => (
                       <div key={item.id || idx} className="space-y-0.5">
                         <div className="font-bold text-slate-900">{item.description || "---"}</div>
                         <div className="flex justify-between text-slate-700 font-mono">
                           <span>
-                            {item.quantity} x {item.unitPrice.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
+                            {safeNumber(item.quantity)} x {safeToFixed(item.unitPrice, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
                           </span>
                           <span className="font-bold text-slate-900">
-                            {item.amount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
+                            {safeToFixed(item.amount, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
                           </span>
                         </div>
                       </div>
@@ -447,23 +472,23 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                 <div className="space-y-1 text-[11px] font-mono border-b-2 border-dashed border-slate-900 pb-2">
                   <div className="flex justify-between text-slate-700">
                     <span>{printLang === "ar" ? "المجموع الفرعي:" : "Subtotal:"}</span>
-                    <span>{voucher.currency} {voucher.subtotal.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                    <span>{voucher.currency} {safeToFixed(voucher.subtotal, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
                   </div>
-                  {voucher.taxAmount > 0 && (
+                  {safeNumber(voucher.taxAmount) > 0 && (
                     <div className="flex justify-between text-slate-700">
                       <span>{printLang === "ar" ? `الضريبة (${voucher.taxRate}%):` : `VAT (${voucher.taxRate}%):`}</span>
-                      <span>+ {voucher.currency} {voucher.taxAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                      <span>+ {voucher.currency} {safeToFixed(voucher.taxAmount, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
                     </div>
                   )}
-                  {voucher.discountAmount > 0 && (
+                  {safeNumber(voucher.discountAmount) > 0 && (
                     <div className="flex justify-between text-red-600">
                       <span>{printLang === "ar" ? "الخصم الممنوح:" : "Discount:"}</span>
-                      <span>- {voucher.currency} {voucher.discountAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                      <span>- {voucher.currency} {safeToFixed(voucher.discountAmount, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center text-sm font-black pt-1 border-t border-slate-400 text-slate-950">
                     <span>{printLang === "ar" ? "الصافي النهائي:" : "NET TOTAL:"}</span>
-                    <span>{voucher.currency} {voucher.totalAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                    <span>{voucher.currency} {safeToFixed(voucher.totalAmount, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
                   </div>
 
                   {/* Multi-Currency Equivalence in Base Currency */}
@@ -472,12 +497,15 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                       <span>
                         {printLang === "ar" ? "المعادل التقريبي: " : "Equivalent: "}
                         {settings.defaultCurrency}{" "}
-                        {convertCurrency(
-                          voucher.totalAmount,
-                          voucher.currency,
-                          settings.defaultCurrency,
-                          settings.customExchangeRates
-                        ).toFixed(settings.defaultCurrency === "OMR" || settings.defaultCurrency === "KWD" ? 3 : 2)}
+                        {safeToFixed(
+                          convertCurrency(
+                            safeNumber(voucher.totalAmount),
+                            voucher.currency,
+                            settings.defaultCurrency,
+                            settings.customExchangeRates
+                          ),
+                          settings.defaultCurrency === "OMR" || settings.defaultCurrency === "KWD" ? 3 : 2
+                        )}
                       </span>
                     </div>
                   )}
@@ -653,16 +681,16 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
-                      {voucher.lineItems.map((item, index) => (
+                      {lineItemsList.map((item, index) => (
                         <tr key={item.id} className="hover:bg-slate-50">
                           <td className="p-2.5 text-center text-slate-600 font-mono border-r border-slate-300">{index + 1}</td>
                           <td className="p-2.5 font-semibold text-slate-900 border-r border-slate-300 text-right">{item.description || "---"}</td>
-                          <td className="p-2.5 text-center font-mono text-slate-800 border-r border-slate-300">{item.quantity}</td>
+                          <td className="p-2.5 text-center font-mono text-slate-800 border-r border-slate-300">{safeNumber(item.quantity)}</td>
                           <td className="p-2.5 text-left font-mono text-slate-800 border-r border-slate-300">
-                            {item.unitPrice.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
+                            {safeToFixed(item.unitPrice, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
                           </td>
                           <td className="p-2.5 text-left font-bold font-mono text-slate-950">
-                            {item.amount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
+                            {safeToFixed(item.amount, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
                           </td>
                         </tr>
                       ))}
@@ -692,23 +720,23 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                   <div className="border border-slate-800 p-3.5 bg-white space-y-1.5 font-mono text-xs">
                     <div className="flex justify-between text-slate-700">
                       <span>{printLang === "ar" ? "المجموع:" : "Subtotal:"}</span>
-                      <span>{voucher.currency} {voucher.subtotal.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                      <span>{voucher.currency} {safeToFixed(voucher.subtotal, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
                     </div>
-                    {voucher.taxAmount > 0 && (
+                    {safeNumber(voucher.taxAmount) > 0 && (
                       <div className="flex justify-between text-slate-700">
                         <span>{printLang === "ar" ? `الضريبة (${voucher.taxRate}%):` : `VAT:`}</span>
-                        <span>+ {voucher.currency} {voucher.taxAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                        <span>+ {voucher.currency} {safeToFixed(voucher.taxAmount, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
                       </div>
                     )}
-                    {voucher.discountAmount > 0 && (
+                    {safeNumber(voucher.discountAmount) > 0 && (
                       <div className="flex justify-between text-red-700">
                         <span>{printLang === "ar" ? "الخصم:" : "Discount:"}</span>
-                        <span>- {voucher.currency} {voucher.discountAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                        <span>- {voucher.currency} {safeToFixed(voucher.discountAmount, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
                       </div>
                     )}
                     <div className="border-t-2 border-slate-900 pt-2 text-sm font-black flex justify-between text-slate-950">
                       <span>{printLang === "ar" ? "الصافي الإجمالي:" : "GRAND TOTAL:"}</span>
-                      <span>{voucher.currency} {voucher.totalAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                      <span>{voucher.currency} {safeToFixed(voucher.totalAmount, voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
                     </div>
                   </div>
 
@@ -842,13 +870,13 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
-                      {voucher.lineItems.map((item, index) => (
+                      {lineItemsList.map((item, index) => (
                         <tr key={item.id} className="hover:bg-indigo-50/30">
                           <td className="p-3 text-center text-slate-400 font-mono font-bold">{index + 1}</td>
                           <td className="p-3 font-bold text-slate-900 text-right">{item.description || "---"}</td>
-                          <td className="p-3 text-center font-mono font-bold text-slate-800">{item.quantity}</td>
-                          <td className="p-3 text-left font-mono text-slate-800">{item.unitPrice.toFixed(2)}</td>
-                          <td className="p-3 text-left font-mono font-black text-indigo-950">{item.amount.toFixed(2)}</td>
+                          <td className="p-3 text-center font-mono font-bold text-slate-800">{safeNumber(item.quantity)}</td>
+                          <td className="p-3 text-left font-mono text-slate-800">{safeToFixed(item.unitPrice, 2)}</td>
+                          <td className="p-3 text-left font-mono font-black text-indigo-950">{safeToFixed(item.amount, 2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -871,17 +899,17 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                   <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-4 rounded-2xl shadow-lg space-y-2 font-mono">
                     <div className="flex justify-between text-xs text-indigo-200">
                       <span>Subtotal:</span>
-                      <span>{voucher.currency} {voucher.subtotal.toFixed(2)}</span>
+                      <span>{voucher.currency} {safeToFixed(voucher.subtotal, 2)}</span>
                     </div>
-                    {voucher.taxAmount > 0 && (
+                    {safeNumber(voucher.taxAmount) > 0 && (
                       <div className="flex justify-between text-xs text-indigo-200">
                         <span>VAT ({voucher.taxRate}%):</span>
-                        <span>+ {voucher.currency} {voucher.taxAmount.toFixed(2)}</span>
+                        <span>+ {voucher.currency} {safeToFixed(voucher.taxAmount, 2)}</span>
                       </div>
                     )}
                     <div className="border-t border-indigo-700 pt-2 flex justify-between items-center">
                       <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">TOTAL AMOUNT:</span>
-                      <span className="text-xl font-black text-amber-300">{voucher.currency} {voucher.totalAmount.toFixed(2)}</span>
+                      <span className="text-xl font-black text-amber-300">{voucher.currency} {safeToFixed(voucher.totalAmount, 2)}</span>
                     </div>
                   </div>
                 </div>
@@ -957,12 +985,12 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {voucher.lineItems.map((item) => (
+                    {lineItemsList.map((item) => (
                       <tr key={item.id}>
                         <td className="py-2.5 font-medium text-slate-800 text-right">{item.description || "---"}</td>
-                        <td className="py-2.5 text-center font-mono text-slate-500">{item.quantity}</td>
-                        <td className="py-2.5 text-left font-mono text-slate-500">{item.unitPrice.toFixed(2)}</td>
-                        <td className="py-2.5 text-left font-mono font-semibold text-slate-900">{item.amount.toFixed(2)}</td>
+                        <td className="py-2.5 text-center font-mono text-slate-500">{safeNumber(item.quantity)}</td>
+                        <td className="py-2.5 text-left font-mono text-slate-500">{safeToFixed(item.unitPrice, 2)}</td>
+                        <td className="py-2.5 text-left font-mono font-semibold text-slate-900">{safeToFixed(item.amount, 2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -973,17 +1001,17 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                   <div className="w-48 space-y-1 font-mono text-xs">
                     <div className="flex justify-between text-slate-500">
                       <span>Subtotal</span>
-                      <span>{voucher.currency} {voucher.subtotal.toFixed(2)}</span>
+                      <span>{voucher.currency} {safeToFixed(voucher.subtotal, 2)}</span>
                     </div>
-                    {voucher.taxAmount > 0 && (
+                    {safeNumber(voucher.taxAmount) > 0 && (
                       <div className="flex justify-between text-slate-500">
                         <span>VAT</span>
-                        <span>+ {voucher.currency} {voucher.taxAmount.toFixed(2)}</span>
+                        <span>+ {voucher.currency} {safeToFixed(voucher.taxAmount, 2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between font-bold text-slate-950 pt-2 border-t border-slate-300 text-sm">
                       <span>Total</span>
-                      <span>{voucher.currency} {voucher.totalAmount.toFixed(2)}</span>
+                      <span>{voucher.currency} {safeToFixed(voucher.totalAmount, 2)}</span>
                     </div>
                   </div>
                 </div>
@@ -1191,22 +1219,16 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
-                      {voucher.lineItems.map((item, index) => (
+                      {lineItemsList.map((item, index) => (
                         <tr key={item.id} className="odd:bg-white even:bg-slate-50/50">
                           <td className="p-2.5 text-center text-slate-400 font-mono">{index + 1}</td>
                           <td className="p-2.5 font-medium text-slate-800 text-right">{item.description || "---"}</td>
-                          <td className="p-2.5 text-center font-mono text-slate-700">{item.quantity}</td>
+                          <td className="p-2.5 text-center font-mono text-slate-700">{safeNumber(item.quantity)}</td>
                           <td className="p-2.5 text-left font-mono text-slate-700">
-                            {item.unitPrice.toLocaleString(undefined, {
-                              minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2,
-                              maximumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
-                            })}
+                            {safeToLocaleString(item.unitPrice, voucher.currency)}
                           </td>
                           <td className="p-2.5 text-left font-bold font-mono text-slate-900">
-                            {item.amount.toLocaleString(undefined, {
-                              minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2,
-                              maximumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
-                            })}
+                            {safeToLocaleString(item.amount, voucher.currency)}
                           </td>
                         </tr>
                       ))}
@@ -1243,30 +1265,24 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                     <div className="flex justify-between text-slate-600">
                       <span className="font-sans">{printLang === "ar" ? "المجموع الجزئي:" : printLang === "en" ? "Subtotal:" : "المجموع الجزئي / Subtotal:"}</span>
                       <span className="font-semibold text-slate-900">
-                        {voucher.currency} {voucher.subtotal.toLocaleString(undefined, {
-                          minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
-                        })}
+                        {voucher.currency} {safeToLocaleString(voucher.subtotal, voucher.currency)}
                       </span>
                     </div>
 
-                    {voucher.taxAmount > 0 && (
+                    {safeNumber(voucher.taxAmount) > 0 && (
                       <div className="flex justify-between text-slate-600">
                         <span className="font-sans">{printLang === "ar" ? `ضريبة القيمة المضافة (${voucher.taxRate}%):` : `VAT (${voucher.taxRate}%):`}</span>
                         <span className="font-semibold text-slate-900">
-                          + {voucher.currency} {voucher.taxAmount.toLocaleString(undefined, {
-                            minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
-                          })}
+                          + {voucher.currency} {safeToLocaleString(voucher.taxAmount, voucher.currency)}
                         </span>
                       </div>
                     )}
 
-                    {voucher.discountAmount > 0 && (
+                    {safeNumber(voucher.discountAmount) > 0 && (
                       <div className="flex justify-between text-slate-600">
                         <span className="font-sans">{printLang === "ar" ? "الخصم:" : "Discount:"}</span>
                         <span className="font-semibold text-red-600">
-                          - {voucher.currency} {voucher.discountAmount.toLocaleString(undefined, {
-                            minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
-                          })}
+                          - {voucher.currency} {safeToLocaleString(voucher.discountAmount, voucher.currency)}
                         </span>
                       </div>
                     )}
@@ -1279,9 +1295,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                         style={{ color: theme.primaryColor || "#0f172a" }}
                         className="text-lg font-black"
                       >
-                        {voucher.currency} {voucher.totalAmount.toLocaleString(undefined, {
-                          minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
-                        })}
+                        {voucher.currency} {safeToLocaleString(voucher.totalAmount, voucher.currency)}
                       </span>
                     </div>
 
@@ -1291,17 +1305,13 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                         <div className="flex justify-between items-center text-slate-700">
                           <span className="font-sans font-bold text-xs">{printLang === "ar" ? "المبلغ المدفوع:" : printLang === "en" ? "Paid Amount:" : "المبلغ المدفوع / Paid:"}</span>
                           <span className="font-bold text-emerald-700">
-                            {voucher.currency} {(voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount).toLocaleString(undefined, {
-                              minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
-                            })}
+                            {voucher.currency} {safeToLocaleString(voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount, voucher.currency)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-slate-700">
                           <span className="font-sans font-bold text-xs">{printLang === "ar" ? "المبلغ المتبقي:" : printLang === "en" ? "Remaining Balance:" : "المتبقي / Balance Due:"}</span>
-                          <span className={`font-bold ${(voucher.remainingAmount ?? Math.max(0, voucher.totalAmount - (voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount))) > 0 ? "text-amber-700" : "text-emerald-700"}`}>
-                            {voucher.currency} {(voucher.remainingAmount ?? Math.max(0, voucher.totalAmount - (voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount))).toLocaleString(undefined, {
-                              minimumFractionDigits: voucher.currency === "OMR" || voucher.currency === "KWD" || voucher.currency === "BHD" ? 3 : 2
-                            })}
+                          <span className={`font-bold ${(voucher.remainingAmount ?? Math.max(0, safeNumber(voucher.totalAmount) - safeNumber(voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount))) > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                            {voucher.currency} {safeToLocaleString(voucher.remainingAmount ?? Math.max(0, safeNumber(voucher.totalAmount) - safeNumber(voucher.paidAmount ?? voucher.amount ?? voucher.totalAmount)), voucher.currency)}
                           </span>
                         </div>
                       </div>
@@ -1324,15 +1334,15 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                         </span>
                         <span className="font-mono">
                           {settings.defaultCurrency}{" "}
-                          {convertCurrency(
-                            voucher.totalAmount,
-                            voucher.currency,
-                            settings.defaultCurrency,
-                            settings.customExchangeRates
-                          ).toLocaleString(undefined, {
-                            minimumFractionDigits: settings.defaultCurrency === "OMR" || settings.defaultCurrency === "KWD" || settings.defaultCurrency === "BHD" ? 3 : 2,
-                            maximumFractionDigits: settings.defaultCurrency === "OMR" || settings.defaultCurrency === "KWD" || settings.defaultCurrency === "BHD" ? 3 : 2
-                          })}
+                          {safeToLocaleString(
+                            convertCurrency(
+                              safeNumber(voucher.totalAmount),
+                              voucher.currency,
+                              settings.defaultCurrency,
+                              settings.customExchangeRates
+                            ),
+                            settings.defaultCurrency
+                          )}
                         </span>
                       </div>
                     )}
