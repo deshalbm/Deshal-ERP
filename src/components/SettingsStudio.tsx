@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { CompanySettings, DesignTheme, PageSizeFormat, TemplateStyle, Employee, Branch, AuditLogEntry, KioskDevice } from "../types";
+import { CompanySettings, DesignTheme, PageSizeFormat, TemplateStyle, Employee, Branch, AuditLogEntry, KioskDevice, ReceiptVoucher } from "../types";
 import { useLanguage } from "../utils/LanguageContext";
+import { ReceiptPreview } from "./ReceiptPreview";
 import {
   Building2,
   Palette,
@@ -1187,10 +1188,59 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   </label>
                 </div>
               </div>
-
             </div>
 
           </div>
+
+          {/* Live Interactive Receipt Preview Container */}
+          <div className="pt-4 border-t border-slate-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <Printer className="w-4 h-4 text-indigo-600" />
+                <span>{language === "ar" ? "معاينة حية ومباشرة لقالب السند والتنسيق المختار:" : "Live Voucher Template & Theme Preview:"}</span>
+              </h3>
+              <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200 font-mono">
+                {localTheme.templateId.toUpperCase()}
+              </span>
+            </div>
+
+            <div className="bg-slate-100/80 p-4 rounded-2xl border border-slate-200 max-h-[600px] overflow-y-auto shadow-inner">
+              <ReceiptPreview
+                voucher={{
+                  id: "preview-sample-01",
+                  type: "RECEIPT",
+                  voucherNumber: "RV-2026-0850",
+                  date: new Date().toISOString().split("T")[0],
+                  receivedFrom: "شركة السرور والتجارة المتميزة ش.م.م",
+                  amount: 450.0,
+                  subtotal: 450.0,
+                  taxRate: 5,
+                  taxAmount: 22.5,
+                  discountAmount: 0,
+                  totalAmount: 472.5,
+                  currency: localSettings.defaultCurrency || "OMR",
+                  paymentMethod: "BANK_TRANSFER",
+                  bankName: localSettings.bankDetails?.bankName || "بنك مسقط",
+                  transactionRef: "TRX-98442211",
+                  notes: "سداد دفعة العقد السنوي للخدمات البرمجية والحلول الذكية",
+                  preparedBy: "محمد السالمي (المحاسب)",
+                  receivedBy: "فهد العبري",
+                  status: "PAID",
+                  category: "مبيعات عامة",
+                  lineItems: [
+                    { id: "1", description: "اشتراك ترخيص النظام السنوي - الباقة الذهبية", quantity: 1, unitPrice: 350.0, amount: 350.0 },
+                    { id: "2", description: "خدمة الدعم الفني المباشر والتدريب الميداني", quantity: 1, unitPrice: 100.0, amount: 100.0 }
+                  ]
+                }}
+                settings={localSettings}
+                theme={localTheme}
+                onPrint={() => {}}
+                onExportPdf={() => {}}
+                onUpdateTheme={(updatedTheme) => setLocalTheme(updatedTheme)}
+              />
+            </div>
+          </div>
+
         </div>
       )}
 

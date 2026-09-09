@@ -545,6 +545,471 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                   </p>
                 </div>
               </div>
+            ) : theme.templateId === "classic" ? (
+              /* CORPORATE CLASSIC TEMPLATE */
+              <div className="relative z-10 space-y-5 print:space-y-3 text-xs leading-relaxed border-4 border-double border-slate-800 p-5 sm:p-7 rounded-xs bg-amber-50/10">
+                
+                {/* Traditional Calligraphy Centered Header Divider */}
+                <div className="text-center space-y-1.5 border-b-2 border-slate-800 pb-5">
+                  <div className="flex items-center justify-between gap-4">
+                    {theme.showLogo && settings.logoUrl ? (
+                      <img
+                        src={settings.logoUrl}
+                        alt="Brand Logo"
+                        crossOrigin="anonymous"
+                        style={{ width: `${settings.logoWidth || 130}px` }}
+                        className="h-auto object-contain max-h-16"
+                      />
+                    ) : (
+                      <div className="w-20" />
+                    )}
+
+                    <div className="text-center space-y-1">
+                      <h1 className="text-xl font-serif font-black text-slate-950 tracking-wide">
+                        {settings?.companyName}
+                      </h1>
+                      {settings?.tagline && (
+                        <p className="text-xs font-serif italic text-slate-700">
+                          {settings.tagline}
+                        </p>
+                      )}
+                      <p className="text-[11px] text-slate-600 font-serif">
+                        {settings.address} {settings.cityStateZip ? `• ${settings.cityStateZip}` : ""} {settings.phone ? `• هاتف: ${settings.phone}` : ""}
+                      </p>
+                    </div>
+
+                    <div className="text-right text-[10px] font-mono text-slate-700 space-y-0.5 shrink-0 min-w-[120px]">
+                      {settings.taxId && <p><span className="font-bold">ضريبة:</span> {settings.taxId}</p>}
+                      {settings.crNumber && <p><span className="font-bold">س.ت:</span> {settings.crNumber}</p>}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-center gap-3">
+                    <span className="h-0.5 w-16 bg-slate-800" />
+                    <span className="bg-slate-900 text-white px-5 py-1 text-xs font-serif font-black uppercase tracking-widest border border-slate-900 rounded-xs shadow-xs">
+                      ❖ {getDocTitle(voucher.type)} ❖
+                    </span>
+                    <span className="h-0.5 w-16 bg-slate-800" />
+                  </div>
+                </div>
+
+                {/* Classic Grid Box Metadata */}
+                <div className="border border-slate-800 divide-y divide-slate-800 text-xs font-serif bg-white">
+                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-slate-800">
+                    <div className="p-3 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-700">{printLang === "ar" ? "رقم السند الرسمـي:" : "Official Voucher #:"}</span>
+                        <span className="font-mono font-black text-sm text-slate-950">{voucher.voucherNumber}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-slate-700">
+                        <span>{printLang === "ar" ? "تاريخ الإصـدار:" : "Issue Date:"}</span>
+                        <span className="font-mono">{formatDateToDDMMMMYYYY(voucher.date)}</span>
+                      </div>
+                      {voucher.referenceNo && (
+                        <div className="flex justify-between items-center text-slate-700">
+                          <span>{printLang === "ar" ? "رقم المرجع / الفاتورة:" : "Reference #:"}</span>
+                          <span className="font-mono">{voucher.referenceNo}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-3 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-700">{getPayerLabel()}</span>
+                        <span className="font-bold text-slate-950">{voucher.receivedFrom || "---"}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-slate-700">
+                        <span>{printLang === "ar" ? "طريقة السـداد:" : "Payment Method:"}</span>
+                        <span className="font-bold text-slate-900">{getPaymentMethodLabel(voucher.paymentMethod)}</span>
+                      </div>
+                      {voucher.payerPhone && (
+                        <div className="flex justify-between items-center text-slate-700">
+                          <span>{printLang === "ar" ? "رقم الهاتف:" : "Contact Phone:"}</span>
+                          <span className="font-mono">{voucher.payerPhone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Classic Line Items Table with Grid Lines */}
+                <div className="border border-slate-800 overflow-hidden bg-white">
+                  <table className="w-full text-xs font-serif border-collapse">
+                    <thead className="bg-slate-900 text-white font-bold uppercase tracking-wider border-b border-slate-800">
+                      <tr>
+                        <th className="p-2.5 w-10 text-center border-r border-slate-700">#</th>
+                        <th className="p-2.5 text-right border-r border-slate-700">
+                          {printLang === "ar" ? "تفصيل البيان والخدمة" : "Description"}
+                        </th>
+                        <th className="p-2.5 w-16 text-center border-r border-slate-700">
+                          {printLang === "ar" ? "الكمية" : "Qty"}
+                        </th>
+                        <th className="p-2.5 w-28 text-left border-r border-slate-700">
+                          {printLang === "ar" ? "السعر الفردي" : "Unit Price"}
+                        </th>
+                        <th className="p-2.5 w-32 text-left">
+                          {printLang === "ar" ? `المبلغ (${voucher.currency})` : `Total (${voucher.currency})`}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {voucher.lineItems.map((item, index) => (
+                        <tr key={item.id} className="hover:bg-slate-50">
+                          <td className="p-2.5 text-center text-slate-600 font-mono border-r border-slate-300">{index + 1}</td>
+                          <td className="p-2.5 font-semibold text-slate-900 border-r border-slate-300 text-right">{item.description || "---"}</td>
+                          <td className="p-2.5 text-center font-mono text-slate-800 border-r border-slate-300">{item.quantity}</td>
+                          <td className="p-2.5 text-left font-mono text-slate-800 border-r border-slate-300">
+                            {item.unitPrice.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
+                          </td>
+                          <td className="p-2.5 text-left font-bold font-mono text-slate-950">
+                            {item.amount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Classic Financial Totals & Words Block */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start font-serif">
+                  
+                  {/* Amount in Words */}
+                  <div className="border border-slate-800 p-3 bg-white space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">
+                      {printLang === "ar" ? "المبلغ كتابة وقدره:" : "Amount in Words:"}
+                    </span>
+                    <div className="text-xs font-bold text-slate-950 leading-snug">
+                      {renderAmountInWords()}
+                    </div>
+                    {voucher.notes && (
+                      <p className="text-[11px] text-slate-600 border-t border-slate-300 pt-1 mt-1">
+                        <span className="font-bold">ملاحظات:</span> {voucher.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Summary Totals */}
+                  <div className="border border-slate-800 p-3.5 bg-white space-y-1.5 font-mono text-xs">
+                    <div className="flex justify-between text-slate-700">
+                      <span>{printLang === "ar" ? "المجموع:" : "Subtotal:"}</span>
+                      <span>{voucher.currency} {voucher.subtotal.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                    </div>
+                    {voucher.taxAmount > 0 && (
+                      <div className="flex justify-between text-slate-700">
+                        <span>{printLang === "ar" ? `الضريبة (${voucher.taxRate}%):` : `VAT:`}</span>
+                        <span>+ {voucher.currency} {voucher.taxAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                      </div>
+                    )}
+                    {voucher.discountAmount > 0 && (
+                      <div className="flex justify-between text-red-700">
+                        <span>{printLang === "ar" ? "الخصم:" : "Discount:"}</span>
+                        <span>- {voucher.currency} {voucher.discountAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                      </div>
+                    )}
+                    <div className="border-t-2 border-slate-900 pt-2 text-sm font-black flex justify-between text-slate-950">
+                      <span>{printLang === "ar" ? "الصافي الإجمالي:" : "GRAND TOTAL:"}</span>
+                      <span>{voucher.currency} {voucher.totalAmount.toFixed(voucher.currency === "OMR" || voucher.currency === "KWD" ? 3 : 2)}</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Classic Formal Signature Section */}
+                {theme.showSignatureBlock && (
+                  <div className="border border-slate-800 p-4 bg-white grid grid-cols-3 gap-4 text-center font-serif text-xs items-end">
+                    <div className="space-y-6">
+                      <div className="h-10 flex items-end justify-center">
+                        {voucher.preparedBy && <span className="border-b border-slate-800 px-3 font-semibold">{voucher.preparedBy}</span>}
+                      </div>
+                      <div className="border-t border-slate-800 pt-1 font-bold text-slate-800">
+                        {printLang === "ar" ? "توقيع المحاسب المسؤول" : "Prepared By"}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 relative">
+                      {theme.showStamp && settings.stampImageUrl && (
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 pointer-events-none opacity-85">
+                          <img src={settings.stampImageUrl} alt="Stamp" crossOrigin="anonymous" className="w-16 h-16 object-contain rotate-[-10deg]" />
+                        </div>
+                      )}
+                      {settings.signatureImageUrl ? (
+                        <div className="h-10 flex items-end justify-center">
+                          <img src={settings.signatureImageUrl} alt="Signature" crossOrigin="anonymous" className="h-8 object-contain" />
+                        </div>
+                      ) : (
+                        <div className="h-10 flex items-end justify-center font-bold text-slate-800">
+                          {settings.authorizedSignatoryName}
+                        </div>
+                      )}
+                      <div className="border-t border-slate-800 pt-1 font-bold text-slate-900">
+                        {printLang === "ar" ? "الختم الرسمي والاعتماد" : "Authorized Signature & Stamp"}
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="h-10 flex items-end justify-center">
+                        {voucher.receivedBy && <span className="border-b border-slate-800 px-3 font-semibold">{voucher.receivedBy}</span>}
+                      </div>
+                      <div className="border-t border-slate-800 pt-1 font-bold text-slate-800">
+                        {printLang === "ar" ? "توقيع المستلم" : "Received By"}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Classic Footer & QR */}
+                <div className="flex justify-between items-center text-[10px] text-slate-700 pt-2 border-t border-slate-400 font-serif">
+                  <p>{settings.footerNotice || (printLang === "ar" ? "مستند رسمي صادر عن نظام المؤسسة." : "Official Corporate Receipt Document.")}</p>
+                  
+                  {theme.showQrCode && (
+                    <div className="flex items-center gap-1.5">
+                      <QrCode className="w-6 h-6 text-slate-900" />
+                      <span className="font-mono text-[8px]">{voucher.voucherNumber}</span>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            ) : theme.templateId === "executive" ? (
+              /* EXECUTIVE STAMP TEMPLATE */
+              <div className="relative z-10 space-y-6 print:space-y-3 text-xs leading-relaxed">
+                
+                {/* Luxury Gradient Banner */}
+                <div
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.primaryColor || "#1e1b4b"}, ${theme.secondaryColor || "#4338ca"})`
+                  }}
+                  className="p-6 rounded-2xl text-white shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4 -mt-4"
+                >
+                  <div className="space-y-1 text-center sm:text-right">
+                    {theme.showLogo && settings.logoUrl && (
+                      <img
+                        src={settings.logoUrl}
+                        alt="Logo"
+                        crossOrigin="anonymous"
+                        style={{ width: `${settings.logoWidth || 130}px` }}
+                        className="h-auto object-contain max-h-16 mb-2 bg-white/10 p-1.5 rounded-xl backdrop-blur-xs"
+                      />
+                    )}
+                    <h1 className="text-lg font-black tracking-wide uppercase">
+                      {settings?.companyName}
+                    </h1>
+                    {settings?.tagline && <p className="text-xs text-indigo-200">{settings.tagline}</p>}
+                    <p className="text-[11px] text-indigo-100 opacity-90">{settings.address} • {settings.phone}</p>
+                  </div>
+
+                  <div className="text-center sm:text-left space-y-2 shrink-0">
+                    <div className="bg-white/15 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 shadow-inner">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-amber-300 block">
+                        EXECUTIVE DOCUMENT
+                      </span>
+                      <h2 className="text-sm font-black tracking-wider uppercase">
+                        {getDocTitle(voucher.type)}
+                      </h2>
+                      <p className="text-xs font-mono font-bold text-amber-200 mt-0.5">
+                        #{voucher.voucherNumber}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Executive Metadata Ribbon */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-900 text-white p-4 rounded-xl shadow-md text-xs">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-indigo-300 block">{getPayerLabel()}</span>
+                    <span className="font-extrabold text-sm text-white">{voucher.receivedFrom || "---"}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-indigo-300 block">{printLang === "ar" ? "تاريخ العملية:" : "Transaction Date:"}</span>
+                    <span className="font-mono font-bold text-slate-200">{formatDateToDDMMMMYYYY(voucher.date)}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-indigo-300 block">{printLang === "ar" ? "وسيلة الدفع:" : "Payment Channel:"}</span>
+                    <span className="font-bold text-amber-300">{getPaymentMethodLabel(voucher.paymentMethod)}</span>
+                  </div>
+                </div>
+
+                {/* Executive Table */}
+                <div className="overflow-hidden rounded-xl border-2 border-indigo-900/20 shadow-md">
+                  <table className="w-full text-xs">
+                    <thead className="bg-indigo-950 text-amber-300 font-bold uppercase tracking-wider text-[11px]">
+                      <tr>
+                        <th className="p-3 w-10 text-center">#</th>
+                        <th className="p-3 text-right">{printLang === "ar" ? "بند الخدمة والتسليم" : "Particulars"}</th>
+                        <th className="p-3 w-16 text-center">{printLang === "ar" ? "الكمية" : "Qty"}</th>
+                        <th className="p-3 w-28 text-left">{printLang === "ar" ? "السعر الفردي" : "Unit Rate"}</th>
+                        <th className="p-3 w-32 text-left">{printLang === "ar" ? `الصافي (${voucher.currency})` : `Net (${voucher.currency})`}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {voucher.lineItems.map((item, index) => (
+                        <tr key={item.id} className="hover:bg-indigo-50/30">
+                          <td className="p-3 text-center text-slate-400 font-mono font-bold">{index + 1}</td>
+                          <td className="p-3 font-bold text-slate-900 text-right">{item.description || "---"}</td>
+                          <td className="p-3 text-center font-mono font-bold text-slate-800">{item.quantity}</td>
+                          <td className="p-3 text-left font-mono text-slate-800">{item.unitPrice.toFixed(2)}</td>
+                          <td className="p-3 text-left font-mono font-black text-indigo-950">{item.amount.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Executive Summary Card & Seal */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                  <div className="space-y-2">
+                    {theme.showAmountInWords && (
+                      <div className="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-200 text-indigo-950 font-medium">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 block mb-0.5">
+                          {printLang === "ar" ? "المبلغ المالي المعتمد كتابة:" : "Certified Amount in Words:"}
+                        </span>
+                        {renderAmountInWords()}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-4 rounded-2xl shadow-lg space-y-2 font-mono">
+                    <div className="flex justify-between text-xs text-indigo-200">
+                      <span>Subtotal:</span>
+                      <span>{voucher.currency} {voucher.subtotal.toFixed(2)}</span>
+                    </div>
+                    {voucher.taxAmount > 0 && (
+                      <div className="flex justify-between text-xs text-indigo-200">
+                        <span>VAT ({voucher.taxRate}%):</span>
+                        <span>+ {voucher.currency} {voucher.taxAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="border-t border-indigo-700 pt-2 flex justify-between items-center">
+                      <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">TOTAL AMOUNT:</span>
+                      <span className="text-xl font-black text-amber-300">{voucher.currency} {voucher.totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Executive Digital Signatures Panel */}
+                {theme.showSignatureBlock && (
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-300 grid grid-cols-3 gap-4 text-center text-xs items-end">
+                    <div>
+                      <div className="h-10 flex items-end justify-center font-serif italic text-slate-700">{voucher.preparedBy}</div>
+                      <div className="border-t border-slate-400 pt-1 font-bold text-slate-800">إعداد المحاسبة</div>
+                    </div>
+                    <div className="relative">
+                      {theme.showStamp && settings.stampImageUrl && (
+                        <img src={settings.stampImageUrl} alt="Stamp" crossOrigin="anonymous" className="w-16 h-16 object-contain mx-auto opacity-90" />
+                      )}
+                      <div className="border-t border-slate-400 pt-1 font-bold text-indigo-950">الاعتماد التنفيذي والختم</div>
+                    </div>
+                    <div>
+                      <div className="h-10 flex items-end justify-center font-serif italic text-slate-700">{voucher.receivedBy}</div>
+                      <div className="border-t border-slate-400 pt-1 font-bold text-slate-800">اعتماد المستلم</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Executive Footer */}
+                <div className="text-center text-[10px] text-slate-500 pt-2 border-t border-slate-200">
+                  <p className="font-semibold">{settings.footerNotice || "وثيقة تنفيذية معتمدة إلكترونياً."}</p>
+                </div>
+
+              </div>
+            ) : theme.templateId === "minimalist" ? (
+              /* MINIMALIST LIGHT TEMPLATE */
+              <div className="relative z-10 space-y-6 print:space-y-3 text-xs leading-relaxed bg-white">
+                
+                {/* Minimal Header */}
+                <div className="flex justify-between items-end border-b border-slate-200 pb-4">
+                  <div className="space-y-1">
+                    {theme.showLogo && settings.logoUrl && (
+                      <img src={settings.logoUrl} alt="Logo" crossOrigin="anonymous" className="h-10 object-contain mb-2" />
+                    )}
+                    <h1 className="text-sm font-semibold text-slate-900 tracking-tight">{settings?.companyName}</h1>
+                    <p className="text-[10px] text-slate-500">{settings.address} • {settings.phone}</p>
+                  </div>
+
+                  <div className="text-right space-y-0.5">
+                    <span className="text-xs font-light uppercase tracking-widest text-slate-400 block">{getDocTitle(voucher.type)}</span>
+                    <span className="text-sm font-mono font-medium text-slate-900">#{voucher.voucherNumber}</span>
+                    <p className="text-[10px] text-slate-400 font-mono">{voucher.date}</p>
+                  </div>
+                </div>
+
+                {/* Minimal Payer & Summary Details */}
+                <div className="flex justify-between items-start text-xs py-2 text-slate-700">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">{getPayerLabel()}</span>
+                    <span className="font-semibold text-slate-900">{voucher.receivedFrom || "---"}</span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Payment</span>
+                    <span className="font-medium text-slate-800">{getPaymentMethodLabel(voucher.paymentMethod)}</span>
+                  </div>
+                </div>
+
+                {/* Minimal Table */}
+                <table className="w-full text-xs">
+                  <thead className="border-b border-slate-200 text-slate-400 font-normal uppercase text-[10px] text-right">
+                    <tr>
+                      <th className="py-2 text-right">Item</th>
+                      <th className="py-2 text-center w-12">Qty</th>
+                      <th className="py-2 text-left w-24">Price</th>
+                      <th className="py-2 text-left w-24">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {voucher.lineItems.map((item) => (
+                      <tr key={item.id}>
+                        <td className="py-2.5 font-medium text-slate-800 text-right">{item.description || "---"}</td>
+                        <td className="py-2.5 text-center font-mono text-slate-500">{item.quantity}</td>
+                        <td className="py-2.5 text-left font-mono text-slate-500">{item.unitPrice.toFixed(2)}</td>
+                        <td className="py-2.5 text-left font-mono font-semibold text-slate-900">{item.amount.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Minimal Totals */}
+                <div className="flex justify-end pt-3 border-t border-slate-200">
+                  <div className="w-48 space-y-1 font-mono text-xs">
+                    <div className="flex justify-between text-slate-500">
+                      <span>Subtotal</span>
+                      <span>{voucher.currency} {voucher.subtotal.toFixed(2)}</span>
+                    </div>
+                    {voucher.taxAmount > 0 && (
+                      <div className="flex justify-between text-slate-500">
+                        <span>VAT</span>
+                        <span>+ {voucher.currency} {voucher.taxAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-bold text-slate-950 pt-2 border-t border-slate-300 text-sm">
+                      <span>Total</span>
+                      <span>{voucher.currency} {voucher.totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Minimal Words */}
+                {theme.showAmountInWords && (
+                  <div className="text-[11px] text-slate-500 italic pt-2">
+                    {renderAmountInWords()}
+                  </div>
+                )}
+
+                {/* Minimal Signature */}
+                {theme.showSignatureBlock && (
+                  <div className="pt-8 grid grid-cols-2 gap-8 text-[11px] text-slate-500 border-t border-slate-100">
+                    <div>
+                      <div className="h-8 border-b border-slate-200" />
+                      <span className="pt-1 block">Prepared</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-8 border-b border-slate-200" />
+                      <span className="pt-1 block">Authorized</span>
+                    </div>
+                  </div>
+                )}
+
+              </div>
             ) : (
               /* MODERN / CORPORATE DEFAULT TEMPLATE */
               <div className="relative z-10 space-y-5 print:space-y-3 text-xs leading-relaxed">
