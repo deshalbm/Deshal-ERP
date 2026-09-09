@@ -1,5 +1,5 @@
 // Service Worker for Deshal ERP
-const CACHE_NAME = 'deshal-erp-pwa-v3';
+const CACHE_NAME = 'deshal-erp-pwa-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -114,6 +114,9 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
+      }).catch((err) => {
+        console.warn('[SW] Asset fetch failed or offline:', err);
+        return cachedResponse || new Response('Asset unavailable offline', { status: 503, statusText: 'Service Unavailable' });
       });
     })
   );
