@@ -36,6 +36,7 @@ import {
   PurchaseInvoice
 } from '../../types';
 import { useLanguage } from '../../utils/LanguageContext';
+import { useAccounting } from '../../contexts/AccountingContext';
 
 export interface CommandPaletteModalProps {
   isOpen: boolean;
@@ -81,14 +82,25 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   customers = [],
   suppliers = [],
   inventory = [],
-  accounts = [],
-  journalEntries = [],
+  accounts: accountsProp,
+  journalEntries: journalEntriesProp,
   employees = [],
   purchases = [],
   onOpenAiAssistant,
   onOpenAttendanceKiosk,
   onOpenOnboarding
 }) => {
+  let accountingState;
+  try {
+    const accCtx = useAccounting();
+    accountingState = accCtx?.state;
+  } catch (e) {
+    // optional fallback
+  }
+
+  const accounts = accountsProp && accountsProp.length > 0 ? accountsProp : (accountingState?.accounts || []);
+  const journalEntries = journalEntriesProp && journalEntriesProp.length > 0 ? journalEntriesProp : (accountingState?.journalEntries || []);
+
   const { isRTL } = useLanguage();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);

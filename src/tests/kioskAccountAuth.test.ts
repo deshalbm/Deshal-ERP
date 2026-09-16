@@ -22,6 +22,8 @@ async function runKioskAuthTests() {
     }
   }
 
+  // NOTE: NON-PRODUCTION TEST FIXTURES ONLY.
+  // The passwords below ('password123', 'wh654321') are used solely for isolated offline unit tests of kiosk authentication logic.
   const testDevices: KioskDevice[] = [
     {
       id: "dev-sohar-01",

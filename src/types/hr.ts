@@ -1,4 +1,297 @@
-import { EmployeeRole, EmployeeStatus, ContractType } from '../types';
+export type EmployeeRole =
+  | 'ADMIN'
+  | 'ACCOUNTANT'
+  | 'SALES'
+  | 'STOREKEEPER'
+  | 'MANAGER'
+  | 'RECEPTIONIST'
+  | 'COLLABORATOR'
+  | 'AUDITOR'
+  | 'KIOSK_TABLET'
+  | 'CUSTOM';
+
+export type EmployeeStatus = 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | 'SUSPENDED';
+export type ContractType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'TRAINEE';
+
+export type EmployeePermission =
+  | 'create_vouchers'
+  | 'edit_vouchers'
+  | 'delete_vouchers'
+  | 'print_export_vouchers'
+  | 'apply_discounts'
+  | 'view_reports'
+  | 'manage_inventory'
+  | 'manage_transfers'
+  | 'manage_purchases'
+  | 'manage_suppliers'
+  | 'manage_customers'
+  | 'manage_branches'
+  | 'manage_employees'
+  | 'view_salaries'
+  | 'edit_settings'
+  | 'attendance_view'
+  | 'attendance_create'
+  | 'attendance_edit'
+  | 'attendance_delete'
+  | 'attendance_approve'
+  | 'attendance_reports'
+  | 'attendance_photos'
+  | 'attendance_devices'
+  | 'movement_types_mgmt'
+  | 'employee_pin_mgmt'
+  | 'attendance_settings'
+  | 'kiosk_mode_only'
+  | 'auditor_read_only'
+  | 'collaborator_limited';
+
+export interface Employee {
+  id: string;
+  employeeCode: string;
+  fullName: string;
+  fullNameEn?: string;
+  civilId?: string;
+  email: string;
+  phone: string;
+  role: EmployeeRole;
+  jobTitle: string;
+  department: string;
+  branchId?: string;
+  branchName?: string;
+  status: EmployeeStatus;
+  hireDate: string;
+  contractType?: ContractType;
+  basicSalary: number;
+  allowances: number;
+  currency: string;
+  maxSalaryCap?: number;
+  maxBonusCap?: number;
+  preferredBonusTreasury?: string;
+  bankName?: string;
+  bankIban?: string;
+  avatarUrl?: string;
+  signatureUrl?: string;
+  permissions: EmployeePermission[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AttendanceStatus = 'PRESENT' | 'LATE' | 'ABSENT' | 'ON_LEAVE' | 'MISSION' | 'WEEKEND';
+
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string;
+  jobTitle?: string;
+  department?: string;
+  date: string;
+  checkIn?: string;
+  checkOut?: string;
+  status: AttendanceStatus;
+  workingHours: number;
+  overtimeHours: number;
+  lateMinutes: number;
+  branchId?: string;
+  branchName?: string;
+  notes?: string;
+}
+
+export type PayrollStatus = 'DRAFT' | 'APPROVED' | 'PAID';
+
+export interface PayrollSlip {
+  id: string;
+  payrollMonth: string;
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  fullNameEn?: string;
+  jobTitle: string;
+  department: string;
+  civilId?: string;
+  bankName?: string;
+  bankIban?: string;
+  branchName?: string;
+  basicSalary: number;
+  housingAllowance: number;
+  transportAllowance: number;
+  otherAllowances: number;
+  bonus: number;
+  bonusReason?: string;
+  bonusVoucherId?: string;
+  bonusVoucherNumber?: string;
+  bonusTreasuryAccount?: string;
+  deductions: number;
+  deductionReason?: string;
+  socialSecurityDeduction: number;
+  netSalary: number;
+  status: PayrollStatus;
+  paymentDate?: string;
+  paymentMethod?: string;
+  referenceNo?: string;
+  notes?: string;
+  linkedVoucherId?: string;
+  linkedVoucherNumber?: string;
+  disbursedBy?: string;
+  generatedAt: string;
+}
+
+export type LeaveType = 'ANNUAL' | 'SICK' | 'EMERGENCY' | 'UNPAID' | 'HAJJ' | 'MATERNITY' | 'STUDY';
+export type LeaveStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+
+export interface LeaveRequest {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string;
+  jobTitle?: string;
+  department?: string;
+  leaveType: LeaveType;
+  startDate: string;
+  endDate: string;
+  daysCount: number;
+  reason: string;
+  status: LeaveStatus;
+  appliedAt: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+}
+
+export type EmployeeMovementStatus =
+  | 'IN_OFFICE'
+  | 'ON_MISSION'
+  | 'EMERGENCY'
+  | 'ON_BREAK'
+  | 'OUT_OF_OFFICE'
+  | 'INCOMPLETE';
+
+export type MovementCategory =
+  | 'CHECK_IN'
+  | 'CHECK_OUT'
+  | 'MISSION_OUT'
+  | 'MISSION_IN'
+  | 'EMERGENCY_OUT'
+  | 'EMERGENCY_IN'
+  | 'BREAK_OUT'
+  | 'BREAK_IN'
+  | 'CUSTOM';
+
+export interface MovementTypeConfig {
+  id: string;
+  code: string;
+  labelAr: string;
+  labelEn: string;
+  category: MovementCategory;
+  iconName: string;
+  color: string;
+  requiresPhoto: boolean;
+  requiresReason: boolean;
+  requiresApproval: boolean;
+  isActive: boolean;
+  order: number;
+}
+
+export type KioskDeviceStatus = 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+
+export interface KioskDevice {
+  id: string;
+  deviceCode: string;
+  name: string;
+  companyName?: string;
+  branchId: string;
+  branchName: string;
+  location: string;
+  username: string;
+  email?: string;
+  plainPassword?: string;
+  passwordHash?: string;
+  passwordSalt?: string;
+  deviceToken: string;
+  activationCode?: string;
+  devicePinHash?: string;
+  devicePinSalt?: string;
+  hardwareInfo?: {
+    userAgent?: string;
+    platform?: string;
+    screenResolution?: string;
+    deviceId?: string;
+  };
+  status: KioskDeviceStatus;
+  lastPing?: string;
+  ipAddress?: string;
+  model?: string;
+  appVersion?: string;
+  isLocked: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AttendanceMovementLog {
+  id: string;
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  department?: string;
+  jobTitle?: string;
+  branchId: string;
+  branchName: string;
+  movementTypeCode: string;
+  movementTypeNameAr: string;
+  movementTypeNameEn: string;
+  movementCategory: MovementCategory;
+  timestamp: string;
+  date: string;
+  time: string;
+  photoUrl?: string;
+  deviceId: string;
+  deviceName: string;
+  location?: string;
+  syncStatus: 'SYNCED' | 'PENDING_OFFLINE';
+  offlineCapturedAt?: string;
+  reason?: string;
+  notes?: string;
+  isAdjustment?: boolean;
+  originalLogId?: string;
+  adjustedBy?: string;
+  approvedBy?: string;
+  createdAt: string;
+}
+
+export interface AttendanceAdjustment {
+  id: string;
+  logId?: string;
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  date: string;
+  originalMovementType?: string;
+  newMovementType: string;
+  originalTime?: string;
+  newTime: string;
+  reason: string;
+  requestedBy: string;
+  approvedBy?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewNotes?: string;
+  createdAt: string;
+  reviewedAt?: string;
+}
+
+export interface EmployeePinRecord {
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  pinHash: string;
+  salt: string;
+  isLocked: boolean;
+  failedAttempts: number;
+  lastFailedAt?: string;
+  lockoutUntil?: string;
+  updatedAt: string;
+  updatedBy: string;
+}
 
 // ==========================================
 // 1. EMPLOYMENT CONTRACTS (عقود العمل)

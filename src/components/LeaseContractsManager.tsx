@@ -43,34 +43,44 @@ import {
 import { LeaseContractPrintView } from "./LeaseContractPrintView";
 import { LeaseContractEditorModal } from "./LeaseContractEditorModal";
 import { SecurityDepositModal } from "./SecurityDepositModal";
+import { useContracts } from "../contexts/ContractsContext";
 
 interface LeaseContractsManagerProps {
-  contracts: LeaseContract[];
+  contracts?: LeaseContract[];
   spaces: RentalSpace[];
   customers: Customer[];
   packages: MembershipPackage[];
   companySettings: CompanySettings;
-  onSaveContract: (contract: LeaseContract) => void;
-  onDeleteContract: (contractId: string) => void;
-  onCollectInstallment: (contract: LeaseContract, installment: PaymentInstallment) => void;
-  onSaveDepositSettlement: (contract: LeaseContract, refundData?: any) => void;
+  onSaveContract?: (contract: LeaseContract) => void;
+  onDeleteContract?: (contractId: string) => void;
+  onCollectInstallment?: (contract: LeaseContract, installment: PaymentInstallment) => void;
+  onSaveDepositSettlement?: (contract: LeaseContract, refundData?: any) => void;
   onOpenPackagesModal?: () => void;
   onShareWhatsApp?: (contract: LeaseContract) => void;
 }
 
 export const LeaseContractsManager: React.FC<LeaseContractsManagerProps> = ({
-  contracts,
+  contracts: contractsProp,
   spaces,
   customers,
   packages,
   companySettings,
-  onSaveContract,
-  onDeleteContract,
-  onCollectInstallment,
-  onSaveDepositSettlement,
+  onSaveContract: onSaveContractProp,
+  onDeleteContract: onDeleteContractProp,
+  onCollectInstallment: onCollectInstallmentProp,
+  onSaveDepositSettlement: onSaveDepositSettlementProp,
   onOpenPackagesModal,
-  onShareWhatsApp
+  onShareWhatsApp: onShareWhatsAppProp
 }) => {
+  const { state: contractsState, actions: contractsActions } = useContracts();
+
+  const contracts = contractsProp || contractsState.leaseContracts;
+  const onSaveContract = onSaveContractProp || contractsActions.saveContract;
+  const onDeleteContract = onDeleteContractProp || contractsActions.deleteContract;
+  const onCollectInstallment = onCollectInstallmentProp || contractsActions.collectInstallment;
+  const onSaveDepositSettlement = onSaveDepositSettlementProp || contractsActions.settleDeposit;
+  const onShareWhatsApp = onShareWhatsAppProp || contractsActions.shareContractWhatsApp;
+
   // Navigation View Tab
   const [activeSubTab, setActiveSubTab] = useState<
     "contracts" | "installments" | "deposits" | "documents" | "packages"

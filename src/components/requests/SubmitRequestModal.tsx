@@ -26,9 +26,10 @@ import {
   DoorOpen,
   UserCheck
 } from 'lucide-react';
-import { RequestTypeConfig, Employee, Branch, EmployeeRequest, RequestCategory } from '../../types';
+import { RequestTypeConfig, Employee, Branch, EmployeeRequest, RequestCategory, RequestAttachment } from '../../types';
 import { DynamicFormRenderer } from './DynamicFormRenderer';
-import { createEmployeeRequest } from '../../utils/requestsStorage';
+import { submitEmployeeRequest } from '../../application/requests/submitEmployeeRequest';
+import { defaultWorkRequestAdapter } from '../../lib/adapters/workRequestAdapter';
 import { useLanguage } from '../../utils/LanguageContext';
 
 interface SubmitRequestModalProps {
@@ -203,7 +204,7 @@ export const SubmitRequestModal: React.FC<SubmitRequestModalProps> = ({
   };
 
   // Submit request handler
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedType || !activeEmployee) return;
 
     if (!validateForm()) return;
@@ -211,25 +212,42 @@ export const SubmitRequestModal: React.FC<SubmitRequestModalProps> = ({
     setIsSubmitting(true);
     try {
       // Collect attachments from fields
-      const attachmentsList: Array<{ fileName: string; fileSize: number; fileType: string; dataUrl?: string }> = [];
+      const attachmentsList: RequestAttachment[] = [];
       Object.keys(formValues).forEach((key) => {
         const val = formValues[key];
         if (val && typeof val === 'object' && val.fileName) {
-          attachmentsList.push(val);
+          attachmentsList.push({
+            id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            fileName: val.fileName,
+            fileSize: val.fileSize || 0,
+            fileType: val.fileType || 'application/octet-stream',
+            dataUrl: val.dataUrl,
+            uploadedBy: activeEmployee?.fullName || 'الموظف',
+            uploadedAt: new Date().toISOString(),
+          });
         }
       });
 
-      const newReq = createEmployeeRequest(
-        selectedType,
-        activeEmployee,
-        formValues,
-        attachmentsList,
-        companySettings
+      const newReq = await submitEmployeeRequest(
+        {
+          typeId: selectedType.id,
+          typeNameAr: selectedType.nameAr,
+          typeNameEn: selectedType.nameEn,
+          typeCategory: selectedType.category,
+          requesterId: activeEmployee?.id || 'emp-curr',
+          employeeName: activeEmployee?.fullName || 'الموظف',
+          values: formValues,
+          attachments: attachmentsList,
+          status: 'PENDING_APPROVAL',
+        },
+        defaultWorkRequestAdapter
       );
 
-      setCreatedRequest(newReq);
-      setStep('SUCCESS');
-      onSuccess(newReq);
+      if (newReq) {
+        setCreatedRequest(newReq);
+        setStep('SUCCESS');
+        onSuccess(newReq);
+      }
     } catch (err) {
       console.error('Error submitting request:', err);
     } finally {

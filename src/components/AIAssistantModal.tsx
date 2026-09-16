@@ -2,19 +2,26 @@ import React, { useState } from "react";
 import { ReceiptVoucher } from "../types";
 import { useLanguage } from "../utils/LanguageContext";
 import { Sparkles, X, Loader2 } from "lucide-react";
+import { useVouchers } from "../contexts/VouchersContext";
+import { parseVoucherWithAI } from "../application/services/parseVoucherWithAI";
+import { AiParserPort } from "../application/ports/aiParserPort";
+import { aiParserHttpAdapter } from "../lib/adapters/aiParserHttpAdapter";
 
 interface AIAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onApplyParsedVoucher: (parsedData: Partial<ReceiptVoucher>) => void;
+  onApplyParsedVoucher?: (parsedData: Partial<ReceiptVoucher>) => void;
+  parserPort?: AiParserPort;
 }
 
 export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   isOpen,
   onClose,
-  onApplyParsedVoucher
+  onApplyParsedVoucher,
+  parserPort = aiParserHttpAdapter
 }) => {
   const { t, language, dir, isRTL } = useLanguage();
+  const vouchersContext = useVouchers();
   const [promptText, setPromptText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -29,19 +36,17 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     setErrorMsg("");
 
     try {
-      const res = await fetch("/api/ai/parse-voucher", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ textPrompt: promptText })
-      });
+      const data = await parseVoucherWithAI(promptText, parserPort);
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.error || (isRTL ? "فشل إنشاء بيانات السند عبر الذكاء الاصطناعي" : "Failed to generate receipt voucher data"));
       }
 
-      onApplyParsedVoucher(data.data);
+      if (onApplyParsedVoucher) {
+        onApplyParsedVoucher(data.data);
+      } else {
+        vouchersContext.actions.applyAiData(data.data);
+      }
       onClose();
     } catch (err: any) {
       console.error("AI Modal Error:", err);

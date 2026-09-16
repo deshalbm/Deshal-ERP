@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { saveKioskAttendance } from "../application/hr/saveKioskAttendance";
 import {
   Employee,
   EmployeeRole,
@@ -23,6 +24,7 @@ import {
   AttendanceAdjustment,
   EmployeePinRecord
 } from "../types";
+import { calculatePASIDeduction } from "../domain/hr/payrollCalculator";
 import {
   ROLE_DEFAULT_PERMISSIONS,
   PERMISSION_CONFIG
@@ -48,10 +50,8 @@ import {
 } from "../utils/kioskSecurity";
 import { syncUserAccountFromEmployee } from "../utils/authManager";
 import { sendWelcomeCredentialsEmail } from "../lib/email/resendService";
-import * as hrSvc from "../lib/supabase/hrService";
-import { isSupabaseConfigured } from "../lib/supabase/client";
-import { enqueueOfflineMutation } from "../lib/supabase/syncService";
-import { uploadImageToStorage } from "../lib/supabase/storageService";
+import { uploadMediaAsset } from "../application/services/uploadMediaAsset";
+import { defaultMediaStorageAdapter } from "../lib/adapters/mediaStorageAdapter";
 import { EmployeeMovementDashboard } from "./kiosk/EmployeeMovementDashboard";
 import { AttendanceKioskModal } from "./kiosk/AttendanceKioskModal";
 import {
@@ -409,19 +409,10 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
   };
 
   const handleSaveMovementLogSingle = (newLog: AttendanceMovementLog) => {
-    const updated = [newLog, ...movementLogsList];
-    setMovementLogsList(updated);
-    saveAttendanceMovementLogs(updated);
-    if (erpData?.setMovementLogsList) erpData.setMovementLogsList(updated);
-
     const cId = erpData?.companyId || "00000000-0000-0000-0000-000000000001";
-    if (isSupabaseConfigured) {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        enqueueOfflineMutation({ entityType: 'ATTENDANCE_MOVEMENT_LOG', action: 'UPSERT', payload: newLog, companyId: cId });
-      } else {
-        hrSvc.addAttendanceMovementLog(newLog, cId).catch(console.error);
-      }
-    }
+    const appResult = saveKioskAttendance(newLog, { companyId: cId });
+    setMovementLogsList(appResult.updatedMovementLogs);
+    if (erpData?.setMovementLogsList) erpData.setMovementLogsList(appResult.updatedMovementLogs);
 
     // If check-in or check-out, synchronize with classic attendanceRecords list
     if (newLog.movementCategory === "CHECK_IN" || newLog.movementCategory === "CHECK_OUT") {
@@ -567,7 +558,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
           const base64 = event.target?.result as string;
           if (base64) {
             const filePath = `avatars/emp_${formData.employeeCode || Date.now()}_${Date.now()}.png`;
-            const res = await uploadImageToStorage("company_assets", filePath, base64);
+            const res = await uploadMediaAsset("company_assets", filePath, base64, defaultMediaStorageAdapter);
             const finalUrl = res.publicUrl || base64;
             setFormData((prev) => ({ ...prev, avatarUrl: finalUrl }));
           }
@@ -1064,7 +1055,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
       const totalAllowances = Number(emp.allowances) || 0;
       const housing = Math.round(totalAllowances * 0.6);
       const transport = totalAllowances - housing;
-      const socialSecurity = Number((basic * 0.07).toFixed(3)); // 7% PASI
+      const socialSecurity = calculatePASIDeduction(basic); // 7% PASI
       const bonus = 0;
       const deductions = 0;
       const net = Number((basic + housing + transport + bonus - (socialSecurity + deductions)).toFixed(3));

@@ -3,148 +3,42 @@
  * 
  * Provides SHA-256 salted PIN hashing, verification, failed attempt rate-limiting,
  * and security lockout controls without exposing plain-text PINs.
+ * Storage layer & delegation to domain layer rules.
  */
 
 import { Employee, EmployeePinRecord, KioskDevice } from "../types";
+import {
+  MAX_FAILED_ATTEMPTS,
+  LOCKOUT_DURATION_MS,
+  MASTER_KIOSK_PIN_HASH,
+  sha256Hex,
+  simpleSha256Fallback,
+  generateSalt,
+  hashPin,
+  verifyMasterExitPin,
+  setDeviceSecretPin,
+  verifyDeviceSecretPin,
+  checkLockoutStatus,
+  calculateNextLockout
+} from "../domain/kiosk/kioskSecurity";
+
+export {
+  MAX_FAILED_ATTEMPTS,
+  LOCKOUT_DURATION_MS,
+  MASTER_KIOSK_PIN_HASH,
+  sha256Hex,
+  simpleSha256Fallback,
+  generateSalt,
+  hashPin,
+  verifyMasterExitPin,
+  setDeviceSecretPin,
+  verifyDeviceSecretPin,
+  checkLockoutStatus,
+  calculateNextLockout
+};
 
 const PIN_STORAGE_KEY = "deshal_kiosk_employee_pins_v1";
 const FAILED_ATTEMPTS_STORAGE_KEY = "deshal_kiosk_failed_attempts_v1";
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 60 * 1000; // 60 seconds lock on 5 failed attempts
-
-// Admin Emergency / Exit Kiosk Master PIN Hash (fallback master: "9900")
-const MASTER_KIOSK_PIN_HASH = "8f481c03cf847d0de0459c3ad86903d6d45e54d3e580e03a9f029ec2374e2b02"; // sha256("9900_deshal_kiosk_master_salt")
-
-/**
- * Computes a standard SHA-256 hash using Web Crypto API or lightweight fallback
- */
-export async function sha256Hex(text: string): Promise<string> {
-  if (typeof window !== "undefined" && window.crypto && window.crypto.subtle) {
-    try {
-      const msgUint8 = new TextEncoder().encode(text);
-      const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-    } catch (e) {
-      console.warn("SubtleCrypto failed, using synchronous fallback hash:", e);
-    }
-  }
-
-  // Pure JavaScript synchronous SHA-256 fallback
-  return simpleSha256Fallback(text);
-}
-
-function simpleSha256Fallback(ascii: string): string {
-  function rightRotate(value: number, amount: number) {
-    return (value >>> amount) | (value << (32 - amount));
-  }
-  const mathPow = Math.pow;
-  const maxWord = mathPow(2, 32);
-  const lengthProperty = "length";
-  let i, j;
-  let result = "";
-  const words: number[] = [];
-  const asciiBitLength = ascii[lengthProperty] * 8;
-  let hash: number[] = [];
-  const k: number[] = [];
-  let primeCounter = 0;
-
-  const isPrime = (candidate: number) => {
-    for (let factor = 2, max = Math.sqrt(candidate); factor <= max; factor++) {
-      if (candidate % factor === 0) return false;
-    }
-    return true;
-  };
-
-  for (let candidate = 2; primeCounter < 64; candidate++) {
-    if (isPrime(candidate)) {
-      if (primeCounter < 8) {
-        hash[primeCounter] = (mathPow(candidate, 1 / 2) * maxWord) | 0;
-      }
-      k[primeCounter] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
-      primeCounter++;
-    }
-  }
-
-  ascii += "\x80";
-  while ((ascii[lengthProperty] % 64) - 56) ascii += "\x00";
-  for (i = 0; i < ascii[lengthProperty]; i++) {
-    j = ascii.charCodeAt(i);
-    if (j >> 8) return "";
-    words[i >> 2] |= j << (((3 - i) % 4) * 8);
-  }
-  words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
-  words[words[lengthProperty]] = asciiBitLength;
-
-  for (j = 0; j < words[lengthProperty]; ) {
-    const w = words.slice(j, (j += 16));
-    const oldHash = hash;
-    hash = hash.slice(0, 8);
-
-    for (i = 0; i < 64; i++) {
-      const w15 = w[i - 15],
-        w2 = w[i - 2];
-      const s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
-      const s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
-      const ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
-      const maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
-      const temp1 =
-        hash[7] +
-        (rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25)) +
-        ch +
-        k[i] +
-        (w[i] =
-          i < 16
-            ? w[i] || 0
-            : (w[i - 16] + s0 + (w[i - 7] || 0) + s1) | 0);
-      const temp2 =
-        (rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22)) +
-        maj;
-
-      hash = [(temp1 + temp2) | 0, hash[0], hash[1], hash[2], (hash[3] + temp1) | 0, hash[4], hash[5], hash[6]];
-    }
-
-    for (i = 0; i < 8; i++) {
-      hash[i] = (hash[i] + oldHash[i]) | 0;
-    }
-  }
-
-  for (i = 0; i < 8; i++) {
-    for (let j = 3; j >= 0; j--) {
-      const b = (hash[i] >> (8 * j)) & 255;
-      result += (b < 16 ? "0" : "") + b.toString(16);
-    }
-  }
-  return result;
-}
-
-/**
- * Generate a random cryptographic salt string
- */
-export function generateSalt(length = 16): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  if (typeof window !== "undefined" && window.crypto && window.crypto.getRandomValues) {
-    const randomVals = new Uint8Array(length);
-    window.crypto.getRandomValues(randomVals);
-    for (let i = 0; i < length; i++) {
-      result += chars[randomVals[i] % chars.length];
-    }
-    return result;
-  }
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-/**
- * Hash a plain-text PIN with salt
- */
-export async function hashPin(pin: string, salt: string): Promise<string> {
-  const combined = `${pin}_${salt}_deshal_kiosk`;
-  return sha256Hex(combined);
-}
 
 /**
  * Load all employee PIN records
@@ -403,47 +297,6 @@ export async function verifyKioskPin(
 }
 
 /**
- * Verify Master Kiosk Admin PIN (for exiting Kiosk mode or administrative override)
- */
-export async function verifyMasterExitPin(pin: string): Promise<boolean> {
-  if (pin === "9900" || pin === "1234") return true;
-  const hash = await hashPin(pin, "deshal_kiosk_master_salt");
-  return hash === MASTER_KIOSK_PIN_HASH;
-}
-
-/**
- * Hash and attach a secret device PIN to a KioskDevice object
- */
-export async function setDeviceSecretPin(
-  device: KioskDevice,
-  plainPin: string
-): Promise<KioskDevice> {
-  const salt = generateSalt(16);
-  const devicePinHash = await hashPin(plainPin, salt);
-  return {
-    ...device,
-    devicePinHash,
-    devicePinSalt: salt,
-    updatedAt: new Date().toISOString()
-  };
-}
-
-/**
- * Verify if an entered PIN matches a device's specific secret PIN
- */
-export async function verifyDeviceSecretPin(
-  device: KioskDevice,
-  enteredPin: string
-): Promise<boolean> {
-  if (!device.devicePinHash || !device.devicePinSalt) {
-    // If no custom PIN set on device, check default master PINs
-    return enteredPin === "1234" || enteredPin === "9900";
-  }
-  const computedHash = await hashPin(enteredPin, device.devicePinSalt);
-  return computedHash === device.devicePinHash;
-}
-
-/**
  * Validates Admin PIN for the hidden 7-clicks Kiosk Administration and Exit flow.
  * Checks Master PINs (9900, 1234), device secret PIN, and any employee with Admin privileges.
  */
@@ -542,7 +395,7 @@ export async function verifyAdminExitPin(
 }
 
 // ----------------------------------------------------
-// FAILED ATTEMPT & RATE LIMITING HELPERS
+// FAILED ATTEMPT & RATE LIMITING HELPERS (STORAGE)
 // ----------------------------------------------------
 
 interface KioskLockoutData {
@@ -572,19 +425,15 @@ function saveLockoutData(data: KioskLockoutData): void {
 
 export function checkKioskLockout(): { isLocked: boolean; remainingSeconds: number } {
   const data = getLockoutData();
-  const now = Date.now();
-  if (data.lockoutUntil && data.lockoutUntil > now) {
-    const remainingSeconds = Math.ceil((data.lockoutUntil - now) / 1000);
-    return { isLocked: true, remainingSeconds };
-  }
-  return { isLocked: false, remainingSeconds: 0 };
+  return checkLockoutStatus(data.lockoutUntil);
 }
 
 export function recordKioskFailedAttempt(): number {
   const data = getLockoutData();
-  data.failedAttempts += 1;
-  if (data.failedAttempts >= MAX_FAILED_ATTEMPTS) {
-    data.lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
+  const next = calculateNextLockout(data.failedAttempts);
+  data.failedAttempts = next.newFailedAttempts;
+  if (next.lockoutUntil > 0) {
+    data.lockoutUntil = next.lockoutUntil;
   }
   saveLockoutData(data);
   return data.failedAttempts;

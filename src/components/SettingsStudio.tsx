@@ -42,9 +42,10 @@ import { ActivityLogsManager } from "./ActivityLogsManager";
 import { DigitalSignaturePad } from "./DigitalSignaturePad";
 import { WhatsAppBaileysStudio } from "./WhatsAppBaileysStudio";
 import { AVAILABLE_CURRENCIES, fetchLiveExchangeRates } from "../utils/currencyConverter";
-import { DEFAULT_COMPANY_SETTINGS, DEFAULT_RESEND_SETTINGS } from "../utils/storage";
+import { DEFAULT_COMPANY_SETTINGS, DEFAULT_RESEND_SETTINGS } from "../domain/settings/settingsEngine";
 import { sendTestEmail, fetchEmailLogs, sendNotificationEmail } from "../lib/email/emailService";
-import { seedDemoDataToSupabase } from "../lib/supabase/seedDemoData";
+import { seedDemoData } from "../application/services/seedDemoData";
+import { defaultSeedDemoDataAdapter } from "../lib/adapters/seedDemoDataAdapter";
 import { useERPData } from "../contexts/ERPDataContext";
 import {
   loadKioskDevices,
@@ -1724,7 +1725,7 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
                   setIsSeeding(true);
                   setSeedStatusMessage("جاري رفع وتعبئة البيانات التوضيحية لـ Supabase...");
                   const targetCompanyId = erpCtx?.companyId || "00000000-0000-0000-0000-000000000001";
-                  const res = await seedDemoDataToSupabase(targetCompanyId);
+                  const res = await seedDemoData(targetCompanyId, defaultSeedDemoDataAdapter);
                   setIsSeeding(false);
                   setSeedStatusMessage(res.message);
                   if (res.success && erpCtx?.refreshAllData) {

@@ -11,6 +11,7 @@ import {
 } from "../utils/attendanceStorage";
 import { AttendanceMovementLog, Employee } from "../types";
 import { ensureValidUuid } from "../utils/uuid";
+import { calculatePASIDeduction } from "../domain/hr/payrollCalculator";
 
 console.log("\n================================================================");
 console.log("  DESHAL ERP — HR, PAYROLL & ATTENDANCE UNIT TEST SUITE");
@@ -95,7 +96,7 @@ async function runHRTests() {
     const deductions = 20;
 
     // Social Security (PASI Omani standard calculation: 7% of Basic Salary)
-    const pasiDeduction = Math.round(basic * 0.07 * 1000) / 1000; // 84 OMR
+    const pasiDeduction = calculatePASIDeduction(basic); // 84 OMR
     const expectedNetSalary = Math.round((basic + allowance + bonus - pasiDeduction - deductions) * 1000) / 1000;
 
     assert.strictEqual(pasiDeduction, 84, "PASI 7% of 1200 basic salary should be 84 OMR");

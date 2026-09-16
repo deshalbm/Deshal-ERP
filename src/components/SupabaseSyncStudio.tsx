@@ -36,7 +36,7 @@ import {
   POSOrder,
   RecurringSchedule
 } from "../types";
-import { DEFAULT_COMPANY_SETTINGS } from "../utils/storage";
+import { DEFAULT_COMPANY_SETTINGS } from "../domain/settings/settingsEngine";
 import { useLanguage } from "../utils/LanguageContext";
 import {
   FullAppBackupSnapshot,
@@ -424,7 +424,7 @@ export const SupabaseSyncStudio: React.FC<SupabaseSyncStudioProps> = ({
             </label>
             <input
               type="password"
-              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              placeholder="your-supabase-anon-key"
               value={localConfig.supabaseAnonKey}
               onChange={(e) => handleConfigChange("supabaseAnonKey", e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500"

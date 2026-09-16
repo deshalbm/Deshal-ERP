@@ -48,7 +48,6 @@ import {
   processApprovalDecision,
   saveEmployeeRequests
 } from '../../utils/requestsStorage';
-import { upsertEmployeeRequest, deleteEmployeeRequest } from '../../lib/supabase/requestsService';
 import { GeneratedDocumentModal } from './GeneratedDocumentModal';
 import { SubmitRequestModal } from './SubmitRequestModal';
 import { RequestDetailsModal } from './RequestDetailsModal';

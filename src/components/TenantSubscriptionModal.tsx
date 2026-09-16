@@ -19,24 +19,29 @@ import {
 } from "lucide-react";
 
 import { generateUuid, ensureValidUuid } from "../utils/uuid";
+import { useServices } from "../contexts/ServicesContext";
 
 interface TenantSubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
   subscription: TenantSubscription | null;
-  packages: MembershipPackage[];
+  packages?: MembershipPackage[];
   customers: Customer[];
-  onSaveSubscription: (sub: TenantSubscription) => void;
+  onSaveSubscription?: (sub: TenantSubscription) => void;
 }
 
 export const TenantSubscriptionModal: React.FC<TenantSubscriptionModalProps> = ({
   isOpen,
   onClose,
   subscription,
-  packages,
+  packages: packagesProp,
   customers,
-  onSaveSubscription
+  onSaveSubscription: onSaveSubscriptionProp
 }) => {
+  const { state: servicesState, actions: servicesActions } = useServices();
+
+  const packages = packagesProp || servicesState.membershipPackages;
+  const onSaveSubscription = onSaveSubscriptionProp || servicesActions.saveSubscription;
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");

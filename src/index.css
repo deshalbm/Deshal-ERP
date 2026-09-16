@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
@@ -8,9 +9,12 @@
 }
 
 html, body {
+  color-scheme: light;
   min-height: 100%;
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
+  background-color: #f8fafc;
+  color: #0f172a;
 }
 
 body {

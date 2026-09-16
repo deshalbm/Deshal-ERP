@@ -1,3 +1,133 @@
+import { CustomField, PaymentMethod } from './common';
+
+export type VoucherType = 'RECEIPT' | 'PAYMENT' | 'PETTY_CASH' | 'TAX_INVOICE' | 'QUOTATION';
+export type VoucherStatus = 'ISSUED' | 'DRAFT' | 'PAID' | 'CANCELLED';
+export type DiscountType = 'PERCENTAGE' | 'FIXED';
+
+export interface LineItem {
+  id: string;
+  itemId?: string;
+  sku?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  unit?: string;
+}
+
+export interface ReceiptVoucher {
+  id: string;
+  type: VoucherType;
+  voucherNumber: string;
+  referenceNo: string;
+  date: string;
+  dueDate?: string;
+  branchId?: string;
+  branchName?: string;
+  receivedFrom: string;
+  paidTo?: string;
+  payerEmail?: string;
+  payerPhone?: string;
+  payerAddress?: string;
+  payerTaxId?: string;
+  amount: number;
+  currency: string;
+  amountInWords: string;
+  isCustomWords: boolean;
+  paymentMethod: PaymentMethod;
+  checkNumber?: string;
+  bankName?: string;
+  transactionRef?: string;
+  category: string;
+  lineItems: LineItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  discountType?: DiscountType;
+  discountValue?: number;
+  discountRate?: number;
+  discountAmount: number;
+  totalAmount: number;
+  paidAmount?: number;
+  remainingAmount?: number;
+  linkedInvoiceId?: string;
+  linkedInvoiceNumber?: string;
+  autoGenerateInvoice?: boolean;
+  notes: string;
+  terms: string;
+  customFields: CustomField[];
+  status: VoucherStatus;
+  preparedBy: string;
+  approvedBy: string;
+  receivedBy: string;
+  verificationToken?: string;
+  transferProofUrl?: string;
+  posLastFour?: string;
+  paymentGatewayRef?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RecurrenceFrequency =
+  | 'DAILY'
+  | 'WEEKLY'
+  | 'BIWEEKLY'
+  | 'MONTHLY'
+  | 'QUARTERLY'
+  | 'SEMI_ANNUALLY'
+  | 'ANNUALLY';
+
+export type RecurringScheduleStatus = 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
+
+export interface RecurringScheduleExecution {
+  id: string;
+  voucherId: string;
+  voucherNumber: string;
+  executionDate: string;
+  dueDate: string;
+  amount: number;
+  currency: string;
+  status: 'POSTED' | 'SKIPPED';
+  notes?: string;
+  createdAt: string;
+}
+
+export interface RecurringSchedule {
+  id: string;
+  scheduleCode: string;
+  title: string;
+  type: VoucherType;
+  frequency: RecurrenceFrequency;
+  customIntervalMonths?: number;
+  amount: number;
+  currency: string;
+  partyName: string;
+  partyType: 'CUSTOMER' | 'SUPPLIER' | 'EMPLOYEE' | 'OTHER';
+  partyPhone?: string;
+  partyEmail?: string;
+  partyTaxId?: string;
+  category: string;
+  paymentMethod: PaymentMethod;
+  bankName?: string;
+  startDate: string;
+  endDate?: string;
+  totalOccurrences?: number;
+  completedOccurrences: number;
+  nextDueDate: string;
+  lastExecutedDate?: string;
+  autoGenerateVoucher: boolean;
+  reminderDaysBefore: number;
+  status: RecurringScheduleStatus;
+  branchId?: string;
+  branchName?: string;
+  description?: string;
+  notes?: string;
+  terms?: string;
+  executions: RecurringScheduleExecution[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type AccountType =
   | 'ASSET'
   | 'LIABILITY'

@@ -22,6 +22,11 @@ import {
   PayrollSlip
 } from '../types';
 
+import { calculateAccountLedger, generateIncomeStatement } from '../domain/finance/profitAndLossEngine';
+import { generateBalanceSheet } from '../domain/finance/balanceSheetEngine';
+
+export { calculateAccountLedger, generateIncomeStatement, generateBalanceSheet };
+
 export const DEFAULT_CHART_OF_ACCOUNTS: Account[] = [
   // =================== ASSETS (1000) ===================
   {
@@ -1246,68 +1251,7 @@ export function saveFiscalPeriods(periods: FiscalPeriod[]): void {
 // ACCOUNTING CALCULATOR ENGINES (General Ledger, Trial Balance, P&L, Balance Sheet)
 // =========================================================================
 
-export function calculateAccountLedger(
-  accounts: Account[],
-  entries: JournalEntry[],
-  filter?: FinancialReportPeriodFilter
-): Account[] {
-  const safeAccounts = [...accounts];
-  const postedEntries = entries.filter((e) => {
-    const isStatusOk = filter?.includeDrafts ? e.status !== 'CANCELLED' : (e.status === 'POSTED' || e.status === 'LOCKED');
-    if (!isStatusOk) return false;
-    if (filter?.startDate && e.date < filter.startDate) return false;
-    if (filter?.endDate && e.date > filter.endDate) return false;
-    if (filter?.branchId && filter.branchId !== 'all' && e.branchId && e.branchId !== filter.branchId) return false;
-    return true;
-  });
 
-  // Calculate movements for each account
-  const accountMovements: Record<string, { totalDebit: number; totalCredit: number }> = {};
-  safeAccounts.forEach((acc) => {
-    accountMovements[acc.id] = { totalDebit: 0, totalCredit: 0 };
-    accountMovements[acc.code] = { totalDebit: 0, totalCredit: 0 };
-  });
-
-  postedEntries.forEach((entry) => {
-    entry.lines.forEach((line) => {
-      const targetId = line.accountId;
-      if (!accountMovements[targetId]) {
-        accountMovements[targetId] = { totalDebit: 0, totalCredit: 0 };
-      }
-      accountMovements[targetId].totalDebit += Number(line.debit || 0);
-      accountMovements[targetId].totalCredit += Number(line.credit || 0);
-
-      // Also map by code
-      if (line.accountCode && !accountMovements[line.accountCode]) {
-        accountMovements[line.accountCode] = { totalDebit: 0, totalCredit: 0 };
-      }
-      if (line.accountCode) {
-        accountMovements[line.accountCode].totalDebit += Number(line.debit || 0);
-        accountMovements[line.accountCode].totalCredit += Number(line.credit || 0);
-      }
-    });
-  });
-
-  return safeAccounts.map((acc) => {
-    const mov = accountMovements[acc.id] || accountMovements[acc.code] || { totalDebit: 0, totalCredit: 0 };
-    const opening = Number(acc.openingBalance || 0);
-    
-    // Normal balance sign
-    let current = opening;
-    if (acc.type === 'ASSET' || acc.type === 'EXPENSE') {
-      current = opening + mov.totalDebit - mov.totalCredit;
-    } else {
-      current = opening + mov.totalCredit - mov.totalDebit;
-    }
-
-    return {
-      ...acc,
-      totalDebit: mov.totalDebit,
-      totalCredit: mov.totalCredit,
-      currentBalance: current
-    };
-  });
-}
 
 export function generateTrialBalance(
   accounts: Account[],
@@ -1401,153 +1345,7 @@ export function generateTrialBalance(
   };
 }
 
-export function generateIncomeStatement(
-  accounts: Account[],
-  entries: JournalEntry[],
-  filter?: FinancialReportPeriodFilter
-): IncomeStatementReport {
-  const calculatedAccounts = calculateAccountLedger(accounts, entries, filter);
 
-  // Revenues (Type = REVENUE)
-  const revenueAccounts = calculatedAccounts.filter((a) => a.type === 'REVENUE' && a.isPosting);
-  const operatingRevItems = revenueAccounts
-    .filter((a) => a.category !== 'OTHER_REVENUE')
-    .map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-  const otherRevItems = revenueAccounts
-    .filter((a) => a.category === 'OTHER_REVENUE')
-    .map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-
-  const totalOperatingRevenue = operatingRevItems.reduce((acc, curr) => acc + curr.amount, 0);
-  const totalOtherRevenue = otherRevItems.reduce((acc, curr) => acc + curr.amount, 0);
-
-  // COGS
-  const cogsAccounts = calculatedAccounts.filter((a) => a.category === 'COST_OF_GOODS_SOLD' && a.isPosting);
-  const cogsItems = cogsAccounts.map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-  const totalCogs = cogsItems.reduce((acc, curr) => acc + curr.amount, 0);
-
-  const grossProfit = totalOperatingRevenue - totalCogs;
-
-  // Operating Expenses (EXPENSE excluding COGS, OTHER_EXPENSE, TAX_EXPENSE)
-  const opexAccounts = calculatedAccounts.filter(
-    (a) => a.type === 'EXPENSE' && a.category !== 'COST_OF_GOODS_SOLD' && a.category !== 'OTHER_EXPENSE' && a.category !== 'TAX_EXPENSE' && a.isPosting
-  );
-  const opexItems = opexAccounts.map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-  const totalOpex = opexItems.reduce((acc, curr) => acc + curr.amount, 0);
-
-  const operatingIncome = grossProfit - totalOpex;
-
-  // Other Expenses & Taxes
-  const otherExpenseAccounts = calculatedAccounts.filter(
-    (a) => a.type === 'EXPENSE' && (a.category === 'OTHER_EXPENSE' || a.category === 'TAX_EXPENSE') && a.isPosting
-  );
-  const totalOtherExpenses = otherExpenseAccounts.reduce((acc, curr) => acc + curr.currentBalance, 0);
-
-  const netIncomeBeforeTax = operatingIncome + (totalOtherRevenue - totalOtherExpenses);
-  const taxExpense = 0; // Standard GCC threshold / Corporate tax calc
-  const netProfit = netIncomeBeforeTax - taxExpense;
-
-  return {
-    operatingRevenue: {
-      items: operatingRevItems,
-      total: totalOperatingRevenue
-    },
-    cogs: {
-      items: cogsItems,
-      total: totalCogs
-    },
-    grossProfit,
-    operatingExpenses: {
-      items: opexItems,
-      total: totalOpex
-    },
-    operatingIncome,
-    otherIncomeAndExpenses: {
-      items: [
-        ...otherRevItems,
-        ...otherExpenseAccounts.map((a) => ({ code: a.code, nameAr: `(مصروف) ${a.nameAr}`, amount: -a.currentBalance }))
-      ],
-      total: totalOtherRevenue - totalOtherExpenses
-    },
-    netIncomeBeforeTax,
-    taxExpense,
-    netProfit
-  };
-}
-
-export function generateBalanceSheet(
-  accounts: Account[],
-  entries: JournalEntry[],
-  filter?: FinancialReportPeriodFilter
-): BalanceSheetReport {
-  const calculatedAccounts = calculateAccountLedger(accounts, entries, filter);
-  const incomeStatement = generateIncomeStatement(accounts, entries, filter);
-
-  // Current Assets
-  const currentAssetAccounts = calculatedAccounts.filter(
-    (a) => a.type === 'ASSET' && a.category !== 'FIXED_ASSET' && a.isPosting
-  );
-  const currentAssetItems = currentAssetAccounts.map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-  const totalCurrentAssets = currentAssetItems.reduce((acc, curr) => acc + curr.amount, 0);
-
-  // Non-Current Assets (Fixed Assets)
-  const nonCurrentAssetAccounts = calculatedAccounts.filter(
-    (a) => a.type === 'ASSET' && a.category === 'FIXED_ASSET' && a.isPosting
-  );
-  const nonCurrentAssetItems = nonCurrentAssetAccounts.map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-  const totalNonCurrentAssets = nonCurrentAssetItems.reduce((acc, curr) => acc + curr.amount, 0);
-
-  const totalAssets = totalCurrentAssets + totalNonCurrentAssets;
-
-  // Current Liabilities
-  const currentLiabAccounts = calculatedAccounts.filter(
-    (a) => a.type === 'LIABILITY' && a.category !== 'LONG_TERM_LIABILITY' && a.isPosting
-  );
-  const currentLiabItems = currentLiabAccounts.map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-  const totalCurrentLiabilities = currentLiabItems.reduce((acc, curr) => acc + curr.amount, 0);
-
-  // Long Term Liabilities
-  const longTermLiabAccounts = calculatedAccounts.filter(
-    (a) => a.type === 'LIABILITY' && a.category === 'LONG_TERM_LIABILITY' && a.isPosting
-  );
-  const longTermLiabItems = longTermLiabAccounts.map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-  const totalLongTermLiabilities = longTermLiabItems.reduce((acc, curr) => acc + curr.amount, 0);
-
-  const totalLiabilities = totalCurrentLiabilities + totalLongTermLiabilities;
-
-  // Equity
-  const equityAccounts = calculatedAccounts.filter((a) => a.type === 'EQUITY' && a.isPosting);
-  const equityItems = equityAccounts.map((a) => ({ code: a.code, nameAr: a.nameAr, amount: a.currentBalance }));
-  const baseEquity = equityItems.reduce((acc, curr) => acc + curr.amount, 0);
-
-  const currentPeriodProfit = incomeStatement.netProfit;
-  const totalEquity = baseEquity + currentPeriodProfit;
-
-  const totalLiabilitiesAndEquity = totalLiabilities + totalEquity;
-  const variance = Math.abs(totalAssets - totalLiabilitiesAndEquity);
-  const isBalanced = variance < 0.01;
-
-  return {
-    assets: {
-      currentAssets: { items: currentAssetItems, total: totalCurrentAssets },
-      nonCurrentAssets: { items: nonCurrentAssetItems, total: totalNonCurrentAssets },
-      totalAssets
-    },
-    liabilities: {
-      currentLiabilities: { items: currentLiabItems, total: totalCurrentLiabilities },
-      longTermLiabilities: { items: longTermLiabItems, total: totalLongTermLiabilities },
-      totalLiabilities
-    },
-    equity: {
-      items: equityItems,
-      retainedEarnings: 0,
-      currentPeriodProfit,
-      totalEquity
-    },
-    totalLiabilitiesAndEquity,
-    isBalanced,
-    variance
-  };
-}
 
 // =========================================================================
 // FINANCIAL POSITION DIAGNOSTICS & RECONCILIATION ENGINE

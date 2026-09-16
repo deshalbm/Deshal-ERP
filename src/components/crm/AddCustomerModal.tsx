@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { Customer, MasterLocation } from '../../types';
 import { useLanguage } from '../../utils/LanguageContext';
 import { generateUuid } from '../../utils/uuid';
-import { getMasterLocations } from '../../lib/supabase/masterDataService';
-import { upsertCustomer, checkPhoneExists, findCustomerByPhone, normalizePhone } from '../../lib/supabase/customerService';
+import { fetchMasterLocations } from '../../application/services/fetchMasterLocations';
+import { saveCustomer, getCustomerByPhone, formatNormalizedPhone } from '../../application/crm/customerUseCases';
+import { defaultMasterDataAdapter } from '../../lib/adapters/masterDataAdapter';
+import { defaultCustomerServiceAdapter } from '../../lib/adapters/customerServiceAdapter';
 import { User, Phone, Mail, Building, MapPin, X, CheckCircle2, AlertTriangle, Loader2, RefreshCw, Link as LinkIcon, Plus } from 'lucide-react';
 
 interface AddCustomerModalProps {
@@ -51,7 +53,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      getMasterLocations().then((locs) => {
+      fetchMasterLocations(defaultMasterDataAdapter).then((locs) => {
         setMasterLocations(locs);
         if (locs.length > 0) {
           const defaultGov = locs[0].governorateAr;
@@ -89,10 +91,10 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
     }
 
     setIsSaving(true);
-    const normalized = normalizePhone(phone);
+    const normalized = formatNormalizedPhone(phone, defaultCustomerServiceAdapter);
 
     // Check duplicate phone
-    const existing = await findCustomerByPhone(companyId, normalized);
+    const existing = await getCustomerByPhone(companyId, normalized, defaultCustomerServiceAdapter);
     if (existing) {
       setIsSaving(false);
       setDuplicateCustomer(existing);
@@ -104,7 +106,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
   const saveCustomerRecord = async (allowDuplicatePhone: boolean, customNotes?: string, targetCustomerId?: string) => {
     setIsSaving(true);
-    const normalized = normalizePhone(phone);
+    const normalized = formatNormalizedPhone(phone, defaultCustomerServiceAdapter);
     const now = new Date().toISOString();
 
     const customerPayload: Customer = {
@@ -127,15 +129,15 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
       updatedAt: now,
     };
 
-    const res = await upsertCustomer(customerPayload, companyId, allowDuplicatePhone);
+    const res = await saveCustomer(customerPayload, companyId, allowDuplicatePhone, defaultCustomerServiceAdapter);
     setIsSaving(false);
 
     if (!res.success) {
-      setErrorMessage(res.error || (isRTL ? 'فشل حفظ العميل في قاعدة البيانات' : 'Failed to save customer'));
+      setErrorMessage(res.error || res.message || (isRTL ? 'فشل حفظ العميل في قاعدة البيانات' : 'Failed to save customer'));
       return;
     }
 
-    onCustomerCreated(res.data || customerPayload);
+    onCustomerCreated(res.data || res.customer || customerPayload);
     onClose();
   };
 

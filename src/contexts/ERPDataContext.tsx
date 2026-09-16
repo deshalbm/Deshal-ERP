@@ -15,7 +15,7 @@ import React, {
 import { supabase, isSupabaseConfigured } from '../lib/supabase/client';
 import type { Session } from '@supabase/supabase-js';
 import type { SupabaseAuthUser } from '../lib/supabase/authService';
-import { getCurrentSession, onAuthStateChange } from '../lib/supabase/authService';
+import { getCurrentSession } from '../lib/supabase/authService';
 import * as customerSvc from '../lib/supabase/customerService';
 import * as employeeSvc from '../lib/supabase/employeeService';
 import * as inventorySvc from '../lib/supabase/inventoryService';
@@ -291,17 +291,8 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    const unsubscribe = onAuthStateChange((user, session) => {
-      if (isMounted) {
-        setAuthUser(user);
-        setAuthSession(session);
-        setCompanyId(user?.companyId ?? '');
-      }
-    });
-
     return () => {
       isMounted = false;
-      unsubscribe();
     };
   }, []);
 

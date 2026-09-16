@@ -13,18 +13,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useLanguage } from '../../utils/LanguageContext';
-
-export interface ERPNotification {
-  id: string;
-  type: 'warning' | 'info' | 'error' | 'success';
-  titleAr: string;
-  titleEn: string;
-  descAr: string;
-  descEn: string;
-  time: string;
-  targetTab?: string;
-  icon?: React.ElementType;
-}
+import { ERPNotification } from '../../types';
+export type { ERPNotification };
 
 export interface NotificationsDrawerProps {
   isOpen: boolean;

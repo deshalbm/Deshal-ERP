@@ -6,7 +6,7 @@ export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [];
 
 export function loadAuditLogs(): AuditLogEntry[] {
   try {
-    if (typeof window !== "undefined") {
+    if (typeof localStorage !== "undefined") {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -23,7 +23,7 @@ export function loadAuditLogs(): AuditLogEntry[] {
 
 export function saveAuditLogs(logs: AuditLogEntry[]): void {
   try {
-    if (typeof window !== "undefined") {
+    if (typeof localStorage !== "undefined") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(logs.slice(0, 1000))); // Keep last 1000 logs
     }
   } catch (e) {
@@ -31,26 +31,13 @@ export function saveAuditLogs(logs: AuditLogEntry[]): void {
   }
 }
 
+import { logUserActivity } from "../application/audit/logUserActivity";
+
 export function logActivity(
   entry: Omit<AuditLogEntry, "id" | "timestamp">,
   currentLogs?: AuditLogEntry[]
 ): AuditLogEntry[] {
-  const existing = currentLogs || loadAuditLogs();
-  const newLog: AuditLogEntry = {
-    ...entry,
-    id: `log-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-    timestamp: new Date().toISOString()
-  };
-
-  const updated = [newLog, ...existing];
-  saveAuditLogs(updated);
-
-  // Asynchronously push to Supabase audit_logs
-  import('../lib/supabase/auditService').then((svc) => {
-    svc.logToSupabase(newLog, '00000000-0000-0000-0000-000000000001').catch(console.error);
-  }).catch(console.error);
-
-  return updated;
+  return logUserActivity(entry, currentLogs);
 }
 
 export function clearAuditLogs(): AuditLogEntry[] {

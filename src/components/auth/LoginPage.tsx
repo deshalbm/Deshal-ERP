@@ -46,8 +46,8 @@ import {
 import { loadEmployees, DEFAULT_COMPANY_SETTINGS } from "../../utils/storage";
 import { authenticateKioskAccount, saveActiveKioskDeviceId, saveIsKioskModeEnabled } from "../../utils/attendanceStorage";
 import { useLanguage } from "../../utils/LanguageContext";
-import { signInWithEmail, signUpWithEmail } from "../../lib/supabase/authService";
-import { isSupabaseConfigured } from "../../lib/supabase/client";
+import { isRemoteAuthAvailable, executeRemoteSignIn, executeRemoteSignUp } from "../../application/auth/authUseCases";
+import { defaultAuthServiceAdapter } from "../../lib/adapters/authServiceAdapter";
 
 interface LoginPageProps {
   companySettings?: CompanySettings;
@@ -189,8 +189,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       return;
     }
 
-    if (isSupabaseConfigured) {
-      const supaRes = await signInWithEmail(email, password);
+    if (isRemoteAuthAvailable(defaultAuthServiceAdapter)) {
+      const supaRes = await executeRemoteSignIn(email, password, defaultAuthServiceAdapter);
       if (supaRes.success && supaRes.user) {
         setIsLoading(false);
         const emp: Employee = {
@@ -231,7 +231,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         const session: AuthSession = {
           user: uAcc,
           employee: emp,
-          token: supaRes.session?.access_token || `tok_supa_${Date.now()}`,
+          token: supaRes.accessToken || `tok_supa_${Date.now()}`,
           loginMethod: "PASSWORD",
           authenticatedAt: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -295,7 +295,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setErrorMessage("");
     setSuccessMessage("");
 
-    const res = await signUpWithEmail(email, password, registerFullName, registerCompanyName);
+    const res = await executeRemoteSignUp(email, password, registerFullName, registerCompanyName, defaultAuthServiceAdapter);
     setIsLoading(false);
 
     if (!res.success || !res.user) {

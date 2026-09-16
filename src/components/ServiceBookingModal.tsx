@@ -29,15 +29,16 @@ import {
   Briefcase
 } from "lucide-react";
 import { numberToWords } from "../utils/numberToWords";
+import { useServices } from "../contexts/ServicesContext";
 
 interface ServiceBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
   service: ConsultingService | null;
-  services: ConsultingService[];
+  services?: ConsultingService[];
   customers: Customer[];
-  subscriptions: TenantSubscription[];
-  onConfirmBooking: (
+  subscriptions?: TenantSubscription[];
+  onConfirmBooking?: (
     newBooking: ServiceBooking,
     autoGenerateVoucher: boolean,
     deductFromSubscriptionId?: string
@@ -48,11 +49,16 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
   isOpen,
   onClose,
   service,
-  services,
+  services: servicesProp,
   customers,
-  subscriptions,
-  onConfirmBooking
+  subscriptions: subscriptionsProp,
+  onConfirmBooking: onConfirmBookingProp
 }) => {
+  const { state: servicesState, actions: servicesActions } = useServices();
+
+  const services = servicesProp || servicesState.consultingServices;
+  const subscriptions = subscriptionsProp || servicesState.tenantSubscriptions;
+  const onConfirmBooking = onConfirmBookingProp || servicesActions.confirmBooking;
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");

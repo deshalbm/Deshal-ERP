@@ -64,24 +64,26 @@ import {
   AreaChart,
   Area
 } from "recharts";
+import { useServices } from "../contexts/ServicesContext";
 
 interface ServicesManagerProps {
-  services: ConsultingService[];
-  packages: MembershipPackage[];
-  subscriptions: TenantSubscription[];
-  bookings: ServiceBooking[];
+  services?: ConsultingService[];
+  packages?: MembershipPackage[];
+  subscriptions?: TenantSubscription[];
+  bookings?: ServiceBooking[];
   customers: Customer[];
   branches: Branch[];
   session: AuthSession | null;
-  onSaveService: (service: ConsultingService) => void;
-  onDeleteService: (serviceId: string) => void;
-  onSavePackage: (pkg: MembershipPackage) => void;
-  onSaveSubscription: (sub: TenantSubscription) => void;
-  onDeleteSubscription: (subId: string) => void;
-  onSaveBooking: (booking: ServiceBooking) => void;
-  onOpenBookingModal: (service?: ConsultingService) => void;
-  onOpenSubscriptionModal: (sub?: TenantSubscription) => void;
-  onGenerateVoucherForServiceBooking: (booking: ServiceBooking) => void;
+  onSaveService?: (service: ConsultingService) => void;
+  onDeleteService?: (serviceId: string) => void;
+  onSavePackage?: (pkg: MembershipPackage) => void;
+  onDeletePackage?: (pkgId: string) => void;
+  onSaveSubscription?: (sub: TenantSubscription) => void;
+  onDeleteSubscription?: (subId: string) => void;
+  onSaveBooking?: (booking: ServiceBooking) => void;
+  onOpenBookingModal?: (service?: ConsultingService | null) => void;
+  onOpenSubscriptionModal?: (sub?: TenantSubscription | null) => void;
+  onGenerateVoucherForServiceBooking?: (booking: ServiceBooking) => void;
 }
 
 const CATEGORY_MAP: Record<
@@ -178,23 +180,41 @@ const PRICING_MODEL_MAP: Record<PricingModel, string> = {
 const COLORS = ["#4f46e5", "#06b6d4", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#ea580c"];
 
 export const ServicesManager: React.FC<ServicesManagerProps> = ({
-  services,
-  packages,
-  subscriptions,
-  bookings,
+  services: servicesProp,
+  packages: packagesProp,
+  subscriptions: subscriptionsProp,
+  bookings: bookingsProp,
   customers,
   branches,
   session,
-  onSaveService,
-  onDeleteService,
-  onSavePackage,
-  onSaveSubscription,
-  onDeleteSubscription,
-  onSaveBooking,
-  onOpenBookingModal,
-  onOpenSubscriptionModal,
-  onGenerateVoucherForServiceBooking
+  onSaveService: onSaveServiceProp,
+  onDeleteService: onDeleteServiceProp,
+  onSavePackage: onSavePackageProp,
+  onDeletePackage: onDeletePackageProp,
+  onSaveSubscription: onSaveSubscriptionProp,
+  onDeleteSubscription: onDeleteSubscriptionProp,
+  onSaveBooking: onSaveBookingProp,
+  onOpenBookingModal: onOpenBookingModalProp,
+  onOpenSubscriptionModal: onOpenSubscriptionModalProp,
+  onGenerateVoucherForServiceBooking: onGenerateVoucherForServiceBookingProp
 }) => {
+  const { state: servicesState, actions: servicesActions } = useServices();
+
+  const services = servicesProp || servicesState.consultingServices;
+  const packages = packagesProp || servicesState.membershipPackages;
+  const subscriptions = subscriptionsProp || servicesState.tenantSubscriptions;
+  const bookings = bookingsProp || servicesState.serviceBookings;
+
+  const onSaveService = onSaveServiceProp || servicesActions.saveService;
+  const onDeleteService = onDeleteServiceProp || servicesActions.deleteService;
+  const onSavePackage = onSavePackageProp || servicesActions.savePackage;
+  const onDeletePackage = onDeletePackageProp || servicesActions.deletePackage;
+  const onSaveSubscription = onSaveSubscriptionProp || servicesActions.saveSubscription;
+  const onDeleteSubscription = onDeleteSubscriptionProp || servicesActions.deleteSubscription;
+  const onSaveBooking = onSaveBookingProp || servicesActions.confirmBooking;
+  const onOpenBookingModal = onOpenBookingModalProp || servicesActions.openBookingModal;
+  const onOpenSubscriptionModal = onOpenSubscriptionModalProp || servicesActions.openSubscriptionModal;
+  const onGenerateVoucherForServiceBooking = onGenerateVoucherForServiceBookingProp || servicesActions.issueVoucherFromBooking;
   const [activeTab, setActiveTab] = useState<"catalog" | "subscriptions" | "bookings" | "analytics">(
     "catalog"
   );

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { verifyInvoiceOrVoucher } from '../lib/supabase/qrVerificationService';
+import { verifyPublicInvoice } from '../application/services/verifyPublicInvoice';
+import { defaultPublicInvoiceVerificationAdapter } from '../lib/adapters/publicInvoiceVerificationAdapter';
 import type { PublicInvoiceVerification } from '../types';
 import { CheckCircle2, XCircle, ShieldCheck, FileText, Calendar, Building, DollarSign, Award, ArrowRight } from 'lucide-react';
 
@@ -19,7 +20,7 @@ export const PublicInvoiceVerificationView: React.FC<PublicInvoiceVerificationVi
 
   useEffect(() => {
     let isMounted = true;
-    verifyInvoiceOrVoucher(invoiceId, token).then((res) => {
+    verifyPublicInvoice(invoiceId, token, defaultPublicInvoiceVerificationAdapter).then((res) => {
       if (isMounted) {
         setResult(res);
         setLoading(false);

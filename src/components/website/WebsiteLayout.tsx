@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getSavedWebsiteLanguage, saveWebsiteLanguage } from '../../utils/websiteStorage';
 import { WebsiteHeader } from './WebsiteHeader';
 import { WebsiteFooter } from './WebsiteFooter';
 import { MobileNavigation } from './MobileNavigation';
@@ -25,16 +26,13 @@ export const WebsiteLayout: React.FC<WebsiteLayoutProps> = ({ initialPath = '/',
     return path === '/app' ? '/' : path;
   });
 
-  const [currentLang, setCurrentLang] = useState<'ar' | 'en'>(() => {
-    const saved = localStorage.getItem('alshamil_lang');
-    return saved === 'en' ? 'en' : 'ar';
-  });
+  const [currentLang, setCurrentLang] = useState<'ar' | 'en'>(() => getSavedWebsiteLanguage());
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [prefilledService, setPrefilledService] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    localStorage.setItem('alshamil_lang', currentLang);
+    saveWebsiteLanguage(currentLang);
     document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = currentLang;
   }, [currentLang]);

@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
-import { DEFAULT_COMPANY_SETTINGS } from "../utils/storage";
+import { DEFAULT_COMPANY_SETTINGS } from "../domain/settings/settingsEngine";
 import { loadAuthSession } from "../utils/authManager";
 import {
   loadWorkspaceConfigFromLocal,

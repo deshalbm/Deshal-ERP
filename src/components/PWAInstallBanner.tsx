@@ -1,98 +1,46 @@
-import React, { useState, useEffect } from "react";
-import { Download, X, Smartphone, Sparkles, Monitor, Tablet } from "lucide-react";
-import { BeforeInstallPromptEvent, isIosDevice, isStandaloneMode } from "../utils/pwaManager";
+import React, { useState } from "react";
+import { Download, X } from "lucide-react";
+import { usePWAInstall, UsePWAInstallReturn } from "../hooks/usePWAInstall";
 import { IOSInstallModal } from "./IOSInstallModal";
 
 interface PWAInstallBannerProps {
   onInstallSuccess?: () => void;
+  pwa?: UsePWAInstallReturn;
 }
 
-export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ onInstallSuccess }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ onInstallSuccess, pwa: propPwa }) => {
   const [isIosModalOpen, setIsIosModalOpen] = useState<boolean>(false);
-  const [isDismissed, setIsDismissed] = useState<boolean>(false);
-  const [isInstalled, setIsInstalled] = useState<boolean>(false);
-  const isIos = isIosDevice();
-
-  useEffect(() => {
-    // Check if already in standalone mode
-    if (isStandaloneMode()) {
-      setIsInstalled(true);
-      return;
-    }
-
-    // Check if user dismissed banner recently
-    const dismissedTimestamp = localStorage.getItem("pwa_banner_dismissed");
-    if (dismissedTimestamp) {
-      const hoursSinceDismiss = (Date.now() - parseInt(dismissedTimestamp, 10)) / (1000 * 60 * 60);
-      if (hoursSinceDismiss < 48) {
-        setIsDismissed(true);
-      }
-    }
-
-    // Listen for beforeinstallprompt event on Chromium browsers
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setDeferredPrompt(null);
-      if (onInstallSuccess) onInstallSuccess();
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-    };
-  }, [onInstallSuccess]);
+  const fallbackPwa = usePWAInstall({
+    enabled: !propPwa,
+    onInstallSuccess,
+    onOpenIosModal: () => setIsIosModalOpen(true)
+  });
+  const pwa = propPwa || fallbackPwa;
 
   const handleInstallClick = async () => {
-    if (isIos) {
+    if (pwa.isIos) {
       setIsIosModalOpen(true);
       return;
     }
-
-    if (!deferredPrompt) {
-      // Fallback instruction if prompt isn't directly triggerable
-      alert("لتثبيت التطبيق على جهازك: اضغط على القائمة في متصفحك (⋮ أو ⋯) ثم اختر 'تثبيت التطبيق' أو 'Install App'.");
-      return;
-    }
-
-    try {
-      await deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === "accepted") {
-        console.log("User accepted the PWA install prompt");
-        setIsInstalled(true);
-      }
-      setDeferredPrompt(null);
-    } catch (err) {
-      console.warn("Install prompt error:", err);
-    }
+    await pwa.triggerInstall();
   };
 
   const handleDismiss = () => {
-    setIsDismissed(true);
-    localStorage.setItem("pwa_banner_dismissed", Date.now().toString());
+    pwa.dismissBanner();
   };
 
-  if (isInstalled || isDismissed) {
+  if (pwa.isInstalled || pwa.isDismissed) {
     return <IOSInstallModal isOpen={isIosModalOpen} onClose={() => setIsIosModalOpen(false)} />;
   }
 
   // Show banner if deferredPrompt is available or if on iOS Safari
-  if (!deferredPrompt && !isIos) {
+  if (!pwa.deferredPrompt && !pwa.isIos) {
     return <IOSInstallModal isOpen={isIosModalOpen} onClose={() => setIsIosModalOpen(false)} />;
   }
 
   return (
     <>
-      <div 
+      <div
         data-install-banner
         dir="rtl"
         className="fixed bottom-16 sm:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-40 bg-slate-900/95 text-white p-4 rounded-2xl shadow-2xl border border-indigo-500/30 backdrop-blur-md animate-in slide-in-from-bottom-5 duration-300"

@@ -74,7 +74,6 @@ import {
   loadActiveShift,
   DEFAULT_COMPANY_SETTINGS
 } from "../utils/storage";
-import { upsertPOSOrder, upsertCashierShift } from "../lib/supabase/posService";
 
 interface POSViewProps {
   inventory: InventoryItem[];
@@ -573,6 +572,7 @@ export const POSView: React.FC<POSViewProps> = ({
 
   // Complete Payment & Atomic Transaction
   const handleExecutePayment = (andPrint: boolean = true) => {
+    const targetCompanyId = (companySettings as any)?.companyId || "00000000-0000-0000-0000-000000000001";
     const parsedCash = parseFloat(cashTendered) || netTotal;
     const changeDue = paymentMethod === "CASH" ? Math.max(0, parsedCash - netTotal) : 0;
 
@@ -765,20 +765,13 @@ export const POSView: React.FC<POSViewProps> = ({
       setActiveShift(updatedShift);
       const updatedShiftsList = shifts.map((s) => (s.id === activeShift.id ? updatedShift : s));
       setShifts(updatedShiftsList);
-      saveCashierShifts(updatedShiftsList);
+      saveCashierShifts(updatedShiftsList, targetCompanyId);
     }
 
     // 6. Save POS Order
     const updatedOrders = [newOrder, ...posOrders];
     setPosOrders(updatedOrders);
-    savePOSOrders(updatedOrders);
-
-    // Sync with Supabase asynchronously
-    const targetCompanyId = (companySettings as any)?.companyId || "00000000-0000-0000-0000-000000000001";
-    upsertPOSOrder(newOrder, targetCompanyId).catch(console.error);
-    if (activeShift) {
-      upsertCashierShift(activeShift, targetCompanyId).catch(console.error);
-    }
+    savePOSOrders(updatedOrders, targetCompanyId);
 
     // 7. Log Audit Activity
     onAuditLog(

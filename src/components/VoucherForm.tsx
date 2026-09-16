@@ -19,9 +19,11 @@ import { loadVouchers } from "../utils/storage";
 import { formatOMR, formatCurrency } from "../utils/currencyFormatter";
 import { calculateVoucherTotals } from "../utils/voucherCalculations";
 import { AddCustomerModal } from "./crm/AddCustomerModal";
-import { fetchNextVoucherNumber } from "../lib/supabase/accountingService";
-import { searchCustomersServerSide } from "../lib/supabase/customerService";
-import { searchProductsAndServicesServerSide } from "../lib/supabase/masterDataService";
+import {
+  resolveNextVoucherNumber,
+  searchServerSideCustomers,
+  searchServerSideProductsAndServices
+} from "../utils/voucherSearchFacade";
 import {
   Plus,
   Trash2,
@@ -110,16 +112,16 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
   // Auto-generate number on initial load if empty
   useEffect(() => {
     if (!voucher.voucherNumber || voucher.voucherNumber.trim() === "" || voucher.voucherNumber === "Draft") {
-      fetchNextVoucherNumber(companyId, voucher.type, voucher.branchId).then((num) => {
-        onChange({ ...voucher, voucherNumber: num });
+      resolveNextVoucherNumber(companyId, voucher.type, voucher.branchId).then((num) => {
+        if (num) onChange({ ...voucher, voucherNumber: num });
       });
     }
   }, [voucher.type, voucher.branchId]);
 
   // Load Master Products Catalog
   useEffect(() => {
-    searchProductsAndServicesServerSide(companyId, "").then((res) => {
-      setMasterProducts(res.products);
+    searchServerSideProductsAndServices(companyId, "").then((res) => {
+      if (res && (res as any).products) setMasterProducts((res as any).products);
     });
   }, [companyId]);
 
@@ -127,8 +129,8 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
   useEffect(() => {
     if (customerSearchQuery.trim().length > 1) {
       setIsSearchingCustomers(true);
-      searchCustomersServerSide(companyId, customerSearchQuery).then((res) => {
-        setSearchResults(res.customers);
+      searchServerSideCustomers(companyId, customerSearchQuery).then((res) => {
+        if (res && (res as any).customers) setSearchResults((res as any).customers);
         setIsSearchingCustomers(false);
       });
     } else {
@@ -206,8 +208,8 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
     }
 
     if (field === "type") {
-      fetchNextVoucherNumber(companyId, value, voucher.branchId).then((num) => {
-        onChange({ ...updated, voucherNumber: num });
+      resolveNextVoucherNumber(companyId, value, voucher.branchId).then((num) => {
+        if (num) onChange({ ...updated, voucherNumber: num });
       });
       return;
     }

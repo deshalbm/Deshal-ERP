@@ -22,7 +22,7 @@ import { ReceiptVoucher, CompanySettings, Customer } from "../types";
 import { useLanguage } from "../utils/LanguageContext";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { numberToWords } from "../utils/numberToWords";
-import { DEFAULT_COMPANY_SETTINGS, DEFAULT_WHATSAPP_SETTINGS } from "../utils/storage";
+import { DEFAULT_COMPANY_SETTINGS, DEFAULT_WHATSAPP_SETTINGS } from "../domain/settings/settingsEngine";
 import { sendBaileysTextMessage, formatInternationalPhoneNumber } from "../utils/whatsappBaileys";
 
 interface WhatsAppShareModalProps {

@@ -68,18 +68,19 @@ import {
 } from "recharts";
 import { RentalSpace, SpaceBooking, SpaceType, RentalType, BookingStatus, BookingPaymentStatus, Branch, AuthSession } from "../types";
 import { useLanguage } from "../utils/LanguageContext";
+import { useSpaces } from "../contexts/SpacesContext";
 
 interface SpacesManagerProps {
-  spaces: RentalSpace[];
-  bookings: SpaceBooking[];
+  spaces?: RentalSpace[];
+  bookings?: SpaceBooking[];
   branches: Branch[];
   session: AuthSession | null;
-  onSaveSpace: (space: RentalSpace) => void;
-  onDeleteSpace: (spaceId: string) => void;
-  onSaveBooking: (booking: SpaceBooking) => void;
-  onCancelBooking: (bookingId: string) => void;
-  onOpenBookingModal: (space?: RentalSpace) => void;
-  onGenerateVoucherForBooking: (booking: SpaceBooking) => void;
+  onSaveSpace?: (space: RentalSpace) => void;
+  onDeleteSpace?: (spaceId: string) => void;
+  onSaveBooking?: (booking: SpaceBooking) => void;
+  onCancelBooking?: (bookingId: string) => void;
+  onOpenBookingModal?: (space?: RentalSpace) => void;
+  onGenerateVoucherForBooking?: (booking: SpaceBooking) => void;
 }
 
 export const SpacesManager: React.FC<SpacesManagerProps> = ({
@@ -95,6 +96,35 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
   onGenerateVoucherForBooking
 }) => {
   const { language, isRTL, t } = useLanguage();
+  const { state: spacesState, actions: spacesActions } = useSpaces();
+
+  const effectiveSpaces = spaces ?? spacesState.rentalSpaces;
+  const effectiveBookings = bookings ?? spacesState.spaceBookings;
+
+  const handleSaveSpace = onSaveSpace ?? ((sp: RentalSpace) => {
+    const exists = spacesState.rentalSpaces.some((s) => s.id === sp.id);
+    const updated = exists ? spacesState.rentalSpaces.map((s) => s.id === sp.id ? sp : s) : [sp, ...spacesState.rentalSpaces];
+    spacesActions.saveRentalSpaces(updated);
+  });
+
+  const handleDeleteSpace = onDeleteSpace ?? ((spId: string) => {
+    const updated = spacesState.rentalSpaces.filter((s) => s.id !== spId);
+    spacesActions.saveRentalSpaces(updated);
+  });
+
+  const handleSaveBooking = onSaveBooking ?? ((bk: SpaceBooking) => {
+    const exists = spacesState.spaceBookings.some((b) => b.id === bk.id);
+    const updated = exists ? spacesState.spaceBookings.map((b) => b.id === bk.id ? bk : b) : [bk, ...spacesState.spaceBookings];
+    spacesActions.saveSpaceBookings(updated);
+  });
+
+  const handleCancelBooking = onCancelBooking ?? ((bkId: string) => {
+    const updated = spacesState.spaceBookings.map((b) => b.id === bkId ? { ...b, status: "CANCELLED" as const } : b);
+    spacesActions.saveSpaceBookings(updated);
+  });
+
+  const handleOpenBookingModal = onOpenBookingModal ?? spacesActions.openBookingModal;
+  const handleGenerateVoucherForBooking = onGenerateVoucherForBooking ?? spacesActions.issueVoucherFromBooking;
 
   const [activeTab, setActiveTab] = useState<"spaces" | "calendar" | "bookings" | "analytics">("spaces");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("ALL");
@@ -113,7 +143,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
 
   // Filtered Spaces
   const filteredSpaces = useMemo(() => {
-    return spaces.filter((sp) => {
+    return effectiveSpaces.filter((sp) => {
       if (selectedTypeFilter !== "ALL" && sp.type !== selectedTypeFilter) return false;
       if (selectedBranchFilter !== "ALL" && sp.branchId !== selectedBranchFilter) return false;
       if (searchQuery.trim()) {
@@ -124,11 +154,11 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
       }
       return true;
     });
-  }, [spaces, selectedTypeFilter, selectedBranchFilter, searchQuery]);
+  }, [effectiveSpaces, selectedTypeFilter, selectedBranchFilter, searchQuery]);
 
   // Filtered Bookings
   const filteredBookings = useMemo(() => {
-    return bookings.filter((b) => {
+    return effectiveBookings.filter((b) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchCust = b.customerName.toLowerCase().includes(q) || (b.customerPhone && b.customerPhone.includes(q));
@@ -138,7 +168,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
       }
       return true;
     });
-  }, [bookings, searchQuery]);
+  }, [effectiveBookings, searchQuery]);
 
   // Amenity badge mapper
   const renderAmenityBadge = (amenity: string) => {
@@ -195,7 +225,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
   const handleOpenNewSpaceModal = () => {
     setEditingSpace({
       id: `space-${Date.now()}`,
-      code: `SP-${spaces.length + 101}`,
+      code: `SP-${effectiveSpaces.length + 101}`,
       name: "",
       type: "TRAINING_HALL",
       branchId: branches[0]?.id || "branch-1",
@@ -279,7 +309,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
   // Bookings mapped by Date
   const bookingsByDate = useMemo(() => {
     const map: Record<string, SpaceBooking[]> = {};
-    bookings.forEach((b) => {
+    effectiveBookings.forEach((b) => {
       if (b.status === "CANCELLED") return;
       if (calendarSpaceFilter !== "ALL" && b.spaceId !== calendarSpaceFilter) return;
 
@@ -288,20 +318,20 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
       map[d].push(b);
     });
     return map;
-  }, [bookings, calendarSpaceFilter]);
+  }, [effectiveBookings, calendarSpaceFilter]);
 
   // --- RECHARTS ANALYTICS METRICS & DATASETS ---
   const currentMonthStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}`;
   const currentMonthBookings = useMemo(() => {
-    return bookings.filter((b) => b.startDate?.startsWith(currentMonthStr) && b.status !== "CANCELLED");
-  }, [bookings, currentMonthStr]);
+    return effectiveBookings.filter((b) => b.startDate?.startsWith(currentMonthStr) && b.status !== "CANCELLED");
+  }, [effectiveBookings, currentMonthStr]);
 
   // 1. Occupancy Rate by Space Chart Data
   const occupancyChartData = useMemo(() => {
     // Assuming standard 30 days * 10 operational hours = 300 available hours per space per month
     const totalWorkingHoursPerMonth = 240; 
 
-    return spaces.map((space) => {
+    return effectiveSpaces.map((space) => {
       const spaceMonthBookings = currentMonthBookings.filter((b) => b.spaceId === space.id);
       let bookedHours = 0;
       spaceMonthBookings.forEach((b) => {
@@ -323,7 +353,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
         bookingsCount: spaceMonthBookings.length
       };
     });
-  }, [spaces, currentMonthBookings]);
+  }, [effectiveSpaces, currentMonthBookings]);
 
   // 2. Daily Booking & Revenue Trend Chart Data
   const dailyTrendChartData = useMemo(() => {
@@ -332,7 +362,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dStr = `${currentMonthStr}-${String(day).padStart(2, "0")}`;
-      const dayBookings = bookings.filter((b) => b.startDate === dStr && b.status !== "CANCELLED");
+      const dayBookings = effectiveBookings.filter((b) => b.startDate === dStr && b.status !== "CANCELLED");
       const dayRev = dayBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
       data.push({
@@ -343,7 +373,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
       });
     }
     return data;
-  }, [calendarYear, calendarMonth, currentMonthStr, bookings]);
+  }, [calendarYear, calendarMonth, currentMonthStr, effectiveBookings]);
 
   // 3. Rental Type Distribution
   const rentalTypePieData = useMemo(() => {
@@ -423,7 +453,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
         {/* Top Header Actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => onOpenBookingModal()}
+            onClick={() => handleOpenBookingModal()}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
           >
             <CalendarIcon className="w-4 h-4" />
@@ -449,9 +479,9 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
               <Building2 className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-slate-900">{spaces.length}</p>
+          <p className="text-2xl font-black text-slate-900">{effectiveSpaces.length}</p>
           <p className="text-[11px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> {spaces.filter(s => s.status === "AVAILABLE").length} {language === "ar" ? "جاهزة للحجز الفوري" : "Available"}
+            <CheckCircle2 className="w-3 h-3" /> {effectiveSpaces.filter(s => s.status === "AVAILABLE").length} {language === "ar" ? "جاهزة للحجز الفوري" : "Available"}
           </p>
         </div>
 
@@ -511,7 +541,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
-            <span>{language === "ar" ? "دليل القاعات والمساحات" : "Spaces Directory"} ({spaces.length})</span>
+            <span>{language === "ar" ? "دليل القاعات والمساحات" : "Spaces Directory"} ({effectiveSpaces.length})</span>
           </button>
 
           <button
@@ -535,7 +565,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
             }`}
           >
             <CalendarCheck className="w-3.5 h-3.5" />
-            <span>{language === "ar" ? "سجل الحجوزات" : "Bookings Log"} ({bookings.length})</span>
+            <span>{language === "ar" ? "سجل الحجوزات" : "Bookings Log"} ({effectiveBookings.length})</span>
           </button>
 
           <button
@@ -672,7 +702,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => onOpenBookingModal(space)}
+                        onClick={() => handleOpenBookingModal(space)}
                         className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
                       >
                         <CalendarCheck className="w-3.5 h-3.5" />
@@ -937,7 +967,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button
-                            onClick={() => onGenerateVoucherForBooking(b)}
+                            onClick={() => handleGenerateVoucherForBooking(b)}
                             title={language === "ar" ? "إصدار سند قبض فوري للمبلغ" : "Issue Receipt Voucher"}
                             className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
                           >
@@ -946,7 +976,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
 
                           {b.status !== "CANCELLED" && (
                             <button
-                              onClick={() => onCancelBooking(b.id)}
+                              onClick={() => handleCancelBooking(b.id)}
                               title={language === "ar" ? "إلغاء الحجز" : "Cancel Booking"}
                               className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer"
                             >
@@ -1280,7 +1310,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                onSaveSpace(editingSpace);
+                handleSaveSpace(editingSpace);
                 setIsSpaceModalOpen(false);
               }}
               className="space-y-4 text-xs"
@@ -1398,7 +1428,7 @@ export const SpacesManager: React.FC<SpacesManagerProps> = ({
                     type="button"
                     onClick={() => {
                       if (window.confirm(language === "ar" ? "هل أنت متأكد من حذف هذه القاعة؟" : "Are you sure you want to delete this space?")) {
-                        onDeleteSpace(editingSpace.id);
+                        handleDeleteSpace(editingSpace.id);
                         setIsSpaceModalOpen(false);
                       }
                     }}

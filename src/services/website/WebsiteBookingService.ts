@@ -1,5 +1,6 @@
 import { loadRentalSpaces, loadConsultingServices, loadSpaceBookings, saveSpaceBookings } from '../../utils/storage';
 import { SpaceBooking } from '../../types';
+import { calculateSpaceBookingTotals } from '../../domain/spaces/spacesEngine';
 
 export interface WebsiteBookingInput {
   name: string;
@@ -92,9 +93,10 @@ export class WebsiteBookingService {
       unitPrice = matchedService ? matchedService.basePrice : 25;
     }
 
-    const calculatedSubtotal = unitPrice * duration;
-    const taxAmount = calculatedSubtotal * 0.05; // 5% Omani VAT
-    const totalAmount = calculatedSubtotal + taxAmount;
+    const bookingTotals = calculateSpaceBookingTotals(unitPrice, duration, 0, 5);
+    const calculatedSubtotal = bookingTotals.subtotal;
+    const taxAmount = bookingTotals.taxAmount;
+    const totalAmount = bookingTotals.totalAmount;
 
     // 3. Post to backend Express server for security audit log
     const bookingId = `BOOK-WEB-${Date.now()}`;

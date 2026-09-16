@@ -7,6 +7,7 @@ import {
   ReceiptVoucher,
   Branch
 } from "../types";
+import { calculatePASIDeduction } from "../domain/hr/payrollCalculator";
 import {
   DollarSign,
   Banknote,
@@ -106,7 +107,7 @@ export const IndividualSalaryDisbursementModal: React.FC<IndividualSalaryDisburs
       const allowances = Number(employee.allowances) || 150;
       const housing = Math.round(allowances * 0.6) || 100;
       const transport = Math.round(allowances * 0.4) || 50;
-      const pasi = Number((basic * 0.07).toFixed(3));
+      const pasi = calculatePASIDeduction(basic);
 
       setBasicSalary(basic);
       setHousingAllowance(housing);
@@ -131,7 +132,7 @@ export const IndividualSalaryDisbursementModal: React.FC<IndividualSalaryDisburs
   // Recalculate PASI if not manually customized
   useEffect(() => {
     if (!customPasi) {
-      const autoPasi = Number((basicSalary * 0.07).toFixed(3));
+      const autoPasi = calculatePASIDeduction(basicSalary);
       setSocialSecurityDeduction(autoPasi);
     }
   }, [basicSalary, customPasi]);

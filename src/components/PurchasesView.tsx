@@ -44,7 +44,7 @@ import {
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { numberToWords } from "../utils/numberToWords";
 import { useLanguage } from "../utils/LanguageContext";
-import { DEFAULT_COMPANY_SETTINGS } from "../utils/storage";
+import { DEFAULT_COMPANY_SETTINGS } from "../domain/settings/settingsEngine";
 
 interface PurchasesViewProps {
   purchases: PurchaseInvoice[];

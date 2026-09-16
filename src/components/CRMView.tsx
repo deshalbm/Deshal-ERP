@@ -14,12 +14,19 @@ import {
   SpaceBooking,
   Branch,
   CompanySettings,
-  PaymentInstallment
+  PaymentInstallment,
+  CRMLead,
+  CRMOpportunity,
+  CRMActivityRecord,
+  OpportunityStage,
+  LeadStatus,
+  LeadSource,
+  LeadPriority,
+  CRMActivityType
 } from "../types";
+import { calculatePipelineSummary, calculateOpportunityWeightedValue } from "../domain/crm/crmRules";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
-import { addCustomerInteraction } from "../lib/supabase/crmService";
-import { upsertCustomer } from "../lib/supabase/customerService";
 import { generateUuid } from "../utils/uuid";
 import {
   Users,
@@ -71,9 +78,10 @@ import {
 } from "lucide-react";
 import { ERPEmptyState } from "./common/ERPEmptyState";
 import { StatusBadge } from "./common/StatusBadge";
+import { useCRM } from "../contexts/CRMContext";
 
 interface CRMViewProps {
-  customers: Customer[];
+  customers?: Customer[];
   vouchers: ReceiptVoucher[];
   leaseContracts?: LeaseContract[];
   subscriptions?: TenantSubscription[];
@@ -84,11 +92,11 @@ interface CRMViewProps {
   spaceBookings?: SpaceBooking[];
   branches?: Branch[];
   companySettings?: CompanySettings;
-  onSaveCustomer: (customer: Customer) => void;
-  onDeleteCustomer: (customerId: string) => void;
+  onSaveCustomer?: (customer: Customer) => void;
+  onDeleteCustomer?: (customerId: string) => void;
   onCreateVoucherForCustomer: (customer: Customer) => void;
   onViewVoucher: (voucher: ReceiptVoucher) => void;
-  onSyncWithVouchers: () => void;
+  onSyncWithVouchers?: () => void;
   defaultCurrency?: string;
   onSaveContract?: (contract: LeaseContract) => void;
   onCollectInstallment?: (contract: LeaseContract, installment: PaymentInstallment) => void;
@@ -101,7 +109,7 @@ interface CRMViewProps {
 }
 
 export const CRMView: React.FC<CRMViewProps> = ({
-  customers,
+  customers: customersProp,
   vouchers,
   leaseContracts = [],
   subscriptions = [],
@@ -112,11 +120,11 @@ export const CRMView: React.FC<CRMViewProps> = ({
   spaceBookings = [],
   branches = [],
   companySettings,
-  onSaveCustomer,
-  onDeleteCustomer,
+  onSaveCustomer: onSaveCustomerProp,
+  onDeleteCustomer: onDeleteCustomerProp,
   onCreateVoucherForCustomer,
   onViewVoucher,
-  onSyncWithVouchers,
+  onSyncWithVouchers: onSyncWithVouchersProp,
   defaultCurrency = "OMR",
   onSaveContract,
   onCollectInstallment,
@@ -127,7 +135,32 @@ export const CRMView: React.FC<CRMViewProps> = ({
   onOpenSpaceBookingModal,
   onNavigateTab
 }) => {
+  const { state: crmState, actions: crmActions } = useCRM();
+
+  const customers = customersProp || crmState.customers;
+  const onSaveCustomer = onSaveCustomerProp || crmActions.saveCustomer;
+  const onDeleteCustomer = onDeleteCustomerProp || crmActions.deleteCustomer;
+  const onSyncWithVouchers = onSyncWithVouchersProp || (() => crmActions.syncCustomersWithVouchers(vouchers));
+
   const { t, language, dir, isRTL } = useLanguage();
+
+  // Main CRM View Domain Tabs
+  const [crmMainTab, setCrmMainTab] = useState<"CUSTOMERS" | "PIPELINE" | "LEADS" | "ACTIVITIES">("CUSTOMERS");
+
+  // CRM Expansion State from Context
+  const leads = crmState.leads || [];
+  const opportunities = crmState.opportunities || [];
+  const crmActivities = crmState.activities || [];
+
+  // Pipeline Statistics
+  const pipelineSummary = useMemo(() => calculatePipelineSummary(opportunities), [opportunities]);
+
+  // Modals for Leads & Opportunities
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState<boolean>(false);
+  const [editingLead, setEditingLead] = useState<CRMLead | null>(null);
+
+  const [isOppModalOpen, setIsOppModalOpen] = useState<boolean>(false);
+  const [editingOpp, setEditingOpp] = useState<CRMOpportunity | null>(null);
 
   // Filters & State
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -406,8 +439,6 @@ export const CRMView: React.FC<CRMViewProps> = ({
       updatedAt: new Date().toISOString()
     };
     onSaveCustomer(customerToSave);
-    const targetCompanyId = (companySettings as any)?.companyId || "00000000-0000-0000-0000-000000000001";
-    upsertCustomer(customerToSave, targetCompanyId).catch(console.error);
     setIsAddEditModalOpen(false);
     if (selectedCustomerProfile && selectedCustomerProfile.id === customerToSave.id) {
       setSelectedCustomerProfile(customerToSave);
@@ -436,11 +467,6 @@ export const CRMView: React.FC<CRMViewProps> = ({
 
     onSaveCustomer(updatedCustomer);
     setSelectedCustomerProfile(updatedCustomer);
-
-    // Sync interaction and updated customer to Supabase
-    const targetCompanyId = (companySettings as any)?.companyId || "00000000-0000-0000-0000-000000000001";
-    addCustomerInteraction(selectedCustomerProfile.id, newActivity, targetCompanyId).catch(console.error);
-    upsertCustomer(updatedCustomer, targetCompanyId).catch(console.error);
 
     setNewInteractionTitle("");
     setNewInteractionNotes("");
@@ -631,8 +657,61 @@ export const CRMView: React.FC<CRMViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Filter Tabs & Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-4">
+      {/* 1.5 Main Domain Navigation Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <button
+          onClick={() => setCrmMainTab("CUSTOMERS")}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            crmMainTab === "CUSTOMERS"
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>👥 دليل العملاء والمستأجرين ({customers.length})</span>
+        </button>
+
+        <button
+          onClick={() => setCrmMainTab("PIPELINE")}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            crmMainTab === "PIPELINE"
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>🎯 مسار الصفقات (Pipeline - {opportunities.length})</span>
+        </button>
+
+        <button
+          onClick={() => setCrmMainTab("LEADS")}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            crmMainTab === "LEADS"
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+          }`}
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>📋 العملاء المحتملون (Leads - {leads.length})</span>
+        </button>
+
+        <button
+          onClick={() => setCrmMainTab("ACTIVITIES")}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            crmMainTab === "ACTIVITIES"
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+          }`}
+        >
+          <PhoneCall className="w-4 h-4" />
+          <span>📞 سجل الأنشطة والاتصالات ({crmActivities.length})</span>
+        </button>
+      </div>
+
+      {crmMainTab === "CUSTOMERS" && (
+        <>
+          {/* 2. Filter Tabs & Search Bar */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-4">
         
         {/* Category Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs font-bold">
@@ -1145,6 +1224,254 @@ export const CRMView: React.FC<CRMViewProps> = ({
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. TAB: PIPELINE KANBAN BOARD */}
+      {/* ========================================================================= */}
+      {crmMainTab === "PIPELINE" && (
+        <div className="space-y-6">
+          {/* Metrics Header */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs">
+              <span className="text-xs text-slate-500 font-bold block">إجمالي قيمة مسار الصفقات (Total Pipeline Value)</span>
+              <div className="text-2xl font-black text-indigo-950 mt-1">
+                {pipelineSummary.totalPipelineValue.toFixed(3)} {defaultCurrency}
+              </div>
+              <div className="text-[10px] text-slate-400 mt-1">{pipelineSummary.totalDealsCount} صفقة نشطة ومغلقة</div>
+            </div>
+
+            <div className="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-100 shadow-xs">
+              <span className="text-xs text-emerald-700 font-bold block">القيمة المتوقعة الموزونة (Weighted Value)</span>
+              <div className="text-2xl font-black text-emerald-950 mt-1">
+                {pipelineSummary.totalWeightedValue.toFixed(3)} {defaultCurrency}
+              </div>
+              <div className="text-[10px] text-emerald-600 mt-1">محسوبة وفقاً لنسب الاحتمالية ٪</div>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+              <div>
+                <span className="text-xs text-slate-500 font-bold block">صفقات ناجحة ومغلقة</span>
+                <div className="text-2xl font-black text-emerald-600 mt-1">
+                  {pipelineSummary.stageCounts.WON} صفقة
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingOpp({
+                    id: `opp-${Date.now()}`,
+                    customerName: "",
+                    title: "",
+                    dealValue: 1000,
+                    currency: defaultCurrency,
+                    stage: "QUALIFICATION",
+                    probabilityPercent: 30,
+                    expectedCloseDate: new Date(Date.now() + 86400000 * 14).toISOString().slice(0, 10),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                  });
+                  setIsOppModalOpen(true);
+                }}
+                className="px-3.5 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700 cursor-pointer shadow-md shadow-indigo-200"
+              >
+                + إضافة صفقة جديدة
+              </button>
+            </div>
+          </div>
+
+          {/* Kanban Pipeline Columns */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-4">
+            {[
+              { id: "QUALIFICATION", label: "التأهيل والاستكشاف", prob: 30, bg: "bg-blue-50/80 border-blue-200" },
+              { id: "PROPOSAL", label: "تقديم العرض المالي", prob: 60, bg: "bg-purple-50/80 border-purple-200" },
+              { id: "NEGOTIATION", label: "المفاوضات والبنود", prob: 85, bg: "bg-amber-50/80 border-amber-200" },
+              { id: "WON", label: "صفقات مغلقة وناجحة 🎉", prob: 100, bg: "bg-emerald-50/80 border-emerald-200" },
+              { id: "LOST", label: "صفقات مفقودة", prob: 0, bg: "bg-rose-50/80 border-rose-200" }
+            ].map((col) => {
+              const colOpps = opportunities.filter((o) => o.stage === col.id);
+              const colVal = pipelineSummary.stageValues[col.id as OpportunityStage];
+
+              return (
+                <div key={col.id} className={`p-3 rounded-2xl border ${col.bg} flex flex-col min-h-[400px]`}>
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 mb-3">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-xs">{col.label}</h4>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {colVal.toFixed(3)} {defaultCurrency}
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 text-[10px] font-black bg-white rounded-full border border-slate-200 text-slate-700">
+                      {colOpps.length}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 flex-1">
+                    {colOpps.map((opp) => (
+                      <div key={opp.id} className="p-3 bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="font-extrabold text-slate-900 text-xs truncate">{opp.title}</span>
+                          <span className="text-[10px] font-black px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded font-mono">
+                            {opp.probabilityPercent}%
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium">{opp.customerName}</p>
+                        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                          <span className="font-black text-slate-900 text-xs font-mono">
+                            {opp.dealValue.toFixed(3)} {opp.currency || defaultCurrency}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {col.id !== "QUALIFICATION" && (
+                              <button
+                                onClick={() => {
+                                  const stages: OpportunityStage[] = ["QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
+                                  const idx = stages.indexOf(col.id as OpportunityStage);
+                                  if (idx > 0) crmActions.updateOpportunityStage(opp.id, stages[idx - 1]);
+                                }}
+                                className="px-1.5 py-0.5 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 rounded cursor-pointer"
+                                title="نقل للمرحلة السابقة"
+                              >
+                                →
+                              </button>
+                            )}
+                            {col.id !== "LOST" && col.id !== "WON" && (
+                              <button
+                                onClick={() => {
+                                  const stages: OpportunityStage[] = ["QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
+                                  const idx = stages.indexOf(col.id as OpportunityStage);
+                                  if (idx < stages.length - 1) crmActions.updateOpportunityStage(opp.id, stages[idx + 1]);
+                                }}
+                                className="px-1.5 py-0.5 text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded cursor-pointer"
+                                title="نقل للمرحلة التالية"
+                              >
+                                ←
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. TAB: LEADS DIRECTORY */}
+      {/* ========================================================================= */}
+      {crmMainTab === "LEADS" && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200">
+            <div>
+              <h3 className="font-black text-slate-900 text-base">سجل العملاء المحتملين (Leads Directory)</h3>
+              <p className="text-xs text-slate-500">إدارة الاستفسارات الواردة، تتبع الأولوية، وتحويل العملاء المحتملين إلى ملفات رسمية.</p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingLead({
+                  id: `lead-${Date.now()}`,
+                  title: "",
+                  contactName: "",
+                  phone: "+968 ",
+                  source: "WEBSITE",
+                  status: "NEW",
+                  priority: "MEDIUM",
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                });
+                setIsLeadModalOpen(true);
+              }}
+              className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700 cursor-pointer shadow-md shadow-indigo-200 flex items-center gap-1.5"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>+ إضافة عميل محتمل</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {leads.map((lead) => (
+              <div key={lead.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between space-y-4">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className={`px-2 py-0.5 text-[10px] font-black rounded ${
+                      lead.priority === "HIGH" || lead.priority === "URGENT" ? "bg-rose-100 text-rose-800" : "bg-blue-100 text-blue-800"
+                    }`}>
+                      {lead.priority === "HIGH" ? "عالي الأولوية 🔥" : lead.priority === "URGENT" ? "عاجل ⚡" : "أولوية متوسطة"}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 font-mono">
+                      {lead.source}
+                    </span>
+                  </div>
+
+                  <h4 className="font-extrabold text-slate-900 text-sm mb-1">{lead.title}</h4>
+                  <p className="text-xs font-bold text-indigo-700">{lead.contactName} {lead.companyName ? `(${lead.companyName})` : ""}</p>
+                  <p className="text-xs text-slate-500 font-mono mt-1">📞 {lead.phone}</p>
+                  {lead.notes && <p className="text-xs text-slate-600 mt-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">{lead.notes}</p>}
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <span className={`px-2 py-1 text-[10px] font-extrabold rounded-lg ${
+                    lead.status === "CONVERTED" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                  }`}>
+                    {lead.status === "CONVERTED" ? "مُحوّل إلى عميل ✓" : lead.status}
+                  </span>
+
+                  {lead.status !== "CONVERTED" && (
+                    <button
+                      onClick={() => {
+                        const cust = crmActions.convertLeadToCustomer(lead.id);
+                        if (cust) {
+                          alert(`تم تحويل العميل المحتمل (${lead.contactName}) إلى ملف عميل رسمي بنجاح!`);
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>تحويل إلى عميل</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. TAB: SALES ACTIVITIES */}
+      {/* ========================================================================= */}
+      {crmMainTab === "ACTIVITIES" && (
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <h3 className="font-black text-slate-900 text-base">سجل الأنشطة والاتصالات البيعية</h3>
+              <p className="text-xs text-slate-500">تتبع كافة المكالمات والاجتماعات والزيارات الميدانية مع العملاء والصفقات.</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {crmActivities.map((act) => (
+              <div key={act.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 font-bold">
+                  <PhoneCall className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-extrabold text-slate-900 text-sm">{act.title}</h4>
+                    <span className="text-xs text-slate-400 font-mono">{formatDateToDDMMMMYYYY(act.date.slice(0, 10))}</span>
+                  </div>
+                  <p className="text-xs font-bold text-indigo-700 mt-0.5">{act.entityName}</p>
+                  {act.notes && <p className="text-xs text-slate-600 mt-2 leading-relaxed">{act.notes}</p>}
+                  <span className="text-[10px] text-slate-400 block mt-2">بواسطة: {act.performedByName}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -21,7 +21,7 @@ import {
   PurchaseInvoice,
   CompanySettings
 } from "../types";
-import { DEFAULT_COMPANY_SETTINGS } from "../utils/storage";
+import { DEFAULT_COMPANY_SETTINGS } from "../domain/settings/settingsEngine";
 import { useLanguage } from "../utils/LanguageContext";
 import {
   TrendingUp,

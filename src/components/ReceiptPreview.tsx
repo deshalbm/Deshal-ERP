@@ -13,7 +13,7 @@ import { shareVoucherData } from "../utils/pwaManager";
 import { useLanguage } from "../utils/LanguageContext";
 import { numberToWords } from "../utils/numberToWords";
 import { convertCurrency, getCurrencyInfo } from "../utils/currencyConverter";
-import { DEFAULT_COMPANY_SETTINGS } from "../utils/storage";
+import { DEFAULT_COMPANY_SETTINGS } from "../domain/settings/settingsEngine";
 import {
   Printer,
   FileDown,

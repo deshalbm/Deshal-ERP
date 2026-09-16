@@ -37,8 +37,10 @@ import {
   loadUserAccounts,
   updateUserAvatar
 } from "../../utils/authManager";
-import { uploadImageToStorage } from "../../lib/supabase/storageService";
-import { upsertEmployee } from "../../lib/supabase/employeeService";
+import { uploadMediaAsset } from "../../application/services/uploadMediaAsset";
+import { saveEmployeeProfile } from "../../application/hr/saveEmployeeProfile";
+import { defaultMediaStorageAdapter } from "../../lib/adapters/mediaStorageAdapter";
+import { defaultEmployeeProfileAdapter } from "../../lib/adapters/employeeProfileAdapter";
 import { useLanguage } from "../../utils/LanguageContext";
 
 interface SecuritySettingsModalProps {
@@ -115,7 +117,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
       let finalUrl = url;
       if (url.startsWith("data:")) {
         const filePath = `avatars/user_${session.user.id}_${Date.now()}.png`;
-        const res = await uploadImageToStorage("company_assets", filePath, url);
+        const res = await uploadMediaAsset("company_assets", filePath, url, defaultMediaStorageAdapter);
         if (res.publicUrl) {
           finalUrl = res.publicUrl;
         }
@@ -126,7 +128,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
 
       if (session.employee) {
         const updatedEmp = { ...session.employee, avatarUrl: finalUrl };
-        await upsertEmployee(updatedEmp, session.employee.branchId || "company-1");
+        await saveEmployeeProfile(updatedEmp, session.employee.branchId || "company-1", defaultEmployeeProfileAdapter);
       }
 
       const updatedUser = { ...session.user, avatarUrl: finalUrl };

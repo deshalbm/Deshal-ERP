@@ -27,16 +27,19 @@ import {
 } from "lucide-react";
 import { RentalSpace, SpaceBooking, SpaceType, RentalType, PaymentMethod, Customer, Branch } from "../types";
 import { useLanguage } from "../utils/LanguageContext";
+import { useSpaces } from "../contexts/SpacesContext";
+import { useMasterData } from "../contexts/MasterDataContext";
+import { calculateSpaceBookingTotals } from "../domain/spaces/spacesEngine";
 
 interface SpaceBookingModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   space?: RentalSpace | null;
-  spaces: RentalSpace[];
-  branches: Branch[];
+  spaces?: RentalSpace[];
+  branches?: Branch[];
   bookings?: SpaceBooking[];
   customers?: Customer[];
-  onConfirmBooking: (booking: SpaceBooking, autoGenerateVoucher?: boolean) => void;
+  onConfirmBooking?: (booking: SpaceBooking, autoGenerateVoucher?: boolean) => void;
 }
 
 export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
@@ -44,15 +47,26 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
   onClose,
   space,
   spaces,
-  branches,
-  bookings = [],
+  branches: branchesProp,
+  bookings,
   customers = [],
   onConfirmBooking
 }) => {
   const { language, isRTL, t } = useLanguage();
+  const { state: spacesState, actions: spacesActions } = useSpaces();
+  const { state: masterState } = useMasterData();
+  const masterBranches = masterState?.branches || [];
 
-  const [selectedSpaceId, setSelectedSpaceId] = useState<string>(space?.id || spaces[0]?.id || "");
-  const currentSpace = spaces.find((s) => s.id === selectedSpaceId) || space || spaces[0];
+  const branches = branchesProp ?? masterBranches;
+  const effectiveIsOpen = isOpen ?? spacesState.isBookingModalOpen;
+  const effectiveOnClose = onClose ?? spacesActions.closeBookingModal;
+  const effectiveSpace = space !== undefined ? space : spacesState.selectedSpaceForBooking;
+  const effectiveSpaces = spaces ?? spacesState.rentalSpaces;
+  const effectiveBookings = bookings ?? spacesState.spaceBookings;
+  const effectiveOnConfirmBooking = onConfirmBooking ?? spacesActions.confirmBooking;
+
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string>(effectiveSpace?.id || effectiveSpaces[0]?.id || "");
+  const currentSpace = effectiveSpaces.find((s) => s.id === selectedSpaceId) || effectiveSpace || effectiveSpaces[0];
 
   // Booking Form State
   const [customerName, setCustomerName] = useState<string>("");
@@ -92,10 +106,10 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
   }, [rentalType, startTime, duration]);
 
   useEffect(() => {
-    if (space?.id) {
-      setSelectedSpaceId(space.id);
+    if (effectiveSpace?.id) {
+      setSelectedSpaceId(effectiveSpace.id);
     }
-  }, [space]);
+  }, [effectiveSpace]);
 
   // Autocomplete customer info when typing name or selecting from CRM
   const handleCustomerNameChange = (name: string) => {
@@ -111,7 +125,7 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
   const conflictDetection = useMemo(() => {
     if (!currentSpace || !startDate) return { hasConflict: false, conflictingBooking: null, alternativeSlots: [], alternativeSpaces: [] };
 
-    const spaceBookingsOnDate = bookings.filter((b) => {
+    const spaceBookingsOnDate = effectiveBookings.filter((b) => {
       if (b.status === "CANCELLED") return false;
       if (b.spaceId !== currentSpace.id) return false;
       
@@ -152,48 +166,41 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
       return { hasConflict: false, conflictingBooking: null, alternativeSlots: [], alternativeSpaces: [] };
     }
 
-    // --- GENERATE INTELLIGENT ALTERNATIVE TIME SLOTS ---
-    const candidateStartTimes = ["08:00", "11:30", "14:00", "16:30", "19:00", "20:30"];
+    // Generate alternative slots/spaces suggestions
     const validAltSlots: { startTime: string; endTime: string }[] = [];
-
-    for (const candStart of candidateStartTimes) {
-      const candEnd = calculateEndTime(candStart, duration);
-      let slotConflict = false;
-
-      for (const b of spaceBookingsOnDate) {
-        if (b.rentalType === "DAILY" || b.rentalType === "MONTHLY") {
-          slotConflict = true;
-          break;
-        }
-        if (b.rentalType === "HOURLY" && b.startTime && b.endTime) {
-          if (candStart < b.endTime && candEnd > b.startTime) {
-            slotConflict = true;
+    if (rentalType === "HOURLY") {
+      const potentialTimes = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
+      for (const pTime of potentialTimes) {
+        const pEnd = calculateEndTime(pTime, duration);
+        let hasConflict = false;
+        for (const b of spaceBookingsOnDate) {
+          if (b.rentalType === "DAILY" || b.rentalType === "MONTHLY") {
+            hasConflict = true;
             break;
           }
+          if (b.rentalType === "HOURLY" && b.startTime && b.endTime) {
+            if (pTime < b.endTime && pEnd > b.startTime) {
+              hasConflict = true;
+              break;
+            }
+          }
         }
+        if (!hasConflict) {
+          validAltSlots.push({ startTime: pTime, endTime: pEnd });
+        }
+        if (validAltSlots.length >= 3) break;
       }
-
-      if (!slotConflict) {
-        validAltSlots.push({ startTime: candStart, endTime: candEnd });
-      }
-      if (validAltSlots.length >= 3) break;
     }
 
-    // --- GENERATE INTELLIGENT ALTERNATIVE SPACES ---
-    const reqStart = startTime;
-    const reqEnd = computedEndTime || calculateEndTime(startTime, duration);
     const validAltSpaces: RentalSpace[] = [];
-
-    for (const otherSpace of spaces) {
-      if (otherSpace.id === currentSpace.id || otherSpace.status !== "AVAILABLE") continue;
-
-      const otherBookings = bookings.filter(
-        (b) => b.spaceId === otherSpace.id && b.status !== "CANCELLED" && b.startDate === startDate
-      );
-
+    const otherSpaces = effectiveSpaces.filter((s) => s.id !== currentSpace.id && (s.branchId === currentSpace.branchId || !currentSpace.branchId));
+    for (const otherSpace of otherSpaces) {
+      const otherBookings = effectiveBookings.filter((b) => b.spaceId === otherSpace.id && b.status !== "CANCELLED" && b.startDate === startDate);
       let otherConflict = false;
-      for (const b of otherBookings) {
-        if (rentalType === "HOURLY") {
+      if (rentalType === "HOURLY") {
+        const reqStart = startTime;
+        const reqEnd = computedEndTime || calculateEndTime(startTime, duration);
+        for (const b of otherBookings) {
           if (b.rentalType === "DAILY" || b.rentalType === "MONTHLY") {
             otherConflict = true;
             break;
@@ -204,9 +211,10 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
               break;
             }
           }
-        } else {
+        }
+      } else {
+        if (otherBookings.length > 0) {
           otherConflict = true;
-          break;
         }
       }
 
@@ -222,18 +230,16 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
       alternativeSlots: validAltSlots,
       alternativeSpaces: validAltSpaces
     };
-  }, [currentSpace, startDate, rentalType, startTime, duration, computedEndTime, bookings, spaces]);
+  }, [currentSpace, startDate, rentalType, startTime, duration, computedEndTime, effectiveBookings, effectiveSpaces]);
 
-  if (!isOpen || !currentSpace) return null;
+  if (!effectiveIsOpen || !currentSpace) return null;
 
   // Rate calculation
   let unitPrice = currentSpace.hourlyRate;
   if (rentalType === "DAILY") unitPrice = currentSpace.dailyRate;
   if (rentalType === "MONTHLY") unitPrice = currentSpace.monthlyRate;
 
-  const subtotal = unitPrice * (duration || 1);
-  const taxAmount = +(subtotal * 0.05).toFixed(2); // 5% VAT in Oman
-  const totalAmount = +(subtotal + taxAmount).toFixed(2);
+  const { subtotal, taxAmount, totalAmount } = calculateSpaceBookingTotals(unitPrice, duration || 1);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,8 +280,8 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
       updatedAt: new Date().toISOString()
     };
 
-    onConfirmBooking(newBooking, autoGenerateVoucher);
-    onClose();
+    effectiveOnConfirmBooking(newBooking, autoGenerateVoucher);
+    effectiveOnClose();
   };
 
   return (
@@ -306,7 +312,7 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={effectiveOnClose}
             className="p-1.5 rounded-full hover:bg-slate-200/60 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
