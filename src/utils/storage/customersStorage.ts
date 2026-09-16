@@ -10,15 +10,14 @@ export function loadCustomers(): Customer[] {
     const raw = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load customers from localStorage:", e);
   }
-  saveCustomers(DEFAULT_CUSTOMERS);
-  return DEFAULT_CUSTOMERS;
+  return [];
 }
 
 export function saveCustomers(customers: Customer[]): void {

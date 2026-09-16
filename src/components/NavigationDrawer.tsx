@@ -515,7 +515,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
       {/* Dark Blurred Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity cursor-pointer"
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity cursor-pointer"
         aria-hidden="true"
       />
 

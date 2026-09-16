@@ -1019,34 +1019,34 @@ export const POSView: React.FC<POSViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] max-w-full overflow-hidden bg-slate-900 text-slate-100 font-sans select-none">
+    <div className="flex flex-col h-[calc(100vh-5rem)] max-w-full overflow-hidden bg-slate-50 text-slate-900 font-sans select-none">
       
       {/* Top POS Control Bar */}
-      <div className="bg-slate-950 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 shadow-md">
+      <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 shadow-2xs">
         
         {/* Left: Brand / Branch / Cashier Info */}
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shrink-0">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 shadow-2xs">
             <ShoppingCart className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-black text-white tracking-tight">
+              <span className="text-sm font-black text-slate-900 tracking-tight">
                 {language === "ar" ? "نقطة البيع الذكية" : "Smart POS Terminal"}
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>{language === "ar" ? "نشط ومترابط" : "Active & Synced"}</span>
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+            <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
               <span className="flex items-center gap-1">
                 <Building2 className="w-3.5 h-3.5 text-slate-400" />
                 <span>{currentBranch.name}</span>
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <User className="w-3.5 h-3.5 text-indigo-400" />
+                <User className="w-3.5 h-3.5 text-indigo-600" />
                 <span>{language === "ar" ? activeEmployee.fullName : (activeEmployee.fullNameEn || activeEmployee.fullName)}</span>
               </span>
             </div>
@@ -1069,13 +1069,13 @@ export const POSView: React.FC<POSViewProps> = ({
               }
             }}
             placeholder={language === "ar" ? "بحث بالاسم، الباركود، أو SKU (اضغط F2)..." : "Search item, barcode or SKU (F2)..."}
-            className="w-full bg-slate-900 border border-slate-700/80 focus:border-indigo-500 rounded-xl ps-9 pe-20 py-2 text-xs text-white placeholder-slate-500 outline-none transition-all focus:ring-1 focus:ring-indigo-500 font-medium"
+            className="w-full bg-slate-100 border border-slate-200 focus:bg-white focus:border-indigo-500 rounded-xl ps-9 pe-20 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none transition-all focus:ring-1 focus:ring-indigo-500 font-medium"
           />
           <div className="absolute inset-y-0 end-0 pe-2 flex items-center gap-1">
             <button
               type="button"
               onClick={() => setIsBarcodeModalOpen(true)}
-              className="p-1 text-slate-400 hover:text-indigo-400 rounded-lg hover:bg-slate-800 transition-colors"
+              className="p-1 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-200 transition-colors"
               title="قارئ الباركود"
             >
               <Barcode className="w-4 h-4" />
@@ -1084,7 +1084,7 @@ export const POSView: React.FC<POSViewProps> = ({
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -1099,12 +1099,12 @@ export const POSView: React.FC<POSViewProps> = ({
           <button
             type="button"
             onClick={() => setIsHeldCartsModalOpen(true)}
-            className="relative px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-700"
+            className="relative px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200"
           >
-            <PauseCircle className="w-3.5 h-3.5 text-amber-400" />
+            <PauseCircle className="w-3.5 h-3.5 text-amber-600" />
             <span>{t("heldOrders")}</span>
             {heldCarts.length > 0 && (
-              <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px] flex items-center justify-center -me-1">
+              <span className="w-5 h-5 rounded-full bg-amber-500 text-white font-bold text-[10px] flex items-center justify-center -me-1">
                 {heldCarts.length}
               </span>
             )}
@@ -1116,8 +1116,8 @@ export const POSView: React.FC<POSViewProps> = ({
             onClick={() => setIsShiftModalOpen(true)}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
               activeShift
-                ? "bg-indigo-600/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-600/30"
-                : "bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30"
+                ? "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
@@ -1128,10 +1128,10 @@ export const POSView: React.FC<POSViewProps> = ({
           <button
             type="button"
             onClick={() => setIsHistoryModalOpen(true)}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-slate-700"
+            className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200"
             title="سجل مبيعات POS"
           >
-            <History className="w-3.5 h-3.5 text-slate-400" />
+            <History className="w-3.5 h-3.5 text-slate-500" />
             <span className="hidden sm:inline">{t("orderHistory")}</span>
           </button>
 
@@ -1141,19 +1141,19 @@ export const POSView: React.FC<POSViewProps> = ({
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`p-2 rounded-xl border transition-all cursor-pointer ${
               soundEnabled
-                ? "bg-slate-800 text-slate-300 border-slate-700"
-                : "bg-slate-800 text-slate-600 border-slate-700"
+                ? "bg-slate-100 text-slate-700 border-slate-200"
+                : "bg-slate-100 text-slate-400 border-slate-200"
             }`}
             title="المؤثرات الصوتية"
           >
-            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> : <VolumeX className="w-3.5 h-3.5" />}
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-600" /> : <VolumeX className="w-3.5 h-3.5" />}
           </button>
 
           {/* Keyboard Shortcuts Guide */}
           <button
             type="button"
             onClick={() => setIsShortcutsModalOpen(true)}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 border border-slate-200 transition-all cursor-pointer"
             title="اختصارات لوحة المفاتيح"
           >
             <HelpCircle className="w-3.5 h-3.5" />
@@ -1167,7 +1167,7 @@ export const POSView: React.FC<POSViewProps> = ({
       <div className="flex-1 flex overflow-hidden">
         
         {/* Products Catalogue Section */}
-        <div className="flex-1 flex flex-col min-w-0 bg-slate-900 border-e border-slate-800 p-3 sm:p-4 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 bg-slate-50 border-e border-slate-200 p-3 sm:p-4 overflow-hidden">
           
           {/* Categories Bar & Quick Actions */}
           <div className="flex items-center justify-between gap-2 mb-3 shrink-0 overflow-x-auto pb-1 scrollbar-none">
@@ -1179,8 +1179,8 @@ export const POSView: React.FC<POSViewProps> = ({
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     selectedCategory === cat
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                      : "bg-slate-800 text-slate-400 hover:bg-slate-750 hover:text-white border border-slate-750"
+                      ? "bg-indigo-600 text-white shadow-xs"
+                      : "bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
                   }`}
                 >
                   {cat === "ALL" ? t("allCategories") : cat}
@@ -1192,7 +1192,7 @@ export const POSView: React.FC<POSViewProps> = ({
             <button
               type="button"
               onClick={() => setIsCustomItemModalOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{t("customItem")}</span>
@@ -1202,16 +1202,16 @@ export const POSView: React.FC<POSViewProps> = ({
           {/* Products Grid */}
           <div className="flex-1 overflow-y-auto pe-1">
             {filteredProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-center text-slate-500">
-                <Package className="w-12 h-12 mb-3 text-slate-600" />
-                <p className="text-sm font-bold text-slate-400">{t("noDataFound")}</p>
-                <p className="text-xs text-slate-600 mt-1">
+              <div className="flex flex-col items-center justify-center h-64 text-center text-slate-400">
+                <Package className="w-12 h-12 mb-3 text-slate-300" />
+                <p className="text-sm font-bold text-slate-600">{t("noDataFound")}</p>
+                <p className="text-xs text-slate-400 mt-1">
                   {language === "ar" ? "جرب البحث باسم آخر أو أضف بنداً يدوياً" : "Try a different search or add custom item"}
                 </p>
                 <button
                   type="button"
                   onClick={() => setIsCustomItemModalOpen(true)}
-                  className="mt-4 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                  className="mt-4 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
                 >
                   {t("customItem")}
                 </button>
@@ -1230,8 +1230,8 @@ export const POSView: React.FC<POSViewProps> = ({
                       onClick={() => handleAddToCart(product, 1)}
                       className={`relative flex flex-col justify-between p-3 rounded-2xl border text-start transition-all cursor-pointer select-none group ${
                         isOutOfStock
-                          ? "bg-slate-900/50 border-slate-800/60 opacity-50 cursor-not-allowed"
-                          : "bg-slate-850 hover:bg-slate-800 border-slate-750 hover:border-indigo-500/50 shadow-sm hover:shadow-indigo-500/10 active:scale-[0.98]"
+                          ? "bg-slate-100/60 border-slate-200 opacity-50 cursor-not-allowed"
+                          : "bg-white hover:bg-slate-50 border-slate-200 hover:border-indigo-300 shadow-2xs active:scale-[0.98]"
                       }`}
                     >
                       {/* Top Badges */}
@@ -1242,10 +1242,10 @@ export const POSView: React.FC<POSViewProps> = ({
                         <span
                           className={`px-1.5 py-0.5 text-[9px] font-bold rounded-md ${
                             isOutOfStock
-                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                              ? "bg-rose-50 text-rose-700 border border-rose-200"
                               : isLowStock
-                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                              : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           }`}
                         >
                           {isOutOfStock ? t("outOfStock") : `${product.quantity} ${product.unit || ""}`}
@@ -1254,21 +1254,21 @@ export const POSView: React.FC<POSViewProps> = ({
 
                       {/* Product Name */}
                       <div className="my-1 flex-1">
-                        <h4 className="text-xs font-bold text-white line-clamp-2 leading-snug group-hover:text-indigo-300 transition-colors">
+                        <h4 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
                           {product.name}
                         </h4>
                       </div>
 
                       {/* Bottom Price & Add Action */}
-                      <div className="flex items-end justify-between w-full mt-2 pt-2 border-t border-slate-750">
+                      <div className="flex items-end justify-between w-full mt-2 pt-2 border-t border-slate-100">
                         <div>
                           <p className="text-[10px] text-slate-400 leading-none">{language === "ar" ? "السعر" : "Price"}</p>
-                          <p className="text-sm font-black text-emerald-400 font-mono mt-0.5">
+                          <p className="text-sm font-black text-emerald-700 font-mono mt-0.5">
                             {product.sellingPrice.toFixed(3)}
                             <span className="text-[10px] font-normal text-slate-400 ms-1">{currency}</span>
                           </p>
                         </div>
-                        <div className="w-6 h-6 rounded-lg bg-indigo-600/30 text-indigo-300 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0">
+                        <div className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0">
                           <Plus className="w-3.5 h-3.5" />
                         </div>
                       </div>
@@ -1282,19 +1282,19 @@ export const POSView: React.FC<POSViewProps> = ({
         </div>
 
         {/* Right POS Cart & Fast Checkout Panel */}
-        <div className="w-80 sm:w-96 lg:w-[420px] flex flex-col bg-slate-950 border-s border-slate-800 shrink-0 select-none">
+        <div className="w-80 sm:w-96 lg:w-[420px] flex flex-col bg-white border-s border-slate-200 shrink-0 select-none">
           
           {/* Customer Selection Row */}
-          <div className="p-3 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between gap-2">
+          <div className="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <label className="text-[10px] text-slate-400 font-semibold block mb-1">
+              <label className="text-[10px] text-slate-500 font-semibold block mb-1">
                 {t("selectCustomer")}
               </label>
               <div className="relative">
                 <select
                   value={selectedCustomerId}
                   onChange={(e) => setSelectedCustomerId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 font-medium truncate cursor-pointer"
+                  className="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 font-medium truncate cursor-pointer"
                 >
                   <option value="walk-in">
                     {language === "ar" ? "👤 عميل نقدي عام (Walk-in)" : "👤 Walk-in Customer"}
@@ -1311,7 +1311,7 @@ export const POSView: React.FC<POSViewProps> = ({
             <button
               type="button"
               onClick={() => setIsNewCustomerModalOpen(true)}
-              className="mt-4 p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-white border border-slate-700 transition-colors cursor-pointer shrink-0"
+              className="mt-4 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-600 border border-slate-200 transition-colors cursor-pointer shrink-0"
               title="إضافة عميل جديد"
             >
               <UserPlus className="w-4 h-4" />
@@ -1319,11 +1319,11 @@ export const POSView: React.FC<POSViewProps> = ({
           </div>
 
           {/* Cart Header with Count & Clear */}
-          <div className="px-3 py-2 border-b border-slate-800/80 flex items-center justify-between text-xs bg-slate-900/30">
-            <span className="font-bold text-slate-300 flex items-center gap-1.5">
-              <ShoppingCart className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="px-3 py-2 border-b border-slate-200 flex items-center justify-between text-xs bg-slate-50/80">
+            <span className="font-bold text-slate-700 flex items-center gap-1.5">
+              <ShoppingCart className="w-3.5 h-3.5 text-indigo-600" />
               <span>{language === "ar" ? "أصناف الفاتورة" : "Cart Items"}</span>
-              <span className="px-1.5 py-0.2 rounded-md bg-indigo-500/20 text-indigo-300 font-mono text-[10px]">
+              <span className="px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold">
                 {cartItems.length}
               </span>
             </span>
@@ -1333,7 +1333,7 @@ export const POSView: React.FC<POSViewProps> = ({
                 type="button"
                 onClick={handleHoldCurrentCart}
                 disabled={cartItems.length === 0}
-                className="text-[11px] text-amber-400 hover:text-amber-300 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                className="text-[11px] text-amber-600 hover:text-amber-700 disabled:opacity-40 flex items-center gap-1 cursor-pointer font-bold"
               >
                 <PauseCircle className="w-3 h-3" />
                 <span>{t("holdOrder")}</span>
@@ -1343,7 +1343,7 @@ export const POSView: React.FC<POSViewProps> = ({
                 type="button"
                 onClick={handleClearCart}
                 disabled={cartItems.length === 0}
-                className="text-[11px] text-rose-400 hover:text-rose-300 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                className="text-[11px] text-rose-600 hover:text-rose-700 disabled:opacity-40 flex items-center gap-1 cursor-pointer font-bold"
               >
                 <Trash2 className="w-3 h-3" />
                 <span>{t("clearCart")}</span>
@@ -1354,10 +1354,10 @@ export const POSView: React.FC<POSViewProps> = ({
           {/* Cart Items List */}
           <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
             {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-center text-slate-600">
-                <ShoppingCart className="w-10 h-10 mb-2 stroke-[1.5]" />
-                <p className="text-xs font-bold text-slate-400">{language === "ar" ? "السلة فارغة" : "Cart is Empty"}</p>
-                <p className="text-[11px] text-slate-600 mt-0.5">
+              <div className="flex flex-col items-center justify-center h-48 text-center text-slate-400">
+                <ShoppingCart className="w-10 h-10 mb-2 stroke-[1.5] text-slate-300" />
+                <p className="text-xs font-bold text-slate-500">{language === "ar" ? "السلة فارغة" : "Cart is Empty"}</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
                   {language === "ar" ? "اختر منتجات من القائمة أو امسح الباركود" : "Select items from grid or scan barcode"}
                 </p>
               </div>
@@ -1365,14 +1365,14 @@ export const POSView: React.FC<POSViewProps> = ({
               cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl p-2.5 flex flex-col justify-between hover:border-slate-700 transition-all shadow-xs"
+                  className="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 flex flex-col justify-between hover:border-slate-300 transition-all shadow-2xs"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-white line-clamp-1 leading-snug">
+                      <p className="text-xs font-bold text-slate-900 line-clamp-1 leading-snug">
                         {item.name}
                       </p>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
+                      <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
                         <span>{item.unitPrice.toFixed(3)} {currency}</span>
                         {item.sku && <span>• {item.sku}</span>}
                       </div>
@@ -1381,7 +1381,7 @@ export const POSView: React.FC<POSViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveCartItem(item.id)}
-                      className="text-slate-500 hover:text-rose-400 p-1 transition-colors cursor-pointer"
+                      className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
                       title="حذف الصنف"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1389,29 +1389,29 @@ export const POSView: React.FC<POSViewProps> = ({
                   </div>
 
                   {/* Qty & Line Total Row */}
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80">
-                    <div className="flex items-center bg-slate-950 rounded-xl border border-slate-750 p-0.5">
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200/80">
+                    <div className="flex items-center bg-white rounded-xl border border-slate-200 p-0.5">
                       <button
                         type="button"
                         onClick={() => handleUpdateItemQty(item.id, item.quantity - 1)}
-                        className="w-6 h-6 rounded-lg bg-slate-850 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="w-9 text-center text-xs font-mono font-bold text-white">
+                      <span className="w-9 text-center text-xs font-mono font-bold text-slate-900">
                         {item.quantity}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleUpdateItemQty(item.id, item.quantity + 1)}
-                        className="w-6 h-6 rounded-lg bg-slate-850 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
 
                     <div className="text-end">
-                      <p className="text-xs font-black text-emerald-400 font-mono">
+                      <p className="text-xs font-black text-emerald-700 font-mono">
                         {(item.quantity * item.unitPrice).toFixed(3)} {currency}
                       </p>
                     </div>
@@ -1422,28 +1422,28 @@ export const POSView: React.FC<POSViewProps> = ({
           </div>
 
           {/* Cart Discount & Order Calculation Summary */}
-          <div className="p-3 bg-slate-900/90 border-t border-slate-800 space-y-2 shrink-0">
+          <div className="p-3 bg-slate-50 border-t border-slate-200 space-y-2 shrink-0">
             
             {/* Quick Discount Toggle */}
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400 flex items-center gap-1">
-                <Percent className="w-3 h-3 text-indigo-400" />
+              <span className="text-slate-600 flex items-center gap-1 font-medium">
+                <Percent className="w-3 h-3 text-indigo-600" />
                 <span>{t("discount")}</span>
               </span>
 
               <div className="flex items-center gap-1.5">
-                <div className="flex items-center bg-slate-950 border border-slate-750 rounded-lg p-0.5 text-[10px]">
+                <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 text-[10px]">
                   <button
                     type="button"
                     onClick={() => setDiscountType("PERCENT")}
-                    className={`px-1.5 py-0.5 rounded ${discountType === "PERCENT" ? "bg-indigo-600 text-white font-bold" : "text-slate-400"}`}
+                    className={`px-1.5 py-0.5 rounded ${discountType === "PERCENT" ? "bg-indigo-600 text-white font-bold" : "text-slate-500"}`}
                   >
                     %
                   </button>
                   <button
                     type="button"
                     onClick={() => setDiscountType("FIXED")}
-                    className={`px-1.5 py-0.5 rounded ${discountType === "FIXED" ? "bg-indigo-600 text-white font-bold" : "text-slate-400"}`}
+                    className={`px-1.5 py-0.5 rounded ${discountType === "FIXED" ? "bg-indigo-600 text-white font-bold" : "text-slate-500"}`}
                   >
                     {currency}
                   </button>
@@ -1456,35 +1456,35 @@ export const POSView: React.FC<POSViewProps> = ({
                   value={discountValue || ""}
                   onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
                   placeholder="0"
-                  className="w-16 bg-slate-950 border border-slate-750 rounded-lg px-2 py-1 text-xs text-center text-white outline-none focus:border-indigo-500 font-mono"
+                  className="w-16 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-center text-slate-900 outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
             </div>
 
             {/* Calculations Breakdown */}
-            <div className="space-y-1 text-xs border-t border-slate-800/80 pt-2">
-              <div className="flex items-center justify-between text-slate-400">
+            <div className="space-y-1 text-xs border-t border-slate-200 pt-2">
+              <div className="flex items-center justify-between text-slate-500">
                 <span>{t("subtotal")}</span>
-                <span className="font-mono text-slate-200">{cartSubtotal.toFixed(3)} {currency}</span>
+                <span className="font-mono text-slate-800 font-semibold">{cartSubtotal.toFixed(3)} {currency}</span>
               </div>
 
               {discountAmount > 0 && (
-                <div className="flex items-center justify-between text-amber-400">
+                <div className="flex items-center justify-between text-amber-700 font-semibold">
                   <span>{t("discount")}</span>
                   <span className="font-mono">-{discountAmount.toFixed(3)} {currency}</span>
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-slate-400">
+              <div className="flex items-center justify-between text-slate-500">
                 <span>{t("vat")} (5%)</span>
-                <span className="font-mono text-slate-200">{taxAmount.toFixed(3)} {currency}</span>
+                <span className="font-mono text-slate-800 font-semibold">{taxAmount.toFixed(3)} {currency}</span>
               </div>
 
               {/* Net Grand Total */}
-              <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-base font-black">
-                <span className="text-white">{t("total")}</span>
-                <span className="text-emerald-400 font-mono text-xl">
-                  {netTotal.toFixed(3)} <span className="text-xs font-normal text-slate-400">{currency}</span>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-base font-black">
+                <span className="text-slate-900">{t("total")}</span>
+                <span className="text-emerald-700 font-mono text-xl">
+                  {netTotal.toFixed(3)} <span className="text-xs font-normal text-slate-500">{currency}</span>
                 </span>
               </div>
             </div>
@@ -1497,13 +1497,13 @@ export const POSView: React.FC<POSViewProps> = ({
                 type="button"
                 disabled={cartItems.length === 0}
                 onClick={() => handleOpenCheckout("CASH")}
-                className="py-3 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-black text-xs shadow-lg shadow-emerald-600/20 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                className="py-3 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-black text-xs shadow-md shadow-emerald-600/20 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
               >
                 <div className="flex items-center gap-1">
                   <Banknote className="w-4 h-4" />
                   <span>{t("payCash")} (F10)</span>
                 </div>
-                <span className="text-[10px] font-mono font-normal opacity-80">
+                <span className="text-[10px] font-mono font-normal opacity-90">
                   {netTotal.toFixed(3)} {currency}
                 </span>
               </button>
@@ -1513,13 +1513,13 @@ export const POSView: React.FC<POSViewProps> = ({
                 type="button"
                 disabled={cartItems.length === 0}
                 onClick={() => handleOpenCheckout("CARD")}
-                className="py-3 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white font-black text-xs shadow-lg shadow-indigo-600/20 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                className="py-3 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white font-black text-xs shadow-md shadow-indigo-600/20 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
               >
                 <div className="flex items-center gap-1">
                   <CreditCard className="w-4 h-4" />
                   <span>{t("payCard")} (F9)</span>
                 </div>
-                <span className="text-[10px] font-mono font-normal opacity-80">
+                <span className="text-[10px] font-mono font-normal opacity-90">
                   {language === "ar" ? "مدى / بطاقة" : "Card POS"}
                 </span>
               </button>
@@ -1532,7 +1532,7 @@ export const POSView: React.FC<POSViewProps> = ({
                 type="button"
                 disabled={cartItems.length === 0}
                 onClick={() => handleOpenCheckout("SPLIT")}
-                className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 text-[11px] font-bold border border-slate-700 transition-all cursor-pointer disabled:opacity-40"
+                className="flex-1 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 transition-all cursor-pointer disabled:opacity-40"
               >
                 {t("splitPayment")}
               </button>
@@ -1541,7 +1541,7 @@ export const POSView: React.FC<POSViewProps> = ({
                 type="button"
                 disabled={cartItems.length === 0}
                 onClick={() => handleOpenCheckout("BANK_TRANSFER")}
-                className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 text-[11px] font-bold border border-slate-700 transition-all cursor-pointer disabled:opacity-40"
+                className="flex-1 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 transition-all cursor-pointer disabled:opacity-40"
               >
                 {t("payBank")}
               </button>
@@ -1557,20 +1557,20 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 1. Fast Payment Modal (نافذة إتمام الدفع والكاشير)                         */}
       {/* ========================================================================= */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 text-slate-900">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-2xs">
                   <CreditCard className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-slate-900">
                     {language === "ar" ? "إتمام عملية البيع والدفع" : "Complete POS Checkout"}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     {selectedCustomer ? selectedCustomer.name : (language === "ar" ? "عميل نقدي عام" : "Walk-in Customer")}
                   </p>
                 </div>
@@ -1579,24 +1579,24 @@ export const POSView: React.FC<POSViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsPaymentModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Total Required Banner */}
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between text-center">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-center">
               <div>
-                <p className="text-xs text-slate-400">{language === "ar" ? "المبلغ المستحق للدفع" : "Total Due"}</p>
-                <p className="text-2xl font-black text-emerald-400 font-mono">
-                  {netTotal.toFixed(3)} <span className="text-xs text-slate-400 font-normal">{currency}</span>
+                <p className="text-xs text-slate-500">{language === "ar" ? "المبلغ المستحق للدفع" : "Total Due"}</p>
+                <p className="text-2xl font-black text-emerald-700 font-mono">
+                  {netTotal.toFixed(3)} <span className="text-xs text-slate-500 font-normal">{currency}</span>
                 </p>
               </div>
 
               <div className="text-end">
-                <p className="text-xs text-slate-400">{language === "ar" ? "عدد الأصناف" : "Items Count"}</p>
-                <p className="text-lg font-bold text-white font-mono">{cartItems.length}</p>
+                <p className="text-xs text-slate-500">{language === "ar" ? "عدد الأصناف" : "Items Count"}</p>
+                <p className="text-lg font-bold text-slate-900 font-mono">{cartItems.length}</p>
               </div>
             </div>
 
@@ -1617,8 +1617,8 @@ export const POSView: React.FC<POSViewProps> = ({
                     onClick={() => setPaymentMethod(m.id as any)}
                     className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       active
-                        ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30 font-bold"
-                        : "bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white"
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-md font-bold"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -1630,9 +1630,9 @@ export const POSView: React.FC<POSViewProps> = ({
 
             {/* Cash Tender Keypad Input */}
             {paymentMethod === "CASH" && (
-              <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <div className="flex items-center justify-between text-xs">
-                  <label className="font-bold text-slate-300">{t("cashReceived")}</label>
+                  <label className="font-bold text-slate-700">{t("cashReceived")}</label>
                   <span className="text-[11px] text-slate-500">
                     {language === "ar" ? "اختر فئة سريعة أو اكتب المبلغ" : "Quick currency buttons"}
                   </span>
@@ -1645,7 +1645,7 @@ export const POSView: React.FC<POSViewProps> = ({
                     value={cashTendered}
                     onChange={(e) => setCashTendered(e.target.value)}
                     placeholder={netTotal.toFixed(3)}
-                    className="w-full bg-slate-900 border border-slate-700 text-white text-xl font-mono font-black rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500 text-center"
+                    className="w-full bg-white border border-slate-300 text-slate-900 text-xl font-mono font-black rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500 text-center"
                   />
                 </div>
 
@@ -1663,7 +1663,7 @@ export const POSView: React.FC<POSViewProps> = ({
                       key={i}
                       type="button"
                       onClick={() => setCashTendered(btn.val.toFixed(3))}
-                      className="px-2.5 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-300 text-xs font-mono font-semibold border border-slate-750 transition-colors cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 text-xs font-mono font-semibold border border-slate-200 transition-colors cursor-pointer"
                     >
                       {btn.label}
                     </button>
@@ -1672,9 +1672,9 @@ export const POSView: React.FC<POSViewProps> = ({
 
                 {/* Change Due Highlight */}
                 {parseFloat(cashTendered) >= netTotal && (
-                  <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between text-xs">
-                    <span className="font-bold text-emerald-300">{t("changeDue")}:</span>
-                    <span className="font-mono text-base font-black text-emerald-400">
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
+                    <span className="font-bold text-emerald-800">{t("changeDue")}:</span>
+                    <span className="font-mono text-base font-black text-emerald-700">
                       {(parseFloat(cashTendered) - netTotal).toFixed(3)} {currency}
                     </span>
                   </div>
@@ -1684,37 +1684,37 @@ export const POSView: React.FC<POSViewProps> = ({
 
             {/* Split Payment Fields */}
             {paymentMethod === "SPLIT" && (
-              <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs">
+              <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">{t("payCash")}</label>
+                    <label className="text-slate-700 font-bold block mb-1">{t("payCash")}</label>
                     <input
                       type="number"
                       step="0.001"
                       value={splitCashAmount}
                       onChange={(e) => setSplitCashAmount(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 text-white font-mono rounded-xl p-2 outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-slate-300 text-slate-900 font-mono rounded-xl p-2 outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">{t("payCard")}</label>
+                    <label className="text-slate-700 font-bold block mb-1">{t("payCard")}</label>
                     <input
                       type="number"
                       step="0.001"
                       value={splitCardAmount}
                       onChange={(e) => setSplitCardAmount(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 text-white font-mono rounded-xl p-2 outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-slate-300 text-slate-900 font-mono rounded-xl p-2 outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-slate-400 font-bold block mb-1">{language === "ar" ? "رقم مرجع الشبكة (اختياري)" : "Card Ref (Optional)"}</label>
+                  <label className="text-slate-700 font-bold block mb-1">{language === "ar" ? "رقم مرجع الشبكة (اختياري)" : "Card Ref (Optional)"}</label>
                   <input
                     type="text"
                     value={splitCardRef}
                     onChange={(e) => setSplitCardRef(e.target.value)}
                     placeholder="MADA-XXXX"
-                    className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2 outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-300 text-slate-900 rounded-xl p-2 outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -1725,7 +1725,7 @@ export const POSView: React.FC<POSViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsPaymentModalOpen(false)}
-                className="flex-1 py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer border border-slate-200"
               >
                 {t("cancel")}
               </button>
@@ -1733,7 +1733,7 @@ export const POSView: React.FC<POSViewProps> = ({
               <button
                 type="button"
                 onClick={() => handleExecutePayment(true)}
-                className="flex-2 py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="flex-2 py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <Printer className="w-4 h-4" />
                 <span>{t("payAndPrint")}</span>
@@ -1748,25 +1748,25 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 2. Cashier Shift & Cash Drawer Modal (إدارة الوردية والصندوق)             */}
       {/* ========================================================================= */}
       {isShiftModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto text-slate-900">
             
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-200">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-slate-900">
                     {activeShift ? `${t("cashierShift")} (${activeShift.shiftNumber})` : t("openShift")}
                   </h3>
-                  <p className="text-xs text-slate-400">{currentBranch.name} • {activeEmployee.fullName}</p>
+                  <p className="text-xs text-slate-500">{currentBranch.name} • {activeEmployee.fullName}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsShiftModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1775,29 +1775,29 @@ export const POSView: React.FC<POSViewProps> = ({
             {!activeShift ? (
               // Open New Shift Form
               <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs space-y-2">
-                  <p className="text-slate-300 font-bold">{language === "ar" ? "لا توجد وردية مفتوحة حالياً" : "No active open shift"}</p>
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                  <p className="text-slate-800 font-bold">{language === "ar" ? "لا توجد وردية مفتوحة حالياً" : "No active open shift"}</p>
                   <p className="text-slate-500">
                     {language === "ar" ? "يرجى إدخال رصيد افتتاح الصندوق النقدي لبدء تسجيل عمليات البيع." : "Enter opening float to begin selling."}
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">{t("openingBalance")}</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">{t("openingBalance")}</label>
                   <input
                     type="number"
                     step="0.001"
                     value={cashMovementAmount}
                     onChange={(e) => setCashMovementAmount(e.target.value)}
                     placeholder="50.000"
-                    className="w-full bg-slate-950 border border-slate-750 text-white font-mono text-lg rounded-xl p-3 outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-300 text-slate-900 font-mono text-lg rounded-xl p-3 outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <button
                   type="button"
                   onClick={handleOpenNewShift}
-                  className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg transition-all cursor-pointer"
+                  className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
                 >
                   {t("openShift")}
                 </button>
@@ -1807,46 +1807,46 @@ export const POSView: React.FC<POSViewProps> = ({
               <div className="space-y-4">
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
-                    <p className="text-[11px] text-slate-400">{t("openingBalance")}</p>
-                    <p className="text-sm font-bold text-white font-mono mt-0.5">{activeShift.openingCash.toFixed(3)}</p>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-center">
+                    <p className="text-[11px] text-slate-500">{t("openingBalance")}</p>
+                    <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">{activeShift.openingCash.toFixed(3)}</p>
                   </div>
-                  <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
-                    <p className="text-[11px] text-emerald-400">{t("payCash")}</p>
-                    <p className="text-sm font-bold text-emerald-400 font-mono mt-0.5">{activeShift.totalSalesCash.toFixed(3)}</p>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-center">
+                    <p className="text-[11px] text-emerald-700 font-medium">{t("payCash")}</p>
+                    <p className="text-sm font-bold text-emerald-700 font-mono mt-0.5">{activeShift.totalSalesCash.toFixed(3)}</p>
                   </div>
-                  <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
-                    <p className="text-[11px] text-indigo-400">{t("payCard")}</p>
-                    <p className="text-sm font-bold text-indigo-400 font-mono mt-0.5">{activeShift.totalSalesCard.toFixed(3)}</p>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-center">
+                    <p className="text-[11px] text-indigo-700 font-medium">{t("payCard")}</p>
+                    <p className="text-sm font-bold text-indigo-700 font-mono mt-0.5">{activeShift.totalSalesCard.toFixed(3)}</p>
                   </div>
-                  <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
-                    <p className="text-[11px] text-slate-400">{language === "ar" ? "عدد الفواتير" : "Orders"}</p>
-                    <p className="text-sm font-bold text-white font-mono mt-0.5">{activeShift.ordersCount}</p>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-center">
+                    <p className="text-[11px] text-slate-500">{language === "ar" ? "عدد الفواتير" : "Orders"}</p>
+                    <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">{activeShift.ordersCount}</p>
                   </div>
-                  <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center col-span-2">
-                    <p className="text-[11px] text-amber-400 font-bold">{t("expectedCash")}</p>
-                    <p className="text-base font-black text-amber-400 font-mono mt-0.5">
-                      {activeShift.expectedCash.toFixed(3)} <span className="text-xs font-normal text-slate-400">{currency}</span>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-center col-span-2">
+                    <p className="text-[11px] text-amber-700 font-bold">{t("expectedCash")}</p>
+                    <p className="text-base font-black text-amber-700 font-mono mt-0.5">
+                      {activeShift.expectedCash.toFixed(3)} <span className="text-xs font-normal text-slate-500">{currency}</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Cash In / Out Form */}
-                <form onSubmit={handleCashMovement} className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 space-y-2.5 text-xs">
+                <form onSubmit={handleCashMovement} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-300">{language === "ar" ? "سحب أو إيداع نقدي بالصندوق" : "Cash In / Out"}</span>
+                    <span className="font-bold text-slate-700">{language === "ar" ? "سحب أو إيداع نقدي بالصندوق" : "Cash In / Out"}</span>
                     <div className="flex gap-1">
                       <button
                         type="button"
                         onClick={() => setCashMovementType("IN")}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-bold ${cashMovementType === "IN" ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-400"}`}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold ${cashMovementType === "IN" ? "bg-emerald-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
                       >
                         {t("cashIn")}
                       </button>
                       <button
                         type="button"
                         onClick={() => setCashMovementType("OUT")}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-bold ${cashMovementType === "OUT" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-400"}`}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold ${cashMovementType === "OUT" ? "bg-rose-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
                       >
                         {t("cashOut")}
                       </button>
@@ -1860,37 +1860,37 @@ export const POSView: React.FC<POSViewProps> = ({
                       value={cashMovementAmount}
                       onChange={(e) => setCashMovementAmount(e.target.value)}
                       placeholder={language === "ar" ? "المبلغ..." : "Amount..."}
-                      className="bg-slate-900 border border-slate-700 text-white rounded-xl p-2 outline-none font-mono"
+                      className="bg-white border border-slate-300 text-slate-900 rounded-xl p-2 outline-none font-mono"
                     />
                     <input
                       type="text"
                       value={cashMovementReason}
                       onChange={(e) => setCashMovementReason(e.target.value)}
                       placeholder={language === "ar" ? "السبب (مثلاً: عهدة، صيانة)..." : "Reason..."}
-                      className="bg-slate-900 border border-slate-700 text-white rounded-xl p-2 outline-none"
+                      className="bg-white border border-slate-300 text-slate-900 rounded-xl p-2 outline-none"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 font-bold transition-colors cursor-pointer"
+                    className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors cursor-pointer border border-slate-200"
                   >
                     {language === "ar" ? "تسجيل حركة النقدية" : "Record Movement"}
                   </button>
                 </form>
 
                 {/* Close Shift Section */}
-                <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl space-y-3">
-                  <h4 className="text-xs font-bold text-rose-300">{t("closeShift")}</h4>
+                <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3">
+                  <h4 className="text-xs font-bold text-rose-800">{t("closeShift")}</h4>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 block">{t("actualCash")}</label>
+                    <label className="text-[11px] text-slate-700 block">{t("actualCash")}</label>
                     <input
                       type="number"
                       step="0.001"
                       value={shiftClosingActualCash}
                       onChange={(e) => setShiftClosingActualCash(e.target.value)}
                       placeholder={activeShift.expectedCash.toFixed(3)}
-                      className="w-full bg-slate-950 border border-slate-750 text-white font-mono rounded-xl p-2.5 outline-none focus:border-rose-500"
+                      className="w-full bg-white border border-slate-300 text-slate-900 font-mono rounded-xl p-2.5 outline-none focus:border-rose-500"
                     />
                   </div>
                   <button
@@ -1912,25 +1912,25 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 3. Thermal Receipt Print & Preview Modal (إيصال الكاشير الحراري 80mm)    */}
       {/* ========================================================================= */}
       {completedOrderForReceipt && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 max-h-[95vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 max-h-[95vh] flex flex-col text-slate-900">
             
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-sm font-bold text-white">{t("orderCompleted")}</h3>
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-sm font-bold text-slate-900">{t("orderCompleted")}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setCompletedOrderForReceipt(null)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Thermal Receipt Paper Layout (80mm Style) */}
-            <div className="flex-1 overflow-y-auto bg-white text-slate-900 p-4 rounded-2xl shadow-inner font-mono text-xs space-y-3 selection:bg-slate-300">
+            <div className="flex-1 overflow-y-auto bg-white text-slate-900 p-4 rounded-2xl border border-slate-200 shadow-inner font-mono text-xs space-y-3 selection:bg-slate-200">
               
               {/* Header Info */}
               <div className="text-center space-y-1 border-b border-dashed border-slate-400 pb-3">
@@ -2047,7 +2047,7 @@ export const POSView: React.FC<POSViewProps> = ({
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer"
+                className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer"
               >
                 <Printer className="w-4 h-4" />
                 <span>{t("printThermalReceipt")}</span>
@@ -2061,7 +2061,7 @@ export const POSView: React.FC<POSViewProps> = ({
                   );
                   window.open(`https://wa.me/?text=${msg}`, "_blank");
                 }}
-                className="p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition-all cursor-pointer"
+                className="p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all cursor-pointer"
                 title="مشاركة عبر واتساب"
               >
                 <Share2 className="w-4 h-4" />
@@ -2076,14 +2076,14 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 4. Custom Item Quick Entry Modal                                          */}
       {/* ========================================================================= */}
       {isCustomItemModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white">{t("customItem")}</h3>
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900">{t("customItem")}</h3>
               <button
                 type="button"
                 onClick={() => setIsCustomItemModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2091,7 +2091,7 @@ export const POSView: React.FC<POSViewProps> = ({
 
             <form onSubmit={handleAddCustomItem} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-bold block mb-1">{language === "ar" ? "اسم البند أو الخدمة" : "Item / Service Name"}</label>
+                <label className="text-slate-700 font-bold block mb-1">{language === "ar" ? "اسم البند أو الخدمة" : "Item / Service Name"}</label>
                 <input
                   type="text"
                   required
@@ -2099,13 +2099,13 @@ export const POSView: React.FC<POSViewProps> = ({
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   placeholder={language === "ar" ? "مثال: خدمة برمجة وتركيب، كابل إضافي..." : "e.g. Installation Service"}
-                  className="w-full bg-slate-950 border border-slate-750 text-white rounded-xl p-3 outline-none focus:border-indigo-500"
+                  className="w-full bg-white border border-slate-300 text-slate-900 rounded-xl p-3 outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">{language === "ar" ? "سعر الوحدة" : "Unit Price"}</label>
+                  <label className="text-slate-700 font-bold block mb-1">{language === "ar" ? "سعر الوحدة" : "Unit Price"}</label>
                   <input
                     type="number"
                     step="0.001"
@@ -2113,18 +2113,18 @@ export const POSView: React.FC<POSViewProps> = ({
                     value={customPrice}
                     onChange={(e) => setCustomPrice(e.target.value)}
                     placeholder="10.000"
-                    className="w-full bg-slate-950 border border-slate-750 text-white font-mono rounded-xl p-3 outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-300 text-slate-900 font-mono rounded-xl p-3 outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">{language === "ar" ? "الكمية" : "Quantity"}</label>
+                  <label className="text-slate-700 font-bold block mb-1">{language === "ar" ? "الكمية" : "Quantity"}</label>
                   <input
                     type="number"
                     min="1"
                     required
                     value={customQty}
                     onChange={(e) => setCustomQty(parseInt(e.target.value) || 1)}
-                    className="w-full bg-slate-950 border border-slate-750 text-white font-mono rounded-xl p-3 outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-300 text-slate-900 font-mono rounded-xl p-3 outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -2160,17 +2160,17 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 6. Quick New Customer Creation Modal                                      */}
       {/* ========================================================================= */}
       {isNewCustomerModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-indigo-400" />
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-indigo-600" />
                 <span>{t("addNewCustomer")}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setIsNewCustomerModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2178,7 +2178,7 @@ export const POSView: React.FC<POSViewProps> = ({
 
             <form onSubmit={handleQuickCreateCustomer} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-bold block mb-1">{language === "ar" ? "اسم العميل أو الشركة" : "Customer / Company Name"}</label>
+                <label className="text-slate-700 font-bold block mb-1">{language === "ar" ? "اسم العميل أو الشركة" : "Customer / Company Name"}</label>
                 <input
                   type="text"
                   required
@@ -2186,29 +2186,29 @@ export const POSView: React.FC<POSViewProps> = ({
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
                   placeholder={language === "ar" ? "مثال: مؤسسة النور الحديثة" : "Customer Name"}
-                  className="w-full bg-slate-950 border border-slate-750 text-white rounded-xl p-3 outline-none focus:border-indigo-500"
+                  className="w-full bg-white border border-slate-300 text-slate-900 rounded-xl p-3 outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">{language === "ar" ? "رقم الهاتف / واتساب" : "Phone"}</label>
+                  <label className="text-slate-700 font-bold block mb-1">{language === "ar" ? "رقم الهاتف / واتساب" : "Phone"}</label>
                   <input
                     type="text"
                     value={newCustPhone}
                     onChange={(e) => setNewCustPhone(e.target.value)}
                     placeholder="+968 9XXXXXXX"
-                    className="w-full bg-slate-950 border border-slate-750 text-white rounded-xl p-3 outline-none focus:border-indigo-500 font-mono"
+                    className="w-full bg-white border border-slate-300 text-slate-900 rounded-xl p-3 outline-none focus:border-indigo-500 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">{language === "ar" ? "الرقم الضريبي (اختياري)" : "Tax ID (Optional)"}</label>
+                  <label className="text-slate-700 font-bold block mb-1">{language === "ar" ? "الرقم الضريبي (اختياري)" : "Tax ID (Optional)"}</label>
                   <input
                     type="text"
                     value={newCustTaxId}
                     onChange={(e) => setNewCustTaxId(e.target.value)}
                     placeholder="OM-TAX-XXXX"
-                    className="w-full bg-slate-950 border border-slate-750 text-white rounded-xl p-3 outline-none focus:border-indigo-500 font-mono"
+                    className="w-full bg-white border border-slate-300 text-slate-900 rounded-xl p-3 outline-none focus:border-indigo-500 font-mono"
                   />
                 </div>
               </div>
@@ -2230,17 +2230,17 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 7. Held Orders Switcher Modal                                             */}
       {/* ========================================================================= */}
       {isHeldCartsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <PauseCircle className="w-5 h-5 text-amber-400" />
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <PauseCircle className="w-5 h-5 text-amber-600" />
                 <span>{t("heldOrders")} ({heldCarts.length})</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setIsHeldCartsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2257,14 +2257,14 @@ export const POSView: React.FC<POSViewProps> = ({
                   return (
                     <div
                       key={held.id}
-                      className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-between gap-3 hover:border-amber-500/40 transition-colors"
+                      className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3 hover:border-amber-300 transition-colors"
                     >
                       <div>
-                        <p className="text-xs font-bold text-white">{held.label}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
+                        <p className="text-xs font-bold text-slate-900">{held.label}</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
                           {held.items.length} {language === "ar" ? "أصناف" : "items"} • {heldSubtotal.toFixed(3)} {currency}
                         </p>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">
                           {new Date(held.heldAt).toLocaleTimeString()}
                         </p>
                       </div>
@@ -2272,7 +2272,7 @@ export const POSView: React.FC<POSViewProps> = ({
                       <button
                         type="button"
                         onClick={() => handleRecallHeldCart(held)}
-                        className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-md transition-all cursor-pointer"
+                        className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-all cursor-pointer"
                       >
                         <PlayCircle className="w-3.5 h-3.5" />
                         <span>{t("recallOrder")}</span>
@@ -2290,18 +2290,18 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 8. POS Sales History & Refunds Archive Modal                              */}
       {/* ========================================================================= */}
       {isHistoryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col text-slate-900">
             
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
               <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-base font-bold text-white">{t("orderHistory")}</h3>
+                <History className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-base font-bold text-slate-900">{t("orderHistory")}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsHistoryModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2309,8 +2309,8 @@ export const POSView: React.FC<POSViewProps> = ({
 
             <div className="flex-1 overflow-y-auto">
               <table className="w-full text-xs text-start">
-                <thead className="text-[11px] text-slate-400 bg-slate-950 sticky top-0">
-                  <tr className="border-b border-slate-800">
+                <thead className="text-[11px] text-slate-500 bg-slate-50 sticky top-0 border-b border-slate-200">
+                  <tr>
                     <th className="p-3 text-start">رقم الطلب</th>
                     <th className="p-3 text-start">التاريخ والوقت</th>
                     <th className="p-3 text-start">العميل</th>
@@ -2320,26 +2320,26 @@ export const POSView: React.FC<POSViewProps> = ({
                     <th className="p-3 text-end">الإجراءات</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium">
+                <tbody className="divide-y divide-slate-100 font-medium">
                   {posOrders.map((ord) => (
-                    <tr key={ord.id} className="hover:bg-slate-850/50 transition-colors">
-                      <td className="p-3 font-mono font-bold text-white">{ord.orderNumber}</td>
-                      <td className="p-3 text-slate-400 font-mono">{ord.date} {ord.time}</td>
-                      <td className="p-3 text-slate-300">{ord.customerName}</td>
+                    <tr key={ord.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-3 font-mono font-bold text-slate-900">{ord.orderNumber}</td>
+                      <td className="p-3 text-slate-500 font-mono">{ord.date} {ord.time}</td>
+                      <td className="p-3 text-slate-700">{ord.customerName}</td>
                       <td className="p-3">
-                        <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono text-[10px]">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono text-[10px]">
                           {ord.paymentMethod}
                         </span>
                       </td>
-                      <td className="p-3 font-mono font-bold text-emerald-400">
+                      <td className="p-3 font-mono font-bold text-emerald-700">
                         {ord.totalAmount.toFixed(3)} {currency}
                       </td>
                       <td className="p-3">
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                             ord.status === "REFUNDED"
-                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
-                              : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              ? "bg-rose-50 text-rose-700 border border-rose-200"
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           }`}
                         >
                           {ord.status === "REFUNDED" ? "مسترجع (Refunded)" : "مكتمل (Paid)"}
@@ -2351,7 +2351,7 @@ export const POSView: React.FC<POSViewProps> = ({
                           onClick={() => {
                             setCompletedOrderForReceipt(ord);
                           }}
-                          className="p-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30"
+                          className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200"
                           title="معاينة وطباعة الإيصال"
                         >
                           <Printer className="w-3.5 h-3.5" />
@@ -2360,7 +2360,7 @@ export const POSView: React.FC<POSViewProps> = ({
                           <button
                             type="button"
                             onClick={() => handleRefundOrder(ord)}
-                            className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30"
+                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
                             title="استرجاع الفاتورة للمخزن"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
@@ -2381,17 +2381,17 @@ export const POSView: React.FC<POSViewProps> = ({
       {/* 9. Keyboard Shortcuts Guide Modal                                         */}
       {/* ========================================================================= */}
       {isShortcutsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-indigo-400" />
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-indigo-600" />
                 <span>{t("posShortcuts")}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setIsShortcutsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2407,9 +2407,9 @@ export const POSView: React.FC<POSViewProps> = ({
                 { key: "F10", desc: language === "ar" ? "دفع فوري نقداً (Cash)" : "Pay with Cash" },
                 { key: "Esc", desc: language === "ar" ? "إغلاق النوافذ المنبثقة" : "Close active modal" }
               ].map((s, i) => (
-                <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="px-2 py-1 rounded bg-slate-800 text-indigo-300 font-mono font-bold">{s.key}</span>
-                  <span className="text-slate-300">{s.desc}</span>
+                <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="px-2 py-1 rounded bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200">{s.key}</span>
+                  <span className="text-slate-700 font-medium">{s.desc}</span>
                 </div>
               ))}
             </div>

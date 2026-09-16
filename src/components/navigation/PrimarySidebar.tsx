@@ -290,7 +290,7 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
       {isOpen && (
         <div
           id="sidebar-mobile-backdrop"
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-2xs z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-2xs z-40 lg:hidden"
           onClick={onCloseMobile}
         />
       )}
@@ -304,7 +304,7 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
         onMouseLeave={() => {
           setIsHoverExpanded(false);
         }}
-        className={`fixed top-0 bottom-0 z-40 bg-slate-900/95 backdrop-blur-md text-slate-100 flex flex-col border-e border-slate-800 transition-all duration-300 ease-in-out print:hidden shadow-xl ${
+        className={`fixed top-0 bottom-0 z-40 bg-white backdrop-blur-md text-slate-800 flex flex-col border-e border-slate-200 transition-all duration-300 ease-in-out print:hidden shadow-sm ${
           isRTL ? 'right-0' : 'left-0'
         } ${
           isOpen
@@ -313,13 +313,13 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             ? 'translate-x-full lg:translate-x-0'
             : '-translate-x-full lg:translate-x-0'
         } ${
-          effectiveCollapsed ? 'w-20' : 'w-64 sm:w-72 shadow-2xl z-50'
+          effectiveCollapsed ? 'w-20' : 'w-64 sm:w-72 shadow-xl z-50'
         }`}
       >
         {/* Brand Header */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800 shrink-0">
+        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 rounded-2xl bg-white border border-slate-700 flex items-center justify-center shadow-lg shrink-0 overflow-hidden p-1">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-xs shrink-0 overflow-hidden p-1">
               <img
                 src="/assets/images/deshal_logo.png"
                 alt="Deshal ERP Logo"
@@ -332,14 +332,14 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
             {!effectiveCollapsed && (
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h1 className="font-black text-base tracking-tight text-white truncate">
+                  <h1 className="font-black text-base tracking-tight text-slate-900 truncate">
                     Deshal ERP
                   </h1>
-                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-indigo-100 text-indigo-700 border border-indigo-200">
                     V2
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 truncate font-medium">
+                <p className="text-[11px] text-slate-500 truncate font-medium">
                   {isRTL ? 'أنظمة الإدارة المتكاملة' : 'Integrated ERP Suite'}
                 </p>
               </div>
@@ -349,7 +349,7 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
           {/* Close for mobile */}
           <button
             onClick={onCloseMobile}
-            className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+            className="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -362,16 +362,16 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
               {/* Group Section Header */}
               {!effectiveCollapsed ? (
                 <div className="px-3 pt-1 pb-1 flex items-center justify-between">
-                  <span className="text-[10px] font-black tracking-wider text-indigo-400 uppercase">
+                  <span className="text-[10px] font-black tracking-wider text-indigo-600 uppercase">
                     {isRTL ? group.titleAr : group.titleEn}
                   </span>
-                  <span className="text-[9px] font-mono text-slate-500">
+                  <span className="text-[9px] font-mono text-slate-400">
                     {group.groupKey}
                   </span>
                 </div>
               ) : (
                 <div className="w-full flex justify-center py-1">
-                  <div className="w-8 h-[1px] bg-slate-800" />
+                  <div className="w-8 h-[1px] bg-slate-200" />
                 </div>
               )}
 
@@ -390,14 +390,14 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
                     }}
                     className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-start font-bold transition-all cursor-pointer group relative ${
                       isActive
-                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-1 ring-indigo-400/40'
-                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        ? 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-200/80 shadow-2xs'
+                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                     } ${effectiveCollapsed ? 'justify-center px-0' : ''}`}
                     title={effectiveCollapsed ? (isRTL ? item.labelAr : item.labelEn) : undefined}
                   >
                     <Icon
                       className={`w-5 h-5 shrink-0 transition-colors ${
-                        isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400'
+                        isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'
                       }`}
                     />
 
@@ -410,7 +410,7 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
                     {!effectiveCollapsed && item.badge !== undefined && (
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
-                          item.badgeColor || (isActive ? 'bg-indigo-700 text-white' : 'bg-slate-800 text-slate-300')
+                          item.badgeColor || (isActive ? 'bg-indigo-100 text-indigo-700 font-bold' : 'bg-slate-100 text-slate-600')
                         }`}
                       >
                         {item.badge}
@@ -419,7 +419,7 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
 
                     {/* Dot Indicator for Collapsed Mode when active */}
                     {effectiveCollapsed && isActive && (
-                      <div className="absolute end-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-indigo-400 ring-2 ring-indigo-600" />
+                      <div className="absolute end-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-indigo-600 ring-2 ring-indigo-200" />
                     )}
                   </button>
                 );
@@ -430,33 +430,33 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
 
         {/* Footer Onboarding Trigger */}
         {onOpenOnboarding && !effectiveCollapsed && (
-          <div className="p-3 border-t border-slate-800 bg-slate-950/40 shrink-0">
+          <div className="p-3 border-t border-slate-200 bg-slate-50 shrink-0">
             <button
               onClick={() => {
                 onOpenOnboarding();
                 setIsHoverExpanded(false);
               }}
-              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-linear-to-r from-indigo-900/60 to-purple-900/60 border border-indigo-500/30 text-white text-xs font-bold hover:brightness-110 transition-all cursor-pointer shadow-sm"
+              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/80 text-indigo-900 text-xs font-bold hover:bg-indigo-100 transition-all cursor-pointer shadow-2xs"
             >
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+                <Sparkles className="w-4 h-4 text-amber-600" />
                 <span>{isRTL ? 'معالج التهيئة السريعة' : 'Setup Onboarding'}</span>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-indigo-300 rtl:rotate-180" />
+              <ChevronRight className="w-3.5 h-3.5 text-indigo-600 rtl:rotate-180" />
             </button>
           </div>
         )}
 
         {/* Desktop Pin / Collapse Toggle Bar */}
-        <div className="hidden lg:flex items-center justify-between p-3 border-t border-slate-800 text-slate-400 text-xs shrink-0">
+        <div className="hidden lg:flex items-center justify-between p-3 border-t border-slate-200 text-slate-500 text-xs shrink-0">
           <button
             onClick={onToggleCollapse}
-            className="w-full flex items-center justify-center gap-2 p-2 rounded-xl hover:bg-slate-800 hover:text-white transition-colors cursor-pointer font-semibold"
+            className="w-full flex items-center justify-center gap-2 p-2 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer font-semibold"
             title={isCollapsed ? 'تثبيت/توسيع القائمة' : 'طَي القائمة الجانبية'}
           >
-            <ChevronIcon className="w-4 h-4 text-indigo-400" />
+            <ChevronIcon className="w-4 h-4 text-indigo-600" />
             {!effectiveCollapsed && (
-              <span className="text-xs text-slate-300">
+              <span className="text-xs text-slate-600">
                 {isCollapsed
                   ? isRTL
                     ? 'تثبيت القائمة مفتوحة'

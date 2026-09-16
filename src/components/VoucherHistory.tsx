@@ -330,12 +330,12 @@ export const VoucherHistory: React.FC<VoucherHistoryProps> = ({
 
       {/* Sticky Bulk Action Control Bar (Appears when items are selected) */}
       {selectedIds.length > 0 && (
-        <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-200 border border-slate-700">
+        <div className="bg-white text-slate-800 p-4 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-200 border border-slate-200">
           <div className="flex items-center gap-3">
             <span className="bg-indigo-600 text-white text-xs font-black px-3 py-1 rounded-lg">
               {selectedIds.length} {t("selected")}
             </span>
-            <p className="text-xs text-slate-300 font-medium hidden sm:block">
+            <p className="text-xs text-slate-600 font-medium hidden sm:block">
               {t("bulkActionHint")}
             </p>
           </div>

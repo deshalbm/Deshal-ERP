@@ -12,15 +12,14 @@ export function loadPOSOrders(): POSOrder[] {
     const raw = localStorage.getItem(POS_ORDERS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load POS orders from localStorage:", e);
   }
-  savePOSOrders(DEFAULT_POS_ORDERS);
-  return DEFAULT_POS_ORDERS;
+  return [];
 }
 
 export function savePOSOrders(orders: POSOrder[], companyId: string = "00000000-0000-0000-0000-000000000001"): void {
@@ -65,15 +64,14 @@ export function loadCashierShifts(): CashierShift[] {
     const raw = localStorage.getItem(CASHIER_SHIFTS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load cashier shifts:", e);
   }
-  saveCashierShifts(DEFAULT_CASHIER_SHIFTS);
-  return DEFAULT_CASHIER_SHIFTS;
+  return [];
 }
 
 export function saveCashierShifts(shifts: CashierShift[], companyId: string = "00000000-0000-0000-0000-000000000001"): void {

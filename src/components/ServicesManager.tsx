@@ -290,19 +290,18 @@ export const ServicesManager: React.FC<ServicesManagerProps> = ({
     <div className="space-y-6">
       
       {/* Top Header & Metrics Bar */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-indigo-900/40 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-r from-indigo-50/80 via-slate-50 to-purple-50/80 text-slate-900 rounded-2xl p-6 border border-slate-200 shadow-xs relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <div className="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                <Briefcase className="w-6 h-6" />
+              <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-700 border border-indigo-200">
+                <Briefcase className="w-6 h-6 text-indigo-700" />
               </div>
-              <h2 className="text-2xl font-bold tracking-tight">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
                 نظام إدارة الخدمات الاستشارية وباقات المستأجرين
               </h2>
             </div>
-            <p className="text-sm text-slate-300 mt-1 max-w-2xl">
+            <p className="text-sm text-slate-600 mt-1 max-w-2xl">
               إدارة خدمات المحاسبة، التسويق، الاستوديو، المواقع، الـ PRO وتأسيس الأعمال مع تتبع الساعات والاستشارات المجانية لباقات المستأجرين.
             </p>
           </div>
@@ -310,21 +309,21 @@ export const ServicesManager: React.FC<ServicesManagerProps> = ({
           <div className="flex items-center gap-2.5 flex-wrap">
             <button
               onClick={() => onOpenBookingModal()}
-              className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition-all flex items-center gap-2"
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
             >
               <Calendar className="w-4 h-4" />
               حجز خدمة / استشارة
             </button>
             <button
               onClick={() => onOpenSubscriptionModal()}
-              className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition-all flex items-center gap-2"
+              className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
               اشتراك مستأجر جديد
             </button>
             <button
               onClick={handleOpenAddService}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition-all flex items-center gap-2"
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               إضافة خدمة جديدة
@@ -333,26 +332,26 @@ export const ServicesManager: React.FC<ServicesManagerProps> = ({
         </div>
 
         {/* Quick KPI Counters */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-slate-800">
-          <div className="bg-white/5 backdrop-blur rounded-xl p-3 border border-white/10">
-            <span className="text-xs text-slate-400 block">إجمالي الخدمات المتاحة</span>
-            <span className="text-xl font-bold text-white mt-1 block">{services.length} خدمة</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-slate-200">
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs">
+            <span className="text-xs text-slate-500 block font-medium">إجمالي الخدمات المتاحة</span>
+            <span className="text-xl font-bold text-slate-900 mt-1 block">{services.length} خدمة</span>
           </div>
-          <div className="bg-white/5 backdrop-blur rounded-xl p-3 border border-white/10">
-            <span className="text-xs text-purple-300 block">المستأجرين المشتركين بالباقات</span>
-            <span className="text-xl font-bold text-purple-200 mt-1 block">
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs">
+            <span className="text-xs text-purple-700 block font-medium">المستأجرين المشتركين بالباقات</span>
+            <span className="text-xl font-bold text-purple-900 mt-1 block">
               {analyticsData.totalActiveSubs} مستأجر نشط
             </span>
           </div>
-          <div className="bg-white/5 backdrop-blur rounded-xl p-3 border border-white/10">
-            <span className="text-xs text-emerald-300 block">الاستشارات المجانية المستفادة</span>
-            <span className="text-xl font-bold text-emerald-200 mt-1 block">
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs">
+            <span className="text-xs text-emerald-700 block font-medium">الاستشارات المجانية المستفادة</span>
+            <span className="text-xl font-bold text-emerald-900 mt-1 block">
               {analyticsData.freeQuotaBookings} جلسة مغطاة
             </span>
           </div>
-          <div className="bg-white/5 backdrop-blur rounded-xl p-3 border border-white/10">
-            <span className="text-xs text-blue-300 block">إيرادات الخدمات المحققة</span>
-            <span className="text-xl font-bold text-blue-200 mt-1 block">
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs">
+            <span className="text-xs text-blue-700 block font-medium">إيرادات الخدمات المحققة</span>
+            <span className="text-xl font-bold text-blue-900 mt-1 block">
               {analyticsData.paidBookingsRevenue.toFixed(3)} ر.ع
             </span>
           </div>
@@ -433,8 +432,8 @@ export const ServicesManager: React.FC<ServicesManagerProps> = ({
                 onClick={() => setCategoryFilter("ALL")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   categoryFilter === "ALL"
-                    ? "bg-slate-800 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-indigo-600 text-white font-bold"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
                 الكل ({services.length})

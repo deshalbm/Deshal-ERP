@@ -9,15 +9,14 @@ export function loadInventory(): InventoryItem[] {
     const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load inventory from localStorage:", e);
   }
-  saveInventory(DEFAULT_INVENTORY_ITEMS);
-  return DEFAULT_INVENTORY_ITEMS;
+  return [];
 }
 
 export function saveInventory(items: InventoryItem[]): void {

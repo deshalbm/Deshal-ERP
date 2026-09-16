@@ -129,7 +129,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== "undefined" ? navigator.onLine : true);
 
   // Kiosk Flow States
-  const [step, setStep] = useState<KioskStep>("STANDBY");
+  const [step, setStep] = useState<KioskStep>("PIN_ENTRY");
 
   // Device Authorization & Activation States
   const [isKioskModeEnabled, setIsKioskModeEnabledState] = useState<boolean>(() => loadIsKioskModeEnabled());
@@ -194,6 +194,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
       setKioskUsernameInput("");
       setKioskPasswordInput("");
       setActivationSuccessMsg(`تم تسجيل الدخول وتفعيل هذا المتصفح ككشك (${result.device.name}) بنجاح!`);
+      setStep("PIN_ENTRY");
       setTimeout(() => setActivationSuccessMsg(""), 4000);
 
       if (onAuditLog) {
@@ -223,6 +224,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
     saveActiveKioskDeviceId(device.id);
     setActivationError("");
     setActivationSuccessMsg(`تم توثيق وتفعيل هذا المتصفح فورياً بالجهاز اللوحي: ${device.name}`);
+    setStep("PIN_ENTRY");
     setTimeout(() => setActivationSuccessMsg(""), 4000);
 
     if (onAuditLog) {
@@ -550,10 +552,10 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
     return fallbackPhoto;
   };
 
-  // Reset to Standby
+  // Reset to initial PIN entry step
   const resetToStandby = () => {
     stopCamera();
-    setStep("STANDBY");
+    setStep(isDeviceAuthorized ? "PIN_ENTRY" : "STANDBY");
     setEnteredPin("");
     setPinError("");
     setAuthenticatedEmployee(null);
@@ -823,239 +825,149 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
         {/* ========================================================================= */}
         {/* STEP 1: STANDBY SCREEN OR UNAUTHORIZED LOCK GUARD */}
         {/* ========================================================================= */}
-        {step === "STANDBY" && (
-          !isDeviceAuthorized ? (
-            /* ========================================================================= */
-            /* KIOSK ACCOUNT LOGIN / AUTHORIZATION FORM */
-            /* ========================================================================= */
-            <div className="w-full max-w-xl bg-slate-900/95 border border-indigo-500/30 p-8 rounded-3xl shadow-2xl backdrop-blur flex flex-col items-center animate-scaleUp text-right">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-5 shadow-lg">
-                <Tablet className="w-8 h-8 text-indigo-400" />
-              </div>
-
-              <h2 className="text-2xl font-extrabold text-white mb-2 text-center">
-                تسجيل الدخول إلى حساب الكشك اللوحي
-              </h2>
-              <p className="text-slate-300 text-xs mb-6 text-center leading-relaxed max-w-md">
-                أدخل اسم المستخدم وكلمة المرور المحددة للجهاز اللوحي من قبل مسؤول النظام لفتح واجهة الكشك مباشرة.
-              </p>
-
-              {activationSuccessMsg && (
-                <div className="w-full mb-5 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                  <span>{activationSuccessMsg}</span>
-                </div>
-              )}
-
-              {/* Login Credentials Form */}
-              <form onSubmit={handleKioskLoginSubmit} className="w-full bg-slate-950 p-6 rounded-2xl border border-slate-800 mb-6 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
-                    اسم المستخدم الخاص بالجهاز (Kiosk Username):
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      value={kioskUsernameInput}
-                      onChange={(e) => {
-                        setKioskUsernameInput(e.target.value);
-                        setActivationError("");
-                      }}
-                      placeholder="مثال: kiosk.sohar"
-                      className="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 shadow-inner"
-                    />
-                    <User className="w-4 h-4 text-indigo-400 absolute right-3 top-1/2 -translate-y-1/2" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
-                    كلمة المرور / الرمز السري (Password):
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      required
-                      value={kioskPasswordInput}
-                      onChange={(e) => {
-                        setKioskPasswordInput(e.target.value);
-                        setActivationError("");
-                      }}
-                      placeholder="******"
-                      className="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs tracking-widest placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 shadow-inner"
-                    />
-                    <Lock className="w-4 h-4 text-indigo-400 absolute right-3 top-1/2 -translate-y-1/2" />
-                  </div>
-                </div>
-
-                {activationError && (
-                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                    <span>{activationError}</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>تسجيل الدخول وفتح الكشك اللوحي</span>
-                </button>
-              </form>
-
-              {/* Admin Unlock Option */}
-              <div className="w-full flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsAdminAuthDialogOpen(true)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold flex items-center gap-2 transition-colors border border-slate-700 cursor-pointer"
-                >
-                  <Lock className="w-4 h-4 text-amber-400" />
-                  تفعيل وتوثيق بواسطة رمز مسؤول النظام
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  إغلاق واجهة الكشك
-                </button>
-              </div>
-
-              {/* Available Registered Devices List */}
-              {safeKioskDevices.length > 0 && (
-                <div className="w-full mt-6 pt-4 border-t border-slate-850 text-right">
-                  <div className="text-[11px] font-bold text-slate-400 mb-2 flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                    الأجهزة المسجلة للمؤسسة ({safeKioskDevices.filter((d) => d.status === "ACTIVE").length} جهاز نشط):
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {safeKioskDevices.map((dev) => (
-                      <div
-                        key={dev.id}
-                        className={`p-2.5 rounded-xl border text-xs flex items-center justify-between ${
-                          dev.status === "ACTIVE"
-                            ? "bg-slate-950/80 border-slate-800 text-slate-300"
-                            : "bg-rose-950/20 border-rose-900/30 text-rose-400 opacity-60"
-                        }`}
-                      >
-                        <div>
-                          <div className="font-bold text-white text-[12px]">{dev.name}</div>
-                          <div className="font-mono text-[10px] text-indigo-400">{dev.username || dev.deviceCode}</div>
-                        </div>
-                        {dev.status === "ACTIVE" && (
-                          <button
-                            type="button"
-                            onClick={() => handlePairDeviceDirectly(dev)}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold transition-colors cursor-pointer"
-                          >
-                            ربط وتفعيل
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+        {!isDeviceAuthorized ? (
+          /* ========================================================================= */
+          /* KIOSK ACCOUNT LOGIN / AUTHORIZATION FORM */
+          /* ========================================================================= */
+          <div className="w-full max-w-xl bg-slate-900/95 border border-indigo-500/30 p-8 rounded-3xl shadow-2xl backdrop-blur flex flex-col items-center animate-scaleUp text-right">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-5 shadow-lg">
+              <Tablet className="w-8 h-8 text-indigo-400" />
             </div>
-          ) : (
-            /* ========================================================================= */
-            /* AUTHORIZED KIOSK STANDBY VIEW */
-            /* ========================================================================= */
-            <div className="w-full max-w-4xl text-center flex flex-col items-center animate-fadeIn">
-              {/* Welcome Banner */}
-              <div className="mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm font-medium mb-3">
-                  <Sparkles className="w-4 h-4" />
-                  نظام تسجيل الحضور وحركة الموظفين اللحظية
+
+            <h2 className="text-2xl font-extrabold text-white mb-2 text-center">
+              تسجيل الدخول إلى حساب الكشك اللوحي
+            </h2>
+            <p className="text-slate-300 text-xs mb-6 text-center leading-relaxed max-w-md">
+              أدخل اسم المستخدم وكلمة المرور المحددة للجهاز اللوحي من قبل مسؤول النظام لفتح واجهة الكشك مباشرة.
+            </p>
+
+            {activationSuccessMsg && (
+              <div className="w-full mb-5 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                <span>{activationSuccessMsg}</span>
+              </div>
+            )}
+
+            {/* Login Credentials Form */}
+            <form onSubmit={handleKioskLoginSubmit} className="w-full bg-slate-950 p-6 rounded-2xl border border-slate-800 mb-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  اسم المستخدم الخاص بالجهاز (Kiosk Username):
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={kioskUsernameInput}
+                    onChange={(e) => {
+                      setKioskUsernameInput(e.target.value);
+                      setActivationError("");
+                    }}
+                    placeholder="مثال: kiosk.sohar"
+                    className="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 shadow-inner"
+                  />
+                  <User className="w-4 h-4 text-indigo-400 absolute right-3 top-1/2 -translate-y-1/2" />
                 </div>
-                <h2 className="text-4xl font-extrabold text-white mb-2">
-                  مرحباً بك في {companySettings.companyNameAr || "ديشال"}
-                </h2>
-                <p className="text-slate-400 text-base max-w-lg mx-auto">
-                  يرجى الضغط على زر تسجيل الحضور أو الخروج، ثم إدخال رمز PIN السري الخاص بك لإتمام العملية.
-                </p>
               </div>
 
-              {/* Big Action Buttons */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
-                {/* Check In Button */}
-                <button
-                  onClick={() => setStep("PIN_ENTRY")}
-                  className="group relative flex flex-col items-center justify-center p-8 rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-2xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all border-2 border-emerald-400/40"
-                >
-                  <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-colors">
-                    <LogIn className="w-10 h-10 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-1">تسجيل حضور</h3>
-                  <p className="text-emerald-100 text-sm">بداية الدوام اليومي</p>
-                  <span className="absolute top-4 right-4 w-3 h-3 rounded-full bg-emerald-300 animate-ping" />
-                </button>
-
-                {/* Movement / Check Out Button */}
-                <button
-                  onClick={() => setStep("PIN_ENTRY")}
-                  className="group relative flex flex-col items-center justify-center p-8 rounded-3xl bg-gradient-to-br from-indigo-600 to-blue-700 text-white shadow-2xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all border-2 border-indigo-400/40"
-                >
-                  <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-colors">
-                    <Car className="w-10 h-10 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-1">حركة موظف / انصراف</h3>
-                  <p className="text-indigo-100 text-sm">مهمة عمل، استراحة، انصراف</p>
-                </button>
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  كلمة المرور / الرمز السري (Password):
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    required
+                    value={kioskPasswordInput}
+                    onChange={(e) => {
+                      setKioskPasswordInput(e.target.value);
+                      setActivationError("");
+                    }}
+                    placeholder="******"
+                    className="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs tracking-widest placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 shadow-inner"
+                  />
+                  <Lock className="w-4 h-4 text-indigo-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                </div>
               </div>
 
-              {/* Employee Code Helper */}
-              <div className="flex flex-col items-center gap-2">
-                <button
-                  onClick={() => setShowDemoPinHelper(!showDemoPinHelper)}
-                  className="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1.5 transition-colors underline underline-offset-4 cursor-pointer"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                  {showDemoPinHelper ? "إخفاء دليل الأرقام الوظيفية" : "عرض دليل الأرقام الوظيفية للموظفين"}
-                </button>
+              {activationError && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{activationError}</span>
+                </div>
+              )}
 
-                {showDemoPinHelper && (
-                  <div className="mt-3 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 max-w-xl text-right">
-                    <div className="font-bold text-amber-400 mb-2 flex items-center gap-1">
-                      <Info className="w-4 h-4" />
-                      الأرقام الوظيفية المسجلة للنظام:
+              <button
+                type="submit"
+                className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>تسجيل الدخول وفتح الكشك اللوحي</span>
+              </button>
+            </form>
+
+            {/* Admin Unlock Option */}
+            <div className="w-full flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsAdminAuthDialogOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold flex items-center gap-2 transition-colors border border-slate-700 cursor-pointer"
+              >
+                <Lock className="w-4 h-4 text-amber-400" />
+                تفعيل وتوثيق بواسطة رمز مسؤول النظام
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+              >
+                إغلاق واجهة الكشك
+              </button>
+            </div>
+
+            {/* Available Registered Devices List */}
+            {safeKioskDevices.length > 0 && (
+              <div className="w-full mt-6 pt-4 border-t border-slate-850 text-right">
+                <div className="text-[11px] font-bold text-slate-400 mb-2 flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  الأجهزة المسجلة للمؤسسة ({safeKioskDevices.filter((d) => d.status === "ACTIVE").length} جهاز نشط):
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {safeKioskDevices.map((dev) => (
+                    <div
+                      key={dev.id}
+                      className={`p-2.5 rounded-xl border text-xs flex items-center justify-between ${
+                        dev.status === "ACTIVE"
+                          ? "bg-slate-950/80 border-slate-800 text-slate-300"
+                          : "bg-rose-950/20 border-rose-900/30 text-rose-400 opacity-60"
+                      }`}
+                    >
+                      <div>
+                        <div className="font-bold text-white text-[12px]">{dev.name}</div>
+                        <div className="font-mono text-[10px] text-indigo-400">{dev.username || dev.deviceCode}</div>
+                      </div>
+                      {dev.status === "ACTIVE" && (
+                        <button
+                          type="button"
+                          onClick={() => handlePairDeviceDirectly(dev)}
+                          className="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold transition-colors cursor-pointer"
+                        >
+                          ربط وتفعيل
+                        </button>
+                      )}
                     </div>
-                    {employees.filter((e) => e.status === "ACTIVE").length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono">
-                        {employees
-                          .filter((e) => e.status === "ACTIVE")
-                          .map((emp) => (
-                            <div key={emp.id} className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                              <span className="text-slate-400 block text-[10px] truncate">{emp.fullName}</span>
-                              <strong className="text-amber-300">{emp.employeeCode}</strong>
-                            </div>
-                          ))}
-                        <div className="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                          <span className="text-slate-400 block text-[10px]">خروج المشرف (أدمن)</span>
-                          <strong className="text-rose-300">9900</strong>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-slate-400 text-xs text-center py-2">
-                        لا يوجد موظفون مسجلون حالياً. أضف موظفين من لوحة التحكم.
-                        <div className="mt-1 text-rose-300 font-mono">رمز خروج المسؤول: 9900</div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
-          )
-        )}
+            )}
+          </div>
+        ) : null}
 
         {/* ========================================================================= */}
-        {/* STEP 2: EMPLOYEE CODE ENTRY (إدخال الرقم الوظيفي للموظف) */}
+        {/* STEP 2: DIRECT EMPLOYEE CODE & PIN ENTRY SCREEN */}
         {/* ========================================================================= */}
-        {step === "PIN_ENTRY" && (
+        {isDeviceAuthorized && (step === "PIN_ENTRY" || step === "STANDBY") && (
           <div className="w-full max-w-lg bg-slate-900/90 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur flex flex-col items-center animate-scaleUp">
             {/* Header */}
             <div className="w-full flex items-center justify-between mb-4">

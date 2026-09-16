@@ -54,16 +54,16 @@ export const OfficialPayslipModal: React.FC<OfficialPayslipModalProps> = ({
       <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden print:shadow-none print:border-none print:max-w-none print:w-full">
         
         {/* Header Bar - Hidden in print */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white print:hidden">
+        <div className="flex items-center justify-between px-6 py-4 bg-white text-slate-900 border-b border-slate-200 print:hidden">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="p-2 bg-indigo-600 rounded-xl">
-              <FileText className="w-5 h-5 text-white" />
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100">
+              <FileText className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <h3 className="text-base font-bold">
+              <h3 className="text-base font-bold text-slate-900">
                 {language === "ar" ? "قسيمة الراتب الرسمية (Payslip)" : "Official Salary Slip"}
               </h3>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-slate-500">
                 {slip.employeeName} - {slip.payrollMonth}
               </p>
             </div>
@@ -79,7 +79,7 @@ export const OfficialPayslipModal: React.FC<OfficialPayslipModalProps> = ({
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>

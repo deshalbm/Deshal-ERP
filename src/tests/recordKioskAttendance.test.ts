@@ -151,20 +151,24 @@ const res5 = recordKioskAttendance({
 });
 assert(res5.newAttendanceRecordCreated?.employeeCode === "EMP-001", "Defaults missing employeeCode to EMP-001");
 
-// Test 6: Non CHECK_IN / CHECK_OUT category (e.g. MISSION_OUT)
-console.log("\n[Test 6] Non CHECK_IN / CHECK_OUT category (e.g. MISSION_OUT)");
-const missionLog: AttendanceMovementLog = {
+// Test 7: Streamlined Action Selection (e.g. BREAK_OUT, BREAK_IN, EMERGENCY_OUT)
+console.log("\n[Test 7] Streamlined Action Selection (e.g. BREAK_OUT, BREAK_IN)");
+const breakLog: AttendanceMovementLog = {
   ...sampleMovementLogCheckIn,
-  movementCategory: "MISSION_OUT",
+  id: "mov-log-007",
+  movementCategory: "BREAK_OUT",
+  movementTypeNameAr: "استراحة خروج",
+  movementTypeNameEn: "Break Out",
+  time: "12:30",
 };
-const res6 = recordKioskAttendance({
-  log: missionLog,
+const res7 = recordKioskAttendance({
+  log: breakLog,
   movementLogs: [],
   attendanceList: [],
   employeesList: [sampleEmployee],
 });
-assert(res6.updatedMovementLogs.length === 1, "Movement log is recorded");
-assert(res6.updatedAttendance.length === 0, "Attendance list remains unchanged");
+assert(res7.updatedMovementLogs.length === 1, "Break movement log recorded successfully");
+assert(res7.updatedMovementLogs[0].movementCategory === "BREAK_OUT", "Correctly records BREAK_OUT action");
 
 // Final Summary Output
 console.log("\n================================================================");

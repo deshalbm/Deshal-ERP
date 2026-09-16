@@ -14,6 +14,8 @@ export * from './storage/posStorage';
 export * from './storage/spacesStorage';
 export * from './storage/requestsStorage';
 export * from './storage/settingsStorage';
+export * from './storage/crmStorage';
+export * from './attendanceStorage';
 
 import {
   ReceiptVoucher,
@@ -82,21 +84,13 @@ export function loadVouchers(): ReceiptVoucher[] {
     const raw = localStorage.getItem(STORAGE_KEYS.VOUCHERS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
+        if (parsed.length === 0) return [];
         const settings = loadCompanySettings();
         const defaultCurr = settings.defaultCurrency || "OMR";
         let shouldSave = false;
 
-        const existingNumbers = new Set(parsed.map((v: ReceiptVoucher) => v.voucherNumber));
-        const missingVouchers = SAMPLE_VOUCHERS.filter((sv) => !existingNumbers.has(sv.voucherNumber));
-
-        let mergedList = [...parsed];
-        if (missingVouchers.length > 0) {
-          mergedList = [...mergedList, ...missingVouchers];
-          shouldSave = true;
-        }
-
-        const updatedList = mergedList.map((v: ReceiptVoucher, idx: number) => {
+        const updatedList = parsed.map((v: ReceiptVoucher, idx: number) => {
           let voucherNum = v.voucherNumber;
           const curr = (!v.currency || v.currency === "USD") ? defaultCurr : v.currency;
           if (curr !== v.currency) shouldSave = true;
@@ -108,8 +102,6 @@ export function loadVouchers(): ReceiptVoucher[] {
           const totalAmt = v.totalAmount ?? v.amount ?? 0;
           const paidAmt = v.paidAmount ?? v.amount ?? totalAmt;
           const remainingAmt = v.remainingAmount ?? Math.max(0, totalAmt - paidAmt);
-
-          shouldSave = true;
 
           return {
             ...v,
@@ -131,8 +123,7 @@ export function loadVouchers(): ReceiptVoucher[] {
   } catch (e) {
     console.warn("Failed to load vouchers:", e);
   }
-  saveVouchers(SAMPLE_VOUCHERS);
-  return SAMPLE_VOUCHERS;
+  return [];
 }
 
 export function saveVouchers(vouchers: ReceiptVoucher[]): void {
@@ -190,15 +181,14 @@ export function loadStockMovements(): StockMovement[] {
     const raw = localStorage.getItem(STORAGE_KEYS.MOVEMENTS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load stock movements from localStorage:", e);
   }
-  saveStockMovements(DEFAULT_MOVEMENTS);
-  return DEFAULT_MOVEMENTS;
+  return [];
 }
 
 export function saveStockMovements(movements: StockMovement[]): void {
@@ -265,15 +255,14 @@ export function loadTransfers(): StockTransfer[] {
     const raw = localStorage.getItem(STORAGE_KEYS.TRANSFERS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load transfers from localStorage:", e);
   }
-  saveTransfers(DEFAULT_TRANSFERS);
-  return DEFAULT_TRANSFERS;
+  return [];
 }
 
 export const loadStockTransfers = loadTransfers;
@@ -313,15 +302,14 @@ export function loadRecurringSchedules(): RecurringSchedule[] {
     const raw = localStorage.getItem(STORAGE_KEYS.RECURRING_SCHEDULES);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Failed to load recurring schedules:", e);
   }
-  saveRecurringSchedules(DEFAULT_RECURRING_SCHEDULES);
-  return DEFAULT_RECURRING_SCHEDULES;
+  return [];
 }
 
 export function saveRecurringSchedules(schedules: RecurringSchedule[]): void {

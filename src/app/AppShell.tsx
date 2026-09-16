@@ -93,7 +93,7 @@ export const AppShell: React.FC<AppShellProps> = ({
     nameEn: "Sohar Main Branch"
   };
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col md:flex-row font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
       {/* Primary Sidebar (Desktop Navigation) */}
       <PrimarySidebar
         activeTab={activeTab as any}

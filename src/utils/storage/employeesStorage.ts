@@ -80,7 +80,7 @@ export function loadAttendanceRecords(): AttendanceRecord[] {
     const raw = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {
     console.warn("Failed to load attendance records:", e);
@@ -101,7 +101,7 @@ export function loadPayrollSlips(): PayrollSlip[] {
     const raw = localStorage.getItem(PAYROLL_SLIPS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {
     console.warn("Failed to load payroll slips:", e);
@@ -122,7 +122,7 @@ export function loadLeaveRequests(): LeaveRequest[] {
     const raw = localStorage.getItem(LEAVE_REQUESTS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {
     console.warn("Failed to load leave requests:", e);

@@ -82,13 +82,7 @@ export async function initializeDefaultPins(employees: Employee[]): Promise<Reco
   const existing = loadEmployeePins();
   let updated = false;
 
-  const defaultPinMap: Record<string, string> = {
-    "emp-1": "1234",
-    "emp-2": "2233",
-    "emp-3": "3344",
-    "emp-4": "4455",
-    "emp-5": "5566"
-  };
+  const defaultPinMap: Record<string, string> = {};
 
   for (const emp of employees) {
     if (!existing[emp.id]) {

@@ -223,25 +223,25 @@ export const InstantBonusModal: React.FC<InstantBonusModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/65 backdrop-blur-xs" dir={dir}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 backdrop-blur-xs" dir={dir}>
       <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-900 via-amber-950 to-slate-900 text-white p-5 px-6 flex items-center justify-between shrink-0">
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 text-amber-950 p-5 px-6 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="p-2.5 bg-amber-500/20 border border-amber-400/30 rounded-2xl">
-              <Award className="w-6 h-6 text-amber-300" />
+            <div className="p-2.5 bg-amber-100 border border-amber-200 rounded-2xl">
+              <Award className="w-6 h-6 text-amber-700" />
             </div>
             <div>
               <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                <h2 className="text-base sm:text-lg font-bold text-white">
+                <h2 className="text-base sm:text-lg font-bold text-amber-950">
                   {language === "ar" ? "صرف مكافأة مالية فورية وربطها بسند الخزينة" : "Instant Bonus & Treasury Voucher Disbursement"}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/30 text-amber-200 border border-amber-400/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                   {payrollMonth}
                 </span>
               </div>
-              <p className="text-xs text-amber-100/80 mt-0.5">
+              <p className="text-xs text-amber-800/90 mt-0.5">
                 {language === "ar"
                   ? "تسجيل المكافأة مباشرة وخصمها من الخزينة المعتمدة وتوليد سند صرف مالي رسمي لضمان دقة التقارير"
                   : "Disburse bonus from selected treasury and issue a traceable payment voucher"}
@@ -251,7 +251,7 @@ export const InstantBonusModal: React.FC<InstantBonusModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 text-amber-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+            className="p-1.5 text-amber-800 hover:text-amber-950 hover:bg-amber-100 rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

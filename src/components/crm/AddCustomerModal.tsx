@@ -145,7 +145,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const governorates = Array.from(new Set(masterLocations.map((l) => l.governorateAr)));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn" dir={dir}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-fadeIn" dir={dir}>
       <div className="bg-white rounded-3xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Duplicate Phone Decision Modal Step */}

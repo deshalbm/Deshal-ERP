@@ -650,18 +650,18 @@ export const SpaceBookingModal: React.FC<SpaceBookingModalProps> = ({
           </div>
 
           {/* Summary & Price Breakdown Card */}
-          <div className="bg-slate-900 text-white p-4 rounded-2xl space-y-2.5">
-            <div className="flex items-center justify-between text-xs text-slate-300">
+          <div className="bg-slate-100 text-slate-900 p-4 rounded-2xl border border-slate-200 space-y-2.5">
+            <div className="flex items-center justify-between text-xs text-slate-600">
               <span>{language === "ar" ? "سعر الوحدة" : "Unit Rate"} ({duration} × {unitPrice} OMR)</span>
-              <span className="font-mono font-bold">{subtotal.toFixed(2)} OMR</span>
+              <span className="font-mono font-bold text-slate-900">{subtotal.toFixed(2)} OMR</span>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-400">
+            <div className="flex items-center justify-between text-xs text-slate-500">
               <span>{language === "ar" ? "ضريبة القيمة المضافة (5% VAT)" : "VAT (5%)"}</span>
-              <span className="font-mono font-bold">{taxAmount.toFixed(2)} OMR</span>
+              <span className="font-mono font-bold text-slate-900">{taxAmount.toFixed(2)} OMR</span>
             </div>
-            <div className="border-t border-slate-800 pt-2 flex items-center justify-between text-sm font-black">
-              <span className="text-emerald-400">{language === "ar" ? "الإجمالي النهائي للحجز" : "Total Booking Price"}</span>
-              <span className="text-xl font-mono text-white">{totalAmount.toFixed(2)} <span className="text-xs font-sans font-normal text-slate-400">OMR</span></span>
+            <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-sm font-black">
+              <span className="text-emerald-700">{language === "ar" ? "الإجمالي النهائي للحجز" : "Total Booking Price"}</span>
+              <span className="text-xl font-mono text-slate-900">{totalAmount.toFixed(2)} <span className="text-xs font-sans font-normal text-slate-500">OMR</span></span>
             </div>
           </div>
 

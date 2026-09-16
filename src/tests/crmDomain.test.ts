@@ -109,10 +109,10 @@ function runTests() {
   // --- TEST 6: STORAGE INTEGRITY ---
   console.log("\n--- TEST 6: STORAGE INTEGRITY ---");
   const initialLeads = loadCRMLeads();
-  assert(Array.isArray(initialLeads) && initialLeads.length > 0, "Loads seed CRM leads cleanly");
+  assert(Array.isArray(initialLeads), "Loads CRM leads cleanly");
 
   const initialOpps = loadCRMOpportunities();
-  assert(Array.isArray(initialOpps) && initialOpps.length > 0, "Loads seed CRM opportunities cleanly");
+  assert(Array.isArray(initialOpps), "Loads CRM opportunities cleanly");
 
   console.log("\n==============================================================");
   console.log("  RESULTS: ALL TESTS PASSED");

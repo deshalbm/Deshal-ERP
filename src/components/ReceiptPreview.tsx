@@ -178,15 +178,15 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
     <div className="space-y-6 max-w-6xl mx-auto pb-16" dir={dir}>
       
       {/* Quick Toolbar for Preview Controls */}
-      <div className="bg-slate-900 text-slate-100 p-4 rounded-2xl border border-slate-800 shadow-xl flex flex-wrap items-center justify-between gap-4 print:hidden">
+      <div className="bg-white text-slate-800 p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4 print:hidden">
         
         {/* Print Language Selector */}
         <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-indigo-400" />
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <Globe className="w-4 h-4 text-indigo-600" />
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             {t("printLanguage")}:
           </span>
-          <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-medium">
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-medium">
             <button
               onClick={() => {
                 setPrintLang("bilingual");
@@ -195,7 +195,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
               className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 printLang === "bilingual"
                   ? "bg-indigo-600 text-white font-bold shadow-xs"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {t("langBilingual")}
@@ -208,7 +208,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
               className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 printLang === "ar"
                   ? "bg-indigo-600 text-white font-bold shadow-xs"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {t("langArabic")}
@@ -221,7 +221,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
               className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 printLang === "en"
                   ? "bg-indigo-600 text-white font-bold shadow-xs"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {t("langEnglish")}
@@ -231,10 +231,10 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 
         {/* Paper Size selector */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider hidden md:inline">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:inline">
             {t("pageSize")}:
           </span>
-          <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-medium">
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-medium">
             {(["A4", "A5", "LETTER", "THERMAL_80MM"] as PageSizeFormat[]).map((size) => (
               <button
                 key={size}
@@ -242,7 +242,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                 className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   theme.pageSize === size
                     ? "bg-indigo-600 text-white font-bold shadow-xs"
-                    : "text-slate-400 hover:text-white"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {size === "THERMAL_80MM" ? "Thermal" : size}
@@ -253,7 +253,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 
         {/* Template Style Switcher */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:inline">
             {t("templateStyle")}:
           </span>
           <select
@@ -262,7 +262,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
               onUpdateTheme &&
               onUpdateTheme({ ...theme, templateId: e.target.value as any })
             }
-            className="bg-slate-800 text-slate-200 border border-slate-700 text-xs rounded-xl px-2.5 py-1 font-semibold focus:outline-none"
+            className="bg-slate-100 text-slate-800 border border-slate-200 text-xs rounded-xl px-2.5 py-1 font-semibold focus:outline-none"
           >
             <option value="modern">{t("modernClean")}</option>
             <option value="classic">{t("corporateClassic")}</option>
@@ -276,24 +276,24 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setZoomLevel((z) => Math.max(50, z - 10))}
-            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg cursor-pointer"
+            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg cursor-pointer transition-colors"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-xs font-mono font-bold text-slate-300 w-10 text-center">
+          <span className="text-xs font-mono font-bold text-slate-700 w-10 text-center">
             {zoomLevel}%
           </span>
           <button
             onClick={() => setZoomLevel((z) => Math.min(150, z + 10))}
-            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg cursor-pointer"
+            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg cursor-pointer transition-colors"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={() => setZoomLevel(100)}
-            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg cursor-pointer"
+            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg cursor-pointer transition-colors"
             title="Reset Zoom"
           >
             <Maximize2 className="w-4 h-4" />
