@@ -9,8 +9,6 @@ import { KioskDevice } from "../../types";
 export const MAX_FAILED_ATTEMPTS = 5;
 export const LOCKOUT_DURATION_MS = 60 * 1000; // 60 seconds lock on 5 failed attempts
 
-// Admin Emergency / Exit Kiosk Master PIN Hash (fallback master: "9900")
-export const MASTER_KIOSK_PIN_HASH = "8f481c03cf847d0de0459c3ad86903d6d45e54d3e580e03a9f029ec2374e2b02"; // sha256("9900_deshal_kiosk_master_salt")
 
 export interface CryptoProvider {
   digestSha256?: (text: string) => Promise<string>;
@@ -153,12 +151,10 @@ export async function hashPin(pin: string, salt: string, cryptoProvider?: Crypto
 }
 
 /**
- * Verify Master Kiosk Admin PIN (for exiting Kiosk mode or administrative override)
+ * Verify Master Kiosk Admin PIN (legacy export - hardcoded master PINs purged; dynamic employee PIN verification enforced)
  */
-export async function verifyMasterExitPin(pin: string, cryptoProvider?: CryptoProvider): Promise<boolean> {
-  if (pin === "9900" || pin === "1234") return true;
-  const hash = await hashPin(pin, "deshal_kiosk_master_salt", cryptoProvider);
-  return hash === MASTER_KIOSK_PIN_HASH;
+export async function verifyMasterExitPin(_pin: string, _cryptoProvider?: CryptoProvider): Promise<boolean> {
+  return false;
 }
 
 /**
@@ -189,8 +185,8 @@ export async function verifyDeviceSecretPin(
   cryptoProvider?: CryptoProvider
 ): Promise<boolean> {
   if (!device.devicePinHash || !device.devicePinSalt) {
-    // If no custom PIN set on device, check default master PINs
-    return enteredPin === "1234" || enteredPin === "9900";
+    // Device has no specific secret PIN configured
+    return false;
   }
   const computedHash = await hashPin(enteredPin, device.devicePinSalt, cryptoProvider);
   return computedHash === device.devicePinHash;

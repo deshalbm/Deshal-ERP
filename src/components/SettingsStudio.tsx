@@ -33,6 +33,7 @@ import {
   Unlock,
   XCircle,
   ShieldAlert,
+  ShieldCheck,
   Mail,
   Send,
   KeyRound
@@ -47,6 +48,12 @@ import { sendTestEmail, fetchEmailLogs, sendNotificationEmail } from "../lib/ema
 import { seedDemoData } from "../application/services/seedDemoData";
 import { defaultSeedDemoDataAdapter } from "../lib/adapters/seedDemoDataAdapter";
 import { useERPData } from "../contexts/ERPDataContext";
+import { useTenant } from "../contexts/TenantContext";
+import { PlatformAdminDashboard } from "./platform/PlatformAdminDashboard";
+import { CompanyProvisioningModal } from "./tenant/CompanyProvisioningModal";
+import { TenantCompanyProfile, TenantModuleFeatures } from "../domain/tenant/tenantCompanyDomain";
+import { loadTenantCompanyProfiles, updateTenantCompanyFeatures } from "../application/services/tenantCompanyProvisioning";
+import { defaultTenantCompanyStorageAdapter } from "../lib/adapters/tenantCompanyStorageAdapter";
 import {
   loadKioskDevices,
   saveKioskDevices,
@@ -108,13 +115,17 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
   onResetDefaults
 }) => {
   const { t, dir, isRTL, language } = useLanguage();
+  const tenantContext = useTenant();
   const [localSettings, setLocalSettings] = useState<CompanySettings>(() => ({
     ...DEFAULT_COMPANY_SETTINGS,
     ...(settings || {})
   }));
   const [localTheme, setLocalTheme] = useState<DesignTheme>(theme);
-  const [activeTab, setActiveTab] = useState<"company" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "email" | "employees" | "kiosk_devices" | "logs" | "demo">("company");
+  const [activeTab, setActiveTab] = useState<"company" | "platform_admin" | "tenants" | "currency" | "brand" | "theme" | "notices" | "bank" | "whatsapp" | "email" | "employees" | "kiosk_devices" | "logs" | "demo">("company");
+
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState<boolean>(false);
+  const [isProvisionModalOpen, setIsProvisionModalOpen] = useState<boolean>(false);
+  const [tenantProfiles, setTenantProfiles] = useState<TenantCompanyProfile[]>(() => loadTenantCompanyProfiles(defaultTenantCompanyStorageAdapter));
   
   // Kiosk Devices Management State
   const safeKioskDevices = kioskDevices || loadKioskDevices();
@@ -307,6 +318,22 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
       {/* Navigation Sub-Tabs Bar (Clean, Responsive, Overflow-Protected) */}
       <div className="overflow-x-auto custom-scrollbar pb-1">
         <div className="flex bg-slate-200/90 p-1.5 rounded-2xl border border-slate-300 text-xs font-semibold gap-1 min-w-max">
+          {tenantContext.state.isPlatformAdmin && (
+            <button
+              id="tab-platform-admin-btn"
+              onClick={() => setActiveTab("platform_admin")}
+              className={`py-2.5 px-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === "platform_admin"
+                  ? "bg-indigo-700 text-white shadow-sm font-bold"
+                  : "text-indigo-800 hover:text-indigo-950 hover:bg-indigo-100/50"
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+              <span>{language === "ar" ? "إدارة المنصة (Platform Admin)" : "Platform Admin"}</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            </button>
+          )}
+
           <button
             onClick={() => setActiveTab("company")}
             className={`py-2.5 px-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
@@ -317,6 +344,19 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
           >
             <Building2 className="w-3.5 h-3.5" />
             <span>{t("tabCompany")}</span>
+          </button>
+
+          <button
+            id="tab-tenants-btn"
+            onClick={() => setActiveTab("tenants")}
+            className={`py-2.5 px-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === "tenants"
+                ? "bg-indigo-700 text-white shadow-sm font-bold"
+                : "text-indigo-800 hover:text-indigo-950 hover:bg-indigo-100/50"
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+            <span>{language === "ar" ? "الشركات المستأجرة" : "Tenant Companies"} ({tenantProfiles.length})</span>
           </button>
 
           <button
@@ -461,6 +501,124 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Tab: Enterprise Platform Admin Dashboard */}
+      {activeTab === "platform_admin" && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <PlatformAdminDashboard />
+        </div>
+      )}
+
+      {/* Tab: Tenant Companies & Feature Scopes */}
+      {activeTab === "tenants" && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-indigo-600" />
+                <span>إدارة الشركات المستأجرة ونطاق الموديولات</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                إدارة الملفات التجارية وتخصيص صلاحيات الموديولات لمؤسسات النظام (Multi-Company Tenant Provisioning Engine)
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsProvisionModalOpen(true)}
+              type="button"
+              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>تأسيس شركة مستأجرة جديدة</span>
+            </button>
+          </div>
+
+          {tenantProfiles.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+              <Building2 className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-slate-700">لا توجد شركات مستأجرة مسجلة بعد</h3>
+              <p className="text-xs text-slate-500 mt-1 mb-4">
+                يمكنك تأسيس شركة جديدة وتحديد موديولاتها وحساب المدير فوراً.
+              </p>
+              <button
+                onClick={() => setIsProvisionModalOpen(true)}
+                type="button"
+                className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow-sm hover:bg-indigo-700"
+              >
+                + تأسيس الشركة الأولى
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {tenantProfiles.map(comp => (
+                <div key={comp.companyId} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-indigo-100 text-indigo-700 rounded-xl font-bold text-base">
+                        🏢
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-slate-900 text-sm">{comp.name}</h3>
+                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
+                            comp.status === "ACTIVE" ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-amber-100 text-amber-800 border border-amber-300"
+                          }`}>
+                            {comp.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          سجل تجاري: <span className="font-mono text-slate-700 font-semibold">{comp.crNumber}</span> | العملة: <span className="font-bold text-indigo-700">{comp.currency}</span> | الفرع: <span className="text-slate-700">{comp.mainBranchName}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-left text-xs text-slate-500">
+                      <div>المدير المسؤول: <span className="font-semibold text-slate-800">{comp.adminName}</span></div>
+                      <div className="font-mono text-indigo-600">{comp.adminEmail}</div>
+                    </div>
+                  </div>
+
+                  {/* Feature Scope Toggles */}
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-700 mb-2">الموديولات المفعلة للشركة:</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {(Object.keys(comp.moduleFeatures) as Array<keyof TenantModuleFeatures>).map(featKey => {
+                        const isEnabled = comp.moduleFeatures[featKey];
+                        return (
+                          <button
+                            key={featKey}
+                            type="button"
+                            onClick={() => {
+                              const updated = updateTenantCompanyFeatures(
+                                comp.companyId,
+                                { [featKey]: !isEnabled },
+                                defaultTenantCompanyStorageAdapter
+                              );
+                              if (updated.success) {
+                                setTenantProfiles(loadTenantCompanyProfiles(defaultTenantCompanyStorageAdapter));
+                              }
+                            }}
+                            className={`p-2 rounded-xl text-[11px] font-semibold flex items-center justify-between border transition-all cursor-pointer ${
+                              isEnabled
+                                ? "bg-white border-indigo-300 text-indigo-900 shadow-2xs"
+                                : "bg-slate-200/60 border-slate-300 text-slate-500 line-through"
+                            }`}
+                          >
+                            <span className="truncate">{featKey}</span>
+                            <span className={`ml-1 px-1.5 py-0.2 rounded text-[9px] ${isEnabled ? "bg-indigo-600 text-white" : "bg-slate-400 text-white"}`}>
+                              {isEnabled ? "مفعل" : "معطل"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tab 1: Company Profile Details */}
       {activeTab === "company" && (
@@ -2268,6 +2426,13 @@ export const SettingsStudio: React.FC<SettingsStudioProps> = ({
         </div>
       )}
 
+      <CompanyProvisioningModal
+        isOpen={isProvisionModalOpen}
+        onClose={() => setIsProvisionModalOpen(false)}
+        onCompanyProvisioned={() => {
+          setTenantProfiles(loadTenantCompanyProfiles(defaultTenantCompanyStorageAdapter));
+        }}
+      />
     </div>
   );
 };

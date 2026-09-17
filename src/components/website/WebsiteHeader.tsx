@@ -33,13 +33,13 @@ export const WebsiteHeader: React.FC<WebsiteHeaderProps> = ({
   ];
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      <div className="max-w-[1320px] mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-3">
+    <header className="sticky top-0 w-full z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-3">
         
         {/* Mobile Hamburger Menu Toggle */}
         <button
           onClick={onOpenMobileMenu}
-          className="xl:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shrink-0"
+          className="xl:hidden p-2 sm:p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shrink-0"
           title={isAr ? 'القائمة الرئيسية' : 'Main Menu'}
         >
           <Menu className="w-5 h-5 text-[#002e69]" />
@@ -48,19 +48,19 @@ export const WebsiteHeader: React.FC<WebsiteHeaderProps> = ({
         {/* Brand Identity */}
         <div 
           onClick={() => onNavigate('/')} 
-          className="flex items-center gap-3 cursor-pointer group shrink-0"
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink min-w-0"
         >
           <img
             src="/assets/images/deshal_logo.png"
             alt="الدليل الشامل"
-            className="h-10 w-auto object-contain"
+            className="h-8 sm:h-10 w-auto object-contain shrink-0"
             onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
           />
-          <div className="flex flex-col text-right">
-            <span className="font-extrabold text-lg sm:text-xl text-[#002e69] leading-tight group-hover:text-[#14448c] transition-colors">
+          <div className="flex flex-col text-right min-w-0">
+            <span className="font-extrabold text-sm sm:text-lg md:text-xl text-[#002e69] leading-tight group-hover:text-[#14448c] transition-colors truncate">
               {isAr ? 'الدليل الشامل' : 'Al Daleel Al Shamil'}
             </span>
-            <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium">
+            <span className="hidden sm:block text-[10px] sm:text-[11px] text-slate-500 font-medium truncate">
               {isAr ? 'لاستشارات إدارة المشاريع | صحار' : 'Project Management Consultancies | Sohar'}
             </span>
           </div>
@@ -89,7 +89,7 @@ export const WebsiteHeader: React.FC<WebsiteHeaderProps> = ({
         </nav>
 
         {/* Location, Language & Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <div className="hidden md:flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full text-xs font-medium text-slate-600">
             <MapPin className="w-3.5 h-3.5 text-[#006d33]" />
             <span>{isAr ? 'صحار، عُمان' : 'Sohar, Oman'}</span>
@@ -101,17 +101,18 @@ export const WebsiteHeader: React.FC<WebsiteHeaderProps> = ({
           {onNavigateToERP && (
             <button
               onClick={onNavigateToERP}
-              className="inline-flex items-center gap-1.5 bg-[#006d33] hover:bg-emerald-600 text-white font-extrabold text-xs px-3.5 sm:px-4 py-2.5 rounded-xl transition-all shadow-md shrink-0"
+              className="inline-flex items-center gap-1.5 bg-[#006d33] hover:bg-emerald-600 text-white font-extrabold text-xs px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-md shrink-0"
               title={isAr ? 'الدخول لنظام ERP' : 'Access ERP Portal'}
             >
-              <Lock className="w-3.5 h-3.5" />
-              <span>{isAr ? 'دخول النظام (ERP)' : 'Go to ERP'}</span>
+              <Lock className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">{isAr ? 'دخول النظام (ERP)' : 'Go to ERP'}</span>
+              <span className="inline sm:hidden">{isAr ? 'ERP' : 'ERP'}</span>
             </button>
           )}
 
           <button
             onClick={() => onNavigate('/contact')}
-            className="hidden sm:inline-flex items-center justify-center bg-[#002e69] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl hover:bg-[#14448c] transition-all shadow-md shrink-0"
+            className="hidden sm:inline-flex items-center justify-center bg-[#002e69] text-white text-xs font-extrabold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl hover:bg-[#14448c] transition-all shadow-md shrink-0"
           >
             {isAr ? 'حجز موعد' : 'Book'}
           </button>

@@ -65,6 +65,7 @@ import { SettingsStudio } from "../components/SettingsStudio";
 import { HelpCenterView } from "../components/help/HelpCenterView";
 import { WebsiteView } from "../components/website/WebsiteView";
 import CmsManagerView from "../components/cms/CmsManagerView";
+import { TenantModuleAccessGuard } from "../components/tenant/TenantModuleAccessGuard";
 
 interface AppRoutesProps {
   activeTab?: string;
@@ -435,298 +436,332 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       })()}
 
       {activeTab === "pos" && (
-        <POSView
-          inventory={inventoryList}
-          customers={customersList}
-          branches={branchesList}
-          activeBranchId={activeBranchId}
-          activeEmployee={getActiveEmployee()}
-          companySettings={companySettings}
-          vouchers={vouchersList}
-          onSaveInventory={handleSaveInventory}
-          onSaveMovements={handleSaveMovements}
-          onSaveVouchers={onSaveVouchersList}
-          onSaveCustomers={onSaveCustomersList}
-          onAuditLog={onAuditLog}
-          onNavigateToTab={setActiveTab}
-        />
+        <TenantModuleAccessGuard moduleCode="pos" moduleTitleAr="نقطة البيع الكاشير" moduleTitleEn="POS Terminal">
+          <POSView
+            inventory={inventoryList}
+            customers={customersList}
+            branches={branchesList}
+            activeBranchId={activeBranchId}
+            activeEmployee={getActiveEmployee()}
+            companySettings={companySettings}
+            vouchers={vouchersList}
+            onSaveInventory={handleSaveInventory}
+            onSaveMovements={handleSaveMovements}
+            onSaveVouchers={onSaveVouchersList}
+            onSaveCustomers={onSaveCustomersList}
+            onAuditLog={onAuditLog}
+            onNavigateToTab={setActiveTab}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "accounting" && (
-        <GeneralLedgerAccountsView
-          accounts={accountsList}
-          journalEntries={journalEntriesList}
-          revisionLogs={revisionLogsList}
-          fiscalPeriods={fiscalPeriodsList}
-          branches={branchesList}
-          companySettings={companySettings}
-          vouchers={vouchersList}
-          purchases={purchasesList}
-          payrollSlips={payrollSlipsList}
-          onSaveAccounts={handleSaveAccounts}
-          onSaveJournalEntries={handleSaveJournalEntries}
-          onSaveRevisionLogs={handleSaveRevisionLogs}
-          onSaveFiscalPeriods={handleSaveFiscalPeriods}
-          currentUserName={userName}
-          activeBranchId={activeBranchId}
-        />
+        <TenantModuleAccessGuard moduleCode="accounting" moduleTitleAr="الأستاذ العام والمحاسبة" moduleTitleEn="General Ledger">
+          <GeneralLedgerAccountsView
+            accounts={accountsList}
+            journalEntries={journalEntriesList}
+            revisionLogs={revisionLogsList}
+            fiscalPeriods={fiscalPeriodsList}
+            branches={branchesList}
+            companySettings={companySettings}
+            vouchers={vouchersList}
+            purchases={purchasesList}
+            payrollSlips={payrollSlipsList}
+            onSaveAccounts={handleSaveAccounts}
+            onSaveJournalEntries={handleSaveJournalEntries}
+            onSaveRevisionLogs={handleSaveRevisionLogs}
+            onSaveFiscalPeriods={handleSaveFiscalPeriods}
+            currentUserName={userName}
+            activeBranchId={activeBranchId}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "spaces" && (
-        <SpacesManager
-          branches={branchesList}
-          session={currentAuthSession}
-        />
+        <TenantModuleAccessGuard moduleCode="spaces" moduleTitleAr="إدارة المساحات والقاعات" moduleTitleEn="Rental Spaces">
+          <SpacesManager
+            branches={branchesList}
+            session={currentAuthSession}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "contracts" && (
-        <LeaseContractsManager
-          spaces={rentalSpacesList || spacesState.rentalSpaces}
-          branches={branchesList}
-          customers={customersList}
-          packages={membershipPackagesList || servicesState.membershipPackages}
-          companySettings={companySettings}
-        />
+        <TenantModuleAccessGuard moduleCode="spaces" moduleTitleAr="عقود الإيجار والخدمات" moduleTitleEn="Lease Contracts">
+          <LeaseContractsManager
+            spaces={rentalSpacesList || spacesState.rentalSpaces}
+            branches={branchesList}
+            customers={customersList}
+            packages={membershipPackagesList || servicesState.membershipPackages}
+            companySettings={companySettings}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "services" && (
-        <ServicesManager
-          branches={branchesList}
-          customers={customersList}
-          session={currentAuthSession}
-        />
+        <TenantModuleAccessGuard moduleCode="services" moduleTitleAr="إدارة الخدمات والباقات" moduleTitleEn="Consulting Services">
+          <ServicesManager
+            branches={branchesList}
+            customers={customersList}
+            session={currentAuthSession}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "portal" && (
-        <ClientBookingPortal
-          services={consultingServicesList || servicesState.consultingServices}
-          spaces={rentalSpacesList || spacesState.rentalSpaces}
-          branches={branchesList}
-          customers={customersList}
-          subscriptions={tenantSubscriptionsList || servicesState.tenantSubscriptions}
-          packages={membershipPackagesList || servicesState.membershipPackages}
-          onBookService={(srv) => {
-            if (onSelectServiceForBooking) onSelectServiceForBooking(srv);
-            else servicesActions.openBookingModal(srv);
-          }}
-          onBookSpace={onOpenBookingModalForSpace}
-          onNavigateTab={setActiveTab}
-        />
+        <TenantModuleAccessGuard moduleCode="services" moduleTitleAr="بوابة حجز الخدمات الذاتية" moduleTitleEn="Client Booking Portal">
+          <ClientBookingPortal
+            services={consultingServicesList || servicesState.consultingServices}
+            spaces={rentalSpacesList || spacesState.rentalSpaces}
+            branches={branchesList}
+            customers={customersList}
+            subscriptions={tenantSubscriptionsList || servicesState.tenantSubscriptions}
+            packages={membershipPackagesList || servicesState.membershipPackages}
+            onBookService={(srv) => {
+              if (onSelectServiceForBooking) onSelectServiceForBooking(srv);
+              else servicesActions.openBookingModal(srv);
+            }}
+            onBookSpace={onOpenBookingModalForSpace}
+            onNavigateTab={setActiveTab}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "editor" && (
-        <VoucherForm
-          voucher={activeVoucher}
-          onChange={handleSetActiveVoucher}
-          onSave={handleSaveActiveVoucher}
-          onPreview={() => setActiveTab("preview")}
-          onOpenAiAssistant={onOpenAiAssistant}
-          customers={customersList}
-          branches={branchesList}
-          companySettings={companySettings}
-          onQuickSaveCustomer={handleSaveCustomer}
-        />
+        <TenantModuleAccessGuard moduleCode="vouchers" moduleTitleAr="تحرير السندات" moduleTitleEn="Voucher Form">
+          <VoucherForm
+            voucher={activeVoucher}
+            onChange={handleSetActiveVoucher}
+            onSave={handleSaveActiveVoucher}
+            onPreview={() => setActiveTab("preview")}
+            onOpenAiAssistant={onOpenAiAssistant}
+            customers={customersList}
+            branches={branchesList}
+            companySettings={companySettings}
+            onQuickSaveCustomer={handleSaveCustomer}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "preview" && (
-        <ReceiptPreview
-          voucher={activeVoucher}
-          settings={companySettings}
-          theme={designTheme}
-          onPrint={handlePrint}
-          onExportPdf={handleExportPdf}
-          onUpdateTheme={handleSaveDesignTheme}
-        />
+        <TenantModuleAccessGuard moduleCode="vouchers" moduleTitleAr="معاينة السندات" moduleTitleEn="Receipt Preview">
+          <ReceiptPreview
+            voucher={activeVoucher}
+            settings={companySettings}
+            theme={designTheme}
+            onPrint={handlePrint}
+            onExportPdf={handleExportPdf}
+            onUpdateTheme={handleSaveDesignTheme}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "history" && (
-        <VoucherHistory
-          vouchers={vouchersList}
-          settings={companySettings}
-          theme={designTheme}
-          onSelectVoucher={(v) => {
-            handleSetActiveVoucher(v);
-            setActiveTab("editor");
-          }}
-          onDeleteVoucher={handleDeleteVoucher}
-          onDeleteMultipleVouchers={handleDeleteMultipleVouchers}
-          onDuplicateVoucher={handleDuplicateVoucher}
-          onNewVoucher={handleCreateNewVoucher}
-          onPrintVoucher={(v) => {
-            handleSetActiveVoucher(v);
-            handlePrint();
-          }}
-          onExportPdfVoucher={(v) => {
-            handleSetActiveVoucher(v);
-            handleExportPdf();
-          }}
-        />
+        <TenantModuleAccessGuard moduleCode="vouchers" moduleTitleAr="سجل السندات والفواتير" moduleTitleEn="Voucher History">
+          <VoucherHistory
+            vouchers={vouchersList}
+            settings={companySettings}
+            theme={designTheme}
+            onSelectVoucher={(v) => {
+              handleSetActiveVoucher(v);
+              setActiveTab("editor");
+            }}
+            onDeleteVoucher={handleDeleteVoucher}
+            onDeleteMultipleVouchers={handleDeleteMultipleVouchers}
+            onDuplicateVoucher={handleDuplicateVoucher}
+            onNewVoucher={handleCreateNewVoucher}
+            onPrintVoucher={(v) => {
+              handleSetActiveVoucher(v);
+              handlePrint();
+            }}
+            onExportPdfVoucher={(v) => {
+              handleSetActiveVoucher(v);
+              handleExportPdf();
+            }}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "inventory" && (
-        <InventoryView
-          inventory={inventoryList}
-          movements={stockMovementsList}
-          companySettings={companySettings}
-          branches={branchesList}
-          onSaveInventory={handleSaveInventory}
-          onSaveMovements={handleSaveMovements}
-          onNavigateToPurchases={() => setActiveTab("purchases")}
-        />
+        <TenantModuleAccessGuard moduleCode="inventory" moduleTitleAr="المخزون والمستودعات" moduleTitleEn="Inventory Management">
+          <InventoryView
+            inventory={inventoryList}
+            movements={stockMovementsList}
+            companySettings={companySettings}
+            branches={branchesList}
+            onSaveInventory={handleSaveInventory}
+            onSaveMovements={handleSaveMovements}
+            onNavigateToPurchases={() => setActiveTab("purchases")}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "purchases" && (
-        <PurchasesView
-          purchases={purchasesList}
-          suppliers={suppliersList}
-          inventory={inventoryList}
-          movements={stockMovementsList}
-          companySettings={companySettings}
-          branches={branchesList}
-          onSavePurchases={handleSavePurchases}
-          onSaveSuppliers={handleSaveSuppliers}
-          onSaveInventory={handleSaveInventory}
-          onSaveMovements={handleSaveMovements}
-          onCreatePaymentVoucher={onCreatePaymentVoucherFromPurchase}
-          onNavigateToInventory={() => setActiveTab("inventory")}
-        />
+        <TenantModuleAccessGuard moduleCode="purchases" moduleTitleAr="المشتريات والموردين" moduleTitleEn="Purchases Management">
+          <PurchasesView
+            purchases={purchasesList}
+            suppliers={suppliersList}
+            inventory={inventoryList}
+            movements={stockMovementsList}
+            companySettings={companySettings}
+            branches={branchesList}
+            onSavePurchases={handleSavePurchases}
+            onSaveSuppliers={handleSaveSuppliers}
+            onSaveInventory={handleSaveInventory}
+            onSaveMovements={handleSaveMovements}
+            onCreatePaymentVoucher={onCreatePaymentVoucherFromPurchase}
+            onNavigateToInventory={() => setActiveTab("inventory")}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "branches" && (
-        <BranchesView
-          branches={branchesList}
-          activeBranchId={activeBranchId}
-          transfers={stockTransfersList}
-          vouchers={vouchersList}
-          inventory={inventoryList}
-          purchases={purchasesList}
-          companySettings={companySettings}
-          onSaveBranches={handleSaveBranches}
-          onSaveTransfers={handleSaveTransfers}
-          onSelectActiveBranch={handleSetActiveBranchId}
-          onUpdateInventoryAfterTransfer={handleSaveInventory}
-          onNavigateToVouchersByBranch={() => {
-            setActiveTab("history");
-          }}
-        />
+        <TenantModuleAccessGuard moduleCode="management" moduleTitleAr="الفروع والمناقلات" moduleTitleEn="Branches & Transfers">
+          <BranchesView
+            branches={branchesList}
+            activeBranchId={activeBranchId}
+            transfers={stockTransfersList}
+            vouchers={vouchersList}
+            inventory={inventoryList}
+            purchases={purchasesList}
+            companySettings={companySettings}
+            onSaveBranches={handleSaveBranches}
+            onSaveTransfers={handleSaveTransfers}
+            onSelectActiveBranch={handleSetActiveBranchId}
+            onUpdateInventoryAfterTransfer={handleSaveInventory}
+            onNavigateToVouchersByBranch={() => {
+              setActiveTab("history");
+            }}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "crm" && (
-        <CRMView
-          customers={customersList}
-          vouchers={vouchersList}
-          leaseContracts={contractsList}
-          subscriptions={tenantSubscriptionsList || servicesState.tenantSubscriptions}
-          packages={membershipPackagesList || servicesState.membershipPackages}
-          services={consultingServicesList || servicesState.consultingServices}
-          serviceBookings={serviceBookingsList || servicesState.serviceBookings}
-          spaces={rentalSpacesList}
-          branches={branchesList}
-          companySettings={companySettings}
-          onSaveCustomer={handleSaveCustomer}
-          onDeleteCustomer={handleDeleteCustomer}
-          onCreateVoucherForCustomer={onCreateVoucherForCustomer}
-          onViewVoucher={(v) => {
-            handleSetActiveVoucher(v);
-            setActiveTab("preview");
-          }}
-          onSyncWithVouchers={handleSyncCustomersWithVouchers}
-          onSaveContract={handleSaveContract}
-          onCollectInstallment={handleCollectInstallmentAction}
-          onSaveSubscription={onSaveTenantSubscription || servicesActions.saveSubscription}
-          onSaveServiceBooking={(bk) => {
-            if (onSaveServiceBookingList) {
-              const currentBookings = serviceBookingsList || servicesState.serviceBookings;
-              const exists = currentBookings.some((b) => b.id === bk.id);
-              const updated = exists ? currentBookings.map((b) => b.id === bk.id ? bk : b) : [bk, ...currentBookings];
-              onSaveServiceBookingList(updated);
-            } else {
-              servicesActions.confirmBooking(bk);
-            }
-          }}
-          onOpenServiceBookingModal={(srv) => {
-            if (onSelectServiceForBooking) onSelectServiceForBooking(srv);
-            else servicesActions.openBookingModal(srv);
-          }}
-          onOpenTenantSubModal={(sub) => {
-            if (onOpenTenantSubModal) onOpenTenantSubModal(sub);
-            else servicesActions.openSubscriptionModal(sub);
-          }}
-          onOpenSpaceBookingModal={onOpenBookingModalForSpace}
-          onNavigateTab={setActiveTab}
-        />
+        <TenantModuleAccessGuard moduleCode="crm" moduleTitleAr="إدارة علاقات العملاء (CRM)" moduleTitleEn="CRM & Customers">
+          <CRMView
+            customers={customersList}
+            vouchers={vouchersList}
+            leaseContracts={contractsList}
+            subscriptions={tenantSubscriptionsList || servicesState.tenantSubscriptions}
+            packages={membershipPackagesList || servicesState.membershipPackages}
+            services={consultingServicesList || servicesState.consultingServices}
+            serviceBookings={serviceBookingsList || servicesState.serviceBookings}
+            spaces={rentalSpacesList}
+            branches={branchesList}
+            companySettings={companySettings}
+            onSaveCustomer={handleSaveCustomer}
+            onDeleteCustomer={handleDeleteCustomer}
+            onCreateVoucherForCustomer={onCreateVoucherForCustomer}
+            onViewVoucher={(v) => {
+              handleSetActiveVoucher(v);
+              setActiveTab("preview");
+            }}
+            onSyncWithVouchers={handleSyncCustomersWithVouchers}
+            onSaveContract={handleSaveContract}
+            onCollectInstallment={handleCollectInstallmentAction}
+            onSaveSubscription={onSaveTenantSubscription || servicesActions.saveSubscription}
+            onSaveServiceBooking={(bk) => {
+              if (onSaveServiceBookingList) {
+                const currentBookings = serviceBookingsList || servicesState.serviceBookings;
+                const exists = currentBookings.some((b) => b.id === bk.id);
+                const updated = exists ? currentBookings.map((b) => b.id === bk.id ? bk : b) : [bk, ...currentBookings];
+                onSaveServiceBookingList(updated);
+              } else {
+                servicesActions.confirmBooking(bk);
+              }
+            }}
+            onOpenServiceBookingModal={(srv) => {
+              if (onSelectServiceForBooking) onSelectServiceForBooking(srv);
+              else servicesActions.openBookingModal(srv);
+            }}
+            onOpenTenantSubModal={(sub) => {
+              if (onOpenTenantSubModal) onOpenTenantSubModal(sub);
+              else servicesActions.openSubscriptionModal(sub);
+            }}
+            onOpenSpaceBookingModal={onOpenBookingModalForSpace}
+            onNavigateTab={setActiveTab}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "schedules" && (
-        <RecurringSchedulesView
-          schedules={schedulesList}
-          vouchers={vouchersList}
-          customers={customersList}
-          suppliers={suppliersList}
-          branches={branchesList}
-          activeBranchId={activeBranchId}
-          companySettings={companySettings}
-          onSaveSchedules={handleSaveSchedules}
-          onSaveVouchers={onSaveVouchersList}
-          onViewVoucher={(v) => {
-            handleSetActiveVoucher(v);
-            setActiveTab("preview");
-          }}
-          onAuditLog={onAuditLog}
-        />
+        <TenantModuleAccessGuard moduleCode="vouchers" moduleTitleAr="جدولة الأقساط والتحصيل الدوري" moduleTitleEn="Recurring Schedules">
+          <RecurringSchedulesView
+            schedules={schedulesList}
+            vouchers={vouchersList}
+            customers={customersList}
+            suppliers={suppliersList}
+            branches={branchesList}
+            activeBranchId={activeBranchId}
+            companySettings={companySettings}
+            onSaveSchedules={handleSaveSchedules}
+            onSaveVouchers={onSaveVouchersList}
+            onViewVoucher={(v) => {
+              handleSetActiveVoucher(v);
+              setActiveTab("preview");
+            }}
+            onAuditLog={onAuditLog}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "employees" && (
-        <EmployeesManager
-          employees={employeesList || []}
-          branches={branchesList || []}
-          companySettings={companySettings}
-          activeEmployeeId={activeEmployeeId}
-          attendanceRecords={attendanceList || []}
-          payrollSlips={payrollSlipsList || []}
-          leaveRequests={leaveRequestsList || []}
-          vouchers={vouchersList || []}
-          onSaveEmployees={handleSaveEmployees}
-          onSaveAttendance={handleSaveAttendance}
-          onSavePayrollSlips={handleSavePayrollSlips}
-          onSaveLeaveRequests={handleSaveLeaveRequests}
-          onSelectActiveEmployee={handleSelectActiveEmployee}
-          onSaveVouchers={onSaveVouchersList}
-          onViewVoucher={(v) => {
-            handleSetActiveVoucher(v);
-            setActiveTab("preview");
-          }}
-          onAuditLog={onAuditLog}
-        />
+        <TenantModuleAccessGuard moduleCode="hr" moduleTitleAr="الموارد البشرية والرواتب" moduleTitleEn="HR & Payroll">
+          <EmployeesManager
+            employees={employeesList || []}
+            branches={branchesList || []}
+            companySettings={companySettings}
+            activeEmployeeId={activeEmployeeId}
+            attendanceRecords={attendanceList || []}
+            payrollSlips={payrollSlipsList || []}
+            leaveRequests={leaveRequestsList || []}
+            vouchers={vouchersList || []}
+            onSaveEmployees={handleSaveEmployees}
+            onSaveAttendance={handleSaveAttendance}
+            onSavePayrollSlips={handleSavePayrollSlips}
+            onSaveLeaveRequests={handleSaveLeaveRequests}
+            onSelectActiveEmployee={handleSelectActiveEmployee}
+            onSaveVouchers={onSaveVouchersList}
+            onViewVoucher={(v) => {
+              handleSetActiveVoucher(v);
+              setActiveTab("preview");
+            }}
+            onAuditLog={onAuditLog}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "requests" && (
-        <RequestsDashboard
-          employees={employeesList}
-          branches={branchesList}
-          currentEmployee={employeesList.find((e) => e.id === activeEmployeeId)}
-          companySettings={companySettings}
-        />
+        <TenantModuleAccessGuard moduleCode="requests" moduleTitleAr="طلبات ونماذج الموظفين" moduleTitleEn="Staff Requests & Forms">
+          <RequestsDashboard
+            employees={employeesList}
+            branches={branchesList}
+            currentEmployee={employeesList.find((e) => e.id === activeEmployeeId)}
+            companySettings={companySettings}
+          />
+        </TenantModuleAccessGuard>
       )}
 
       {activeTab === "settings" && (
-        <SettingsStudio
-          settings={companySettings}
-          theme={designTheme}
-          employees={employeesList}
-          branches={branchesList}
-          activeEmployeeId={activeEmployeeId}
-          auditLogs={auditLogsList}
-          kioskDevices={kioskDevicesList}
-          onSaveSettings={handleSaveCompanySettings}
-          onSaveTheme={handleSaveDesignTheme}
-          onSaveEmployees={handleSaveEmployees}
-          onSaveKioskDevices={handleSaveKioskDevices}
-          onSelectActiveEmployee={handleSelectActiveEmployee}
-          onClearAuditLogs={onClearAuditLogs}
-          onOpenSecuritySettings={onOpenSecuritySettings}
-          onResetDefaults={handleResetDefaults}
-        />
+        <TenantModuleAccessGuard moduleCode="management" moduleTitleAr="إعدادات المنظومة" moduleTitleEn="System Settings">
+          <SettingsStudio
+            settings={companySettings}
+            theme={designTheme}
+            employees={employeesList}
+            branches={branchesList}
+            activeEmployeeId={activeEmployeeId}
+            auditLogs={auditLogsList}
+            kioskDevices={kioskDevicesList}
+            onSaveSettings={handleSaveCompanySettings}
+            onSaveTheme={handleSaveDesignTheme}
+            onSaveEmployees={handleSaveEmployees}
+            onSaveKioskDevices={handleSaveKioskDevices}
+            onSelectActiveEmployee={handleSelectActiveEmployee}
+            onClearAuditLogs={onClearAuditLogs}
+            onOpenSecuritySettings={onOpenSecuritySettings}
+            onResetDefaults={handleResetDefaults}
+          />
+        </TenantModuleAccessGuard>
       )}
     </>
   );

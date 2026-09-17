@@ -10,7 +10,6 @@ import { Employee, EmployeePinRecord, KioskDevice } from "../types";
 import {
   MAX_FAILED_ATTEMPTS,
   LOCKOUT_DURATION_MS,
-  MASTER_KIOSK_PIN_HASH,
   sha256Hex,
   simpleSha256Fallback,
   generateSalt,
@@ -25,7 +24,6 @@ import {
 export {
   MAX_FAILED_ATTEMPTS,
   LOCKOUT_DURATION_MS,
-  MASTER_KIOSK_PIN_HASH,
   sha256Hex,
   simpleSha256Fallback,
   generateSalt,
@@ -70,23 +68,16 @@ export function saveEmployeePins(pins: Record<string, EmployeePinRecord>): void 
 }
 
 /**
- * Initialize default seeded PINs for initial demo employees if not present
- * Seed PINs:
- * - EMP-001 (مدير النظام - Admin): "1234"
- * - EMP-002 (فاطمة البلوشي - Accountant): "2233"
- * - EMP-003 (أحمد المعمري - Storekeeper): "3344"
- * - EMP-004 (محمد الكندي - Sales): "4455"
- * - EMP-005 (مريم المقبالي - Reception): "5566"
+ * Initialize registered PINs for employees with explicit pinCode assigned
  */
 export async function initializeDefaultPins(employees: Employee[]): Promise<Record<string, EmployeePinRecord>> {
   const existing = loadEmployeePins();
   let updated = false;
 
-  const defaultPinMap: Record<string, string> = {};
-
   for (const emp of employees) {
-    if (!existing[emp.id]) {
-      const plainPin = defaultPinMap[emp.id] || "1234";
+    const empPinCode = (emp as any).pinCode;
+    if (!existing[emp.id] && empPinCode) {
+      const plainPin = String(empPinCode).trim();
       const salt = generateSalt(16);
       const pinHash = await hashPin(plainPin, salt);
       existing[emp.id] = {
@@ -290,9 +281,93 @@ export async function verifyKioskPin(
   };
 }
 
+export interface PrivilegedPinVerificationResult {
+  success: boolean;
+  employee?: Employee;
+  adminName?: string;
+  errorMessage?: string;
+}
+
+/**
+ * Dynamically verifies an entered PIN against active employees for privileged actions
+ * (Exiting Kiosk mode, POS discount overrides, high-value voucher approvals, admin overrides).
+ * Authorization is granted if:
+ * 1. Entered PIN matches an active employee's registered PIN (loadEmployeePins() or emp.pinCode).
+ * 2. Employee holds Admin/Manager role or explicit permissions (employee_pin_mgmt, attendance_settings, ADMIN_PANEL, FULL_ACCESS).
+ */
+export async function verifyPrivilegedEmployeePin(
+  pin: string,
+  employees: Employee[],
+  requiredPermissions?: string[]
+): Promise<PrivilegedPinVerificationResult> {
+  const cleanPin = pin.trim();
+  if (!cleanPin) {
+    return {
+      success: false,
+      errorMessage: "يرجى إدخال رمز PIN للمتابعة."
+    };
+  }
+
+  const activeEmployees = employees.filter((e) => e.status !== "INACTIVE");
+  const pinRecords = loadEmployeePins();
+
+  for (const emp of activeEmployees) {
+    let pinMatched = false;
+
+    // Check stored pin record in localStorage
+    const rec = pinRecords[emp.id];
+    if (rec && !rec.isLocked) {
+      const hash = await hashPin(cleanPin, rec.salt);
+      if (hash === rec.pinHash) {
+        pinMatched = true;
+      }
+    }
+
+    // Check direct employee pin code property if available
+    const empDirectPin = (emp as any).pinCode;
+    if (!pinMatched && empDirectPin && String(empDirectPin).trim() === cleanPin) {
+      pinMatched = true;
+    }
+
+    if (pinMatched) {
+      const isManagerOrAdmin =
+        emp.role === "ADMIN" ||
+        emp.role === "MANAGER" ||
+        emp.department === "الإدارة العامة" ||
+        emp.department === "الإدارة العليا" ||
+        (emp.jobTitle && (emp.jobTitle.includes("مدير") || emp.jobTitle.toLowerCase().includes("manager")));
+
+      const hasRequiredPermission =
+        emp.permissions?.includes("employee_pin_mgmt" as any) ||
+        emp.permissions?.includes("attendance_settings" as any) ||
+        emp.permissions?.includes("ADMIN_PANEL" as any) ||
+        emp.permissions?.includes("FULL_ACCESS" as any) ||
+        (requiredPermissions && requiredPermissions.some((perm) => emp.permissions?.includes(perm as any)));
+
+      if (isManagerOrAdmin || hasRequiredPermission) {
+        return {
+          success: true,
+          employee: emp,
+          adminName: emp.fullName
+        };
+      } else {
+        return {
+          success: false,
+          errorMessage: `الموظف (${emp.fullName}) لا يملك صلاحية الإدارة أو التجاوز المطلوب.`
+        };
+      }
+    }
+  }
+
+  return {
+    success: false,
+    errorMessage: "رمز PIN غير صحيح أو غير مسجل لموظف مخول."
+  };
+}
+
 /**
  * Validates Admin PIN for the hidden 7-clicks Kiosk Administration and Exit flow.
- * Checks Master PINs (9900, 1234), device secret PIN, and any employee with Admin privileges.
+ * Checks device secret PIN (if set) and dynamic employee PIN verification against active Admin/Manager profiles.
  */
 export async function verifyAdminExitPin(
   pin: string,
@@ -316,16 +391,6 @@ export async function verifyAdminExitPin(
     };
   }
 
-  // Check master PINs first
-  const isMaster = await verifyMasterExitPin(pin);
-  if (isMaster) {
-    resetKioskFailedAttempts();
-    return {
-      success: true,
-      adminName: "مدير النظام العام (Master Admin)"
-    };
-  }
-
   // Check current device specific secret PIN if present
   if (currentDevice) {
     const isDevicePinValid = await verifyDeviceSecretPin(currentDevice, pin);
@@ -338,36 +403,14 @@ export async function verifyAdminExitPin(
     }
   }
 
-  // Check if PIN matches any administrator employee
-  const pinRecords = loadEmployeePins();
-  for (const emp of employees) {
-    const isEmpAdmin =
-      emp.role === "ADMIN" ||
-      emp.department === "الإدارة العامة" ||
-      emp.department === "الإدارة العليا" ||
-      emp.jobTitle.includes("مدير") ||
-      emp.permissions?.includes("ADMIN_PANEL" as any) ||
-      emp.permissions?.includes("FULL_ACCESS" as any);
-
-    if (isEmpAdmin) {
-      const rec = pinRecords[emp.id];
-      if (rec) {
-        const hash = await hashPin(pin, rec.salt);
-        if (hash === rec.pinHash) {
-          resetKioskFailedAttempts();
-          return {
-            success: true,
-            adminName: emp.fullName
-          };
-        }
-      } else if (emp.employeeCode === "EMP-001" && (pin === "1234" || pin === "9900")) {
-        resetKioskFailedAttempts();
-        return {
-          success: true,
-          adminName: emp.fullName
-        };
-      }
-    }
+  // Perform dynamic employee PIN verification
+  const empResult = await verifyPrivilegedEmployeePin(pin, employees);
+  if (empResult.success) {
+    resetKioskFailedAttempts();
+    return {
+      success: true,
+      adminName: empResult.adminName
+    };
   }
 
   // If wrong, record failed attempt
@@ -384,7 +427,9 @@ export async function verifyAdminExitPin(
   const remaining = MAX_FAILED_ATTEMPTS - attempts;
   return {
     success: false,
-    errorMessage: `❌ رمز المسؤول غير صحيح. يتبقى لديك ${remaining} محاولات قبل الحظر المؤقت.`
+    errorMessage: empResult.errorMessage
+      ? `❌ ${empResult.errorMessage} (يتبقى لديك ${remaining} محاولات).`
+      : `❌ رمز المسؤول غير صحيح. يتبقى لديك ${remaining} محاولات قبل الحظر المؤقت.`
   };
 }
 

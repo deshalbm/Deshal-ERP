@@ -45,6 +45,194 @@ export interface Database {
           updated_at?: string;
         };
       };
+      tenants: {
+        Row: {
+          id: string;
+          company_id: string;
+          tenant_code: string;
+          name: string;
+          status: 'PENDING' | 'PROVISIONING' | 'READY' | 'ACTIVE' | 'SUSPENDED' | 'FAILED' | 'ARCHIVED';
+          subscription_plan: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          tenant_code: string;
+          name: string;
+          status?: 'PENDING' | 'PROVISIONING' | 'READY' | 'ACTIVE' | 'SUSPENDED' | 'FAILED' | 'ARCHIVED';
+          subscription_plan?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          tenant_code?: string;
+          name?: string;
+          status?: 'PENDING' | 'PROVISIONING' | 'READY' | 'ACTIVE' | 'SUSPENDED' | 'FAILED' | 'ARCHIVED';
+          subscription_plan?: string;
+          updated_at?: string;
+        };
+      };
+      platform_admins: {
+        Row: {
+          user_id: string;
+          granted_at: string;
+          granted_by: string | null;
+        };
+        Insert: {
+          user_id: string;
+          granted_at?: string;
+          granted_by?: string | null;
+        };
+        Update: {
+          user_id?: string;
+          granted_at?: string;
+          granted_by?: string | null;
+        };
+      };
+      user_company_memberships: {
+        Row: {
+          id: string;
+          user_id: string;
+          company_id: string;
+          role_id: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          company_id: string;
+          role_id: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          company_id?: string;
+          role_id?: string;
+          is_active?: boolean;
+        };
+      };
+      tenant_modules: {
+        Row: {
+          tenant_id: string;
+          module_code: string;
+          is_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          module_code: string;
+          is_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          module_code?: string;
+          is_enabled?: boolean;
+          updated_at?: string;
+        };
+      };
+      tenant_features: {
+        Row: {
+          tenant_id: string;
+          module_code: string;
+          feature_code: string;
+          is_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          module_code: string;
+          feature_code: string;
+          is_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          module_code?: string;
+          feature_code?: string;
+          is_enabled?: boolean;
+          updated_at?: string;
+        };
+      };
+      tenant_subscriptions: {
+        Row: {
+          id: string;
+          company_id: string;
+          plan_type: string;
+          status: string;
+          current_period_end: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          plan_type?: string;
+          status?: string;
+          current_period_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          plan_type?: string;
+          status?: string;
+          current_period_end?: string | null;
+          updated_at?: string;
+        };
+      };
+      tenant_provisioning_jobs: {
+        Row: {
+          id: string;
+          idempotency_key: string;
+          tenant_id: string | null;
+          company_id: string | null;
+          status: string;
+          failed_step: string | null;
+          error_code: string | null;
+          error_message: string | null;
+          payload: Json | null;
+          created_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          idempotency_key: string;
+          tenant_id?: string | null;
+          company_id?: string | null;
+          status?: string;
+          failed_step?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          payload?: Json | null;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          idempotency_key?: string;
+          tenant_id?: string | null;
+          company_id?: string | null;
+          status?: string;
+          failed_step?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          payload?: Json | null;
+          completed_at?: string | null;
+        };
+      };
       work_centers: {
         Row: {
           id: string;

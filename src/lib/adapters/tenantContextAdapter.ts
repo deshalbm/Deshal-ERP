@@ -1,0 +1,156 @@
+/**
+ * Supabase Data Adapter for Tenant Context & Authorization — Deshal ERP
+ * 
+ * Infrastructure Layer: Executes Supabase database queries for platform admins,
+ * user memberships, tenants, modules, features, and subscriptions.
+ */
+
+import { supabase, isSupabaseConfigured } from '../supabase/client';
+import {
+  Tenant,
+  UserCompanyMembership,
+  TenantSubscription,
+  TenantStatus
+} from '../../domain/tenant/tenantEntities';
+
+export interface FetchedTenantData {
+  isPlatformAdmin: boolean;
+  memberships: UserCompanyMembership[];
+  tenant: Tenant | null;
+  subscription: TenantSubscription | null;
+  enabledModules: Record<string, boolean>;
+  enabledFeatures: Record<string, boolean>;
+}
+
+export async function fetchTenantContextFromSupabase(
+  userId: string | null,
+  activeCompanyId: string | null
+): Promise<FetchedTenantData> {
+  const result: FetchedTenantData = {
+    isPlatformAdmin: false,
+    memberships: [],
+    tenant: null,
+    subscription: null,
+    enabledModules: {
+      crm: true,
+      pos: true,
+      inventory: true,
+      purchases: true,
+      accounting: true,
+      hr: true,
+      attendance: true,
+      spaces: true,
+      services: true,
+      requests: true,
+      documents: true,
+      kiosk: true
+    },
+    enabledFeatures: {}
+  };
+
+  if (!userId || !isSupabaseConfigured) {
+    return result;
+  }
+
+  try {
+    // 1. Query Platform Admins
+    const { data: adminData } = await supabase
+      .from('platform_admins')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    result.isPlatformAdmin = !!adminData;
+
+    // 2. Query User Memberships
+    const { data: membershipsData } = await supabase
+      .from('user_company_memberships')
+      .select('id, user_id, company_id, role_id, is_active, created_at')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (membershipsData && membershipsData.length > 0) {
+      result.memberships = membershipsData.map((m: any) => ({
+        id: m.id,
+        userId: m.user_id,
+        companyId: m.company_id,
+        roleId: m.role_id,
+        isActive: m.is_active,
+        createdAt: m.created_at
+      }));
+    }
+
+    if (!activeCompanyId) {
+      return result;
+    }
+
+    // 3. Query Tenant
+    const { data: tenantData } = await supabase
+      .from('tenants')
+      .select('id, tenant_code, name, company_id, status, subscription_plan, created_at, updated_at')
+      .eq('company_id', activeCompanyId)
+      .maybeSingle();
+
+    if (tenantData) {
+      const t = tenantData as any;
+      result.tenant = {
+        id: t.id,
+        tenantCode: t.tenant_code,
+        name: t.name,
+        companyId: t.company_id,
+        status: t.status as TenantStatus,
+        subscriptionPlan: t.subscription_plan,
+        createdAt: t.created_at,
+        updatedAt: t.updated_at
+      };
+    }
+
+    // 4. Query Modules & Features
+    if (result.tenant?.id) {
+      const { data: modulesData } = await supabase
+        .from('tenant_modules')
+        .select('module_code, is_enabled')
+        .eq('tenant_id', result.tenant.id);
+
+      if (modulesData && modulesData.length > 0) {
+        modulesData.forEach((m: any) => {
+          result.enabledModules[m.module_code] = m.is_enabled;
+        });
+      }
+
+      const { data: featuresData } = await supabase
+        .from('tenant_features')
+        .select('module_code, feature_code, is_enabled')
+        .eq('tenant_id', result.tenant.id);
+
+      if (featuresData && featuresData.length > 0) {
+        featuresData.forEach((f: any) => {
+          result.enabledFeatures[`${f.module_code}.${f.feature_code}`] = f.is_enabled;
+        });
+      }
+    }
+
+    // 5. Query Subscription
+    const { data: subData } = await supabase
+      .from('tenant_subscriptions')
+      .select('id, company_id, plan_type, status, current_period_end')
+      .eq('company_id', activeCompanyId)
+      .maybeSingle();
+
+    if (subData) {
+      const s = subData as any;
+      result.subscription = {
+        id: s.id,
+        companyId: s.company_id,
+        planType: s.plan_type || 'ENTERPRISE',
+        status: s.status || 'active',
+        currentPeriodEnd: s.current_period_end || new Date().toISOString()
+      };
+    }
+
+    return result;
+  } catch (err) {
+    console.warn('[TenantContextAdapter] Error fetching tenant context:', err);
+    return result;
+  }
+}

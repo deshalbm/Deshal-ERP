@@ -11,7 +11,6 @@ import {
 } from "../../types";
 import {
   verifyKioskPin,
-  verifyMasterExitPin,
   verifyAdminExitPin,
   checkKioskLockout,
   setDeviceSecretPin
@@ -1524,7 +1523,7 @@ export const AttendanceKioskModal: React.FC<AttendanceKioskModalProps> = ({
             )}
 
             <div className="text-[11px] text-slate-500 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
-              <span>الرمز الرئيسي للمدير: 9900 أو 1234</span>
+              <span>أدخل رمز PIN الخاص بك المسجل في ملف الموظف للمتابعة</span>
               <span className="text-slate-400">حماية Rate Limiting مفعلة</span>
             </div>
           </div>

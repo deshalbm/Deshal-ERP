@@ -7,6 +7,7 @@ interface MobileNavigationProps {
   isOpen: boolean;
   onClose: () => void;
   currentLang: 'ar' | 'en';
+  onToggleLang?: (lang: 'ar' | 'en') => void;
   onNavigateToERP?: () => void;
 }
 
@@ -16,6 +17,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   isOpen,
   onClose,
   currentLang,
+  onToggleLang,
   onNavigateToERP
 }) => {
   if (!isOpen) return null;
@@ -34,14 +36,24 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm lg:hidden flex justify-end">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm xl:hidden flex justify-end">
       <div className="bg-white w-4/5 max-w-sm h-full p-6 space-y-6 shadow-2xl flex flex-col justify-between text-right" dir={isAr ? 'rtl' : 'ltr'}>
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <span className="font-extrabold text-[#002e69] text-base">{isAr ? 'القائمة الرئيسية للموقع' : 'Website Navigation'}</span>
-            <button onClick={onClose} className="p-2 rounded-full bg-slate-100 text-slate-600">
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onToggleLang && (
+                <button
+                  onClick={() => onToggleLang(currentLang === 'ar' ? 'en' : 'ar')}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  {isAr ? 'EN' : 'عربي'}
+                </button>
+              )}
+              <button onClick={onClose} className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <nav className="space-y-2">
@@ -74,9 +86,9 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 onClose();
                 onNavigateToERP();
               }}
-              className="w-full bg-[#006d33] hover:bg-emerald-600 text-white font-extrabold py-3 rounded-xl text-xs text-center shadow-md flex items-center justify-center gap-2"
+              className="w-full bg-[#006d33] hover:bg-emerald-600 text-white font-extrabold py-3.5 px-4 rounded-xl text-sm text-center shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
             >
-              <Lock className="w-4 h-4" />
+              <Lock className="w-4 h-4 shrink-0" />
               <span>{isAr ? 'دخول نظام Deshal ERP' : 'Go to ERP System'}</span>
             </button>
           )}
@@ -86,7 +98,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
               onNavigate('/contact');
               onClose();
             }}
-            className="w-full bg-[#002e69] text-white font-bold py-3 rounded-xl text-xs text-center shadow-xs"
+            className="w-full bg-[#002e69] text-white font-bold py-3.5 px-4 rounded-xl text-xs text-center shadow-xs transition-all active:scale-[0.98]"
           >
             {isAr ? 'حجز جلسة استشارية' : 'Book Consultation'}
           </button>

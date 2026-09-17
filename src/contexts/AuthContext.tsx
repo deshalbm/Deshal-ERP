@@ -15,6 +15,7 @@ import {
 import { isSupabaseConfigured } from '../lib/supabase/client';
 import { evaluateKioskTabletGuard, createCompatibleAuthSession } from '../application/auth/authUseCases';
 import { useERPData } from './ERPDataContext';
+import { TenantProvider } from './TenantContext';
 
 const DEFAULT_COMPANY_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -195,7 +196,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      <TenantProvider>
+        {children}
+      </TenantProvider>
     </AuthContext.Provider>
   );
 };

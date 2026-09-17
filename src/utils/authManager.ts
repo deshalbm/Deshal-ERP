@@ -336,8 +336,8 @@ export function changeUserPassword(
 
 // Change PIN Code
 export function changeUserPin(userId: string, newPin: string): { success: boolean; error?: string } {
-  if (!newPin || newPin.length < 4) {
-    return { success: false, error: "رمز PIN يجب أن يتكون من 4 أرقام على الأقل" };
+  if (!newPin || !/^\d{4,6}$/.test(newPin)) {
+    return { success: false, error: "رمز PIN يجب أن يتكون من 4 إلى 6 أرقام فقط" };
   }
 
   const users = loadUserAccounts();

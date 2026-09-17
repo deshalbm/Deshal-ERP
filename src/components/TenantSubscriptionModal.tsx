@@ -20,6 +20,7 @@ import {
 
 import { generateUuid, ensureValidUuid } from "../utils/uuid";
 import { useServices } from "../contexts/ServicesContext";
+import { CompanyProvisioningModal } from "./tenant/CompanyProvisioningModal";
 
 interface TenantSubscriptionModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export const TenantSubscriptionModal: React.FC<TenantSubscriptionModalProps> = (
 
   const packages = packagesProp || servicesState.membershipPackages;
   const onSaveSubscription = onSaveSubscriptionProp || servicesActions.saveSubscription;
+  const [isProvisioningModalOpen, setIsProvisioningModalOpen] = useState<boolean>(false);
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
@@ -508,24 +510,39 @@ export const TenantSubscriptionModal: React.FC<TenantSubscriptionModalProps> = (
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 p-4 bg-slate-50 border-t border-slate-100 shrink-0">
+          <div className="flex items-center justify-between gap-3 p-4 bg-slate-50 border-t border-slate-100 shrink-0">
             <button
               type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-sm transition-colors cursor-pointer"
+              onClick={() => setIsProvisioningModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              إلغاء
+              <Building className="w-4 h-4 text-indigo-600" />
+              <span>تأسيس ملف شركة مستأجرة جديدة</span>
             </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              {subscription ? "حفظ التعديلات" : "تفعيل اشتراك المستأجر"}
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-sm transition-colors cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                {subscription ? "حفظ التعديلات" : "تفعيل اشتراك المستأجر"}
+              </button>
+            </div>
           </div>
         </form>
 
+        <CompanyProvisioningModal
+          isOpen={isProvisioningModalOpen}
+          onClose={() => setIsProvisioningModalOpen(false)}
+        />
       </div>
     </div>
   );

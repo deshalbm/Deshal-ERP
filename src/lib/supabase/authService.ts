@@ -367,6 +367,44 @@ async function fetchUserProfile(userId: string): Promise<SupabaseAuthUser | null
   };
 }
 
+// ──────────────────────────────────────────────
+// Multi-Tenant Helpers
+// ──────────────────────────────────────────────
+
+export async function fetchUserMemberships(userId: string): Promise<any[]> {
+  if (!isSupabaseConfigured || !userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('user_company_memberships')
+      .select('id, user_id, company_id, role_id, is_active, created_at')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (error || !data) return [];
+    return data;
+  } catch (err) {
+    console.warn('[AuthService] fetchUserMemberships error:', err);
+    return [];
+  }
+}
+
+export async function checkIsPlatformAdmin(userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured || !userId) return false;
+  try {
+    const { data, error } = await supabase
+      .from('platform_admins')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+    return true;
+  } catch (err) {
+    console.warn('[AuthService] checkIsPlatformAdmin error:', err);
+    return false;
+  }
+}
+
 function mapAuthError(error: AuthError | null): string {
   if (!error) return 'حدث خطأ غير معروف.';
   switch (error.message) {

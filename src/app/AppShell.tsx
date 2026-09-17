@@ -7,6 +7,7 @@ import { CompanySettings, AuthSession } from "../types";
 import { useMasterData } from "../contexts/MasterDataContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useUIShell } from "../contexts/UIShellContext";
+import { useTenant } from "../contexts/TenantContext";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -66,6 +67,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   const { state: masterDataState } = useMasterData();
   const { state: authState, actions: authActions } = useAuth();
   const { state: uiState, actions: uiActions } = useUIShell();
+  const tenant = useTenant();
 
   const activeTab = activeTabProp || uiState.activeTab;
   const onNavigateTab = onNavigateTabProp || uiActions.navigateWithHistory;

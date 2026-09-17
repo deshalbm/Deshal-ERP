@@ -16,7 +16,9 @@ const LEAVE_REQUESTS_STORAGE_KEY = "deshal_hr_leave_requests";
 
 export {
   ROLE_DEFAULT_PERMISSIONS,
-  PERMISSION_CONFIG
+  PERMISSION_CONFIG,
+  evaluateEmployeePermissions,
+  hasPermission
 } from "../../domain/hr/employeePermissions";
 
 export const DEFAULT_EMPLOYEES: Employee[] = [];

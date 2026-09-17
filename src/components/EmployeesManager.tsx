@@ -27,8 +27,12 @@ import {
 import { calculatePASIDeduction } from "../domain/hr/payrollCalculator";
 import {
   ROLE_DEFAULT_PERMISSIONS,
-  PERMISSION_CONFIG
-} from "../utils/storage";
+  PERMISSION_CONFIG,
+  PERMISSION_CATEGORIES_META,
+  ALL_PERMISSIONS,
+  evaluateEmployeePermissions,
+  hasPermission
+} from "../domain/hr/employeePermissions";
 import {
   loadMovementTypes,
   saveMovementTypes,
@@ -109,7 +113,15 @@ import {
   Sliders,
   Coins,
   AlertTriangle,
-  Tablet
+  Tablet,
+  Package,
+  ShoppingCart,
+  Truck,
+  ToggleLeft,
+  ToggleRight,
+  RotateCcw,
+  CheckSquare,
+  Square
 } from "lucide-react";
 import { formatDateToDDMMMMYYYY } from "../utils/dateFormatter";
 import { useLanguage } from "../utils/LanguageContext";
@@ -476,6 +488,16 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
   const [permissionsViewerEmp, setPermissionsViewerEmp] = useState<Employee | null>(null);
   const [deleteConfirmationEmp, setDeleteConfirmationEmp] = useState<Employee | null>(null);
 
+  // Permission Matrix states
+  const [permissionSearchQuery, setPermissionSearchQuery] = useState<string>("");
+  const [viewerPermissions, setViewerPermissions] = useState<EmployeePermission[]>([]);
+
+  useEffect(() => {
+    if (permissionsViewerEmp) {
+      setViewerPermissions(permissionsViewerEmp.permissions || ROLE_DEFAULT_PERMISSIONS[permissionsViewerEmp.role] || []);
+    }
+  }, [permissionsViewerEmp]);
+
   // Form State for Employee Add / Edit
   const [formData, setFormData] = useState<{
     id?: string;
@@ -815,6 +837,18 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
   const handleSaveEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName.trim()) return;
+
+    if (formData.kioskPin && formData.kioskPin.trim()) {
+      const cleanPin = formData.kioskPin.trim();
+      if (!/^\d{4,6}$/.test(cleanPin)) {
+        alert(
+          language === "ar"
+            ? "رمز المرور الموحد (PIN Code) يجب أن يتكون من 4 إلى 6 أرقام فقط."
+            : "PIN Code must be between 4 and 6 numeric digits."
+        );
+        return;
+      }
+    }
 
     let updatedEmployees: Employee[];
     const now = new Date().toISOString();
@@ -2138,6 +2172,14 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
                       <div className="flex items-center space-x-1 rtl:space-x-reverse">
                         <button
+                          type="button"
+                          onClick={() => setPermissionsViewerEmp(emp)}
+                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                          title={language === "ar" ? "إدارة مصفوفة الصلاحيات التفصيلية" : "Manage Granular Permission Matrix"}
+                        >
+                          <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                        </button>
+                        <button
                           onClick={() => handleOpenEditModal(emp)}
                           className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
                           title="تعديل بيانات وسقوفات الموظف"
@@ -2859,7 +2901,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
       {/* 2. Add / Edit Employee Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
-          <div className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+          <div className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white shrink-0">
@@ -2880,446 +2922,736 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
             {/* Modal Form */}
             <form onSubmit={handleSaveEmployee} className="flex flex-col min-h-0 flex-1 overflow-hidden">
-              {/* Scrollable Form Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                
-                {/* Profile Photo / Avatar Picker Section */}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                      <User className="w-4 h-4 text-indigo-600" />
-                      {language === "ar" ? "الصورة الشخصية والرمز التعبيري" : "Profile Picture & Avatar"}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Supabase Storage</span>
-                  </div>
+              {/* Modal Tabs Bar */}
+              <div className="bg-slate-100 border-b border-slate-200 px-6 py-2 flex items-center space-x-2 rtl:space-x-reverse shrink-0 overflow-x-auto">
+                <button
+                  type="button"
+                  onClick={() => setModalTab("personal")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    modalTab === "personal"
+                      ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>{language === "ar" ? "البيانات الأساسية" : "Personal & Job"}</span>
+                </button>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    {/* Preview & File Upload Input */}
-                    <div className="relative group shrink-0">
-                      <img
-                        src={formData.avatarUrl || PRESET_AVATARS[0]}
-                        alt="Avatar Preview"
-                        className="w-16 h-16 rounded-full object-cover border-2 border-indigo-500/50 shadow-xs"
-                      />
-                      <label className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                        <Camera className="w-5 h-5" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleAvatarFileUpload}
-                          className="hidden"
-                        />
-                      </label>
-                      {isUploadingAvatar && (
-                        <div className="absolute inset-0 bg-slate-900/80 rounded-full flex items-center justify-center text-white">
-                          <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
-                        </div>
-                      )}
-                    </div>
+                <button
+                  type="button"
+                  onClick={() => setModalTab("permissions")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    modalTab === "permissions"
+                      ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{language === "ar" ? "مصفوفة الصلاحيات" : "Permissions Matrix"}</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-indigo-100 text-indigo-700">
+                    {formData.permissions?.length || 0}
+                  </span>
+                </button>
 
-                    <div className="flex-1 space-y-2 text-center sm:text-start rtl:sm:text-end">
-                      <div className="flex items-center gap-2 justify-center sm:justify-start rtl:sm:justify-end">
-                        <label className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors">
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>{language === "ar" ? "رفع صورة شخصية" : "Upload Photo"}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleAvatarFileUpload}
-                            className="hidden"
-                          />
-                        </label>
-                        <span className="text-[11px] text-slate-500">
-                          {language === "ar" ? "تُحفظ الصورة في قاعدة البيانات وتُرفع على Supabase Storage" : "Synced to DB & Supabase Storage"}
-                        </span>
-                      </div>
-
-                      {/* Presets Grid */}
-                      <div className="flex items-center gap-2 pt-1 flex-wrap justify-center sm:justify-start rtl:sm:justify-end">
-                        <span className="text-[10px] text-slate-400 font-bold">{language === "ar" ? "أو اختر رمزاً:" : "Presets:"}</span>
-                        {PRESET_AVATARS.map((url, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setFormData({ ...formData, avatarUrl: url })}
-                            className={`w-7 h-7 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
-                              formData.avatarUrl === url ? "border-indigo-600 scale-110 shadow-xs" : "border-slate-300 hover:border-slate-400"
-                            }`}
-                          >
-                            <img src={url} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover" />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الاسم الكامل (عربي) *" : "Full Name (Arabic) *"}</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder="محمد بن عبد الله الشحي"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الاسم بالإنجليزية" : "Full Name (English)"}</label>
-                  <input
-                    type="text"
-                    value={formData.fullNameEn}
-                    onChange={(e) => setFormData({ ...formData, fullNameEn: e.target.value })}
-                    placeholder="Said Rashid Al-Shehhi"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الرقم الوظيفي *" : "Employee Code *"}</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.employeeCode}
-                    onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الرقم المدني" : "Civil / National ID"}</label>
-                  <input
-                    type="text"
-                    value={formData.civilId}
-                    onChange={(e) => setFormData({ ...formData, civilId: e.target.value })}
-                    placeholder="109847291"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "المسمى الوظيفي *" : "Job Title *"}</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.jobTitle}
-                    onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
-                    placeholder="مدير المبيعات والعقود"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "القسم / الإدارة" : "Department"}</label>
-                  <select
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {DEPARTMENTS.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الدور والصلاحية *" : "Role & RBAC *"}</label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => {
-                      const newRole = e.target.value as EmployeeRole;
-                      setFormData({
-                        ...formData,
-                        role: newRole,
-                        permissions: ROLE_DEFAULT_PERMISSIONS[newRole] || []
-                      });
-                    }}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {Object.entries(ROLE_LABELS).map(([k, v]) => (
-                      <option key={k} value={k}>
-                        {language === "ar" ? v.ar : v.en}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الفرع المخصص" : "Assigned Branch"}</label>
-                  <select
-                    value={formData.branchId}
-                    onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الراتب الأساسي *" : "Basic Salary *"}</label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    value={formData.basicSalary}
-                    onChange={(e) => setFormData({ ...formData, basicSalary: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "إجمالي البدلات" : "Allowances"}</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.allowances}
-                    onChange={(e) => setFormData({ ...formData, allowances: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "البنك المعتمد" : "Bank Name"}</label>
-                  <input
-                    type="text"
-                    value={formData.bankName}
-                    onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                    placeholder="بنك مسقط / بنك ظفار"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "رقم الحساب الدولي (IBAN)" : "Bank IBAN"}</label>
-                  <input
-                    type="text"
-                    value={formData.bankIban}
-                    onChange={(e) => setFormData({ ...formData, bankIban: e.target.value })}
-                    placeholder="OM4500010000000012345678901"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "رقم الهاتف" : "Phone Number"}</label>
-                  <input
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+968 99482019"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "البريد الإلكتروني" : "Email"}</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="said@digititech.com"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
+                <button
+                  type="button"
+                  onClick={() => setModalTab("financial")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    modalTab === "financial"
+                      ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  }`}
+                >
+                  <Coins className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{language === "ar" ? "الحوكمة والضوابط" : "Financial Caps"}</span>
+                </button>
               </div>
 
-              {/* Kiosk PIN Code Management Section */}
-              <div className="bg-linear-to-r from-indigo-50/80 via-white to-indigo-50/40 border border-indigo-100 rounded-2xl p-4 space-y-3 mt-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse text-indigo-950">
-                    <Key className="w-4 h-4 text-indigo-600" />
-                    <h4 className="text-xs font-extrabold">
-                      {language === "ar" ? "رمز PIN السريع لكشك الحضور اللوحي (Kiosk PIN)" : "Tablet Kiosk Fast PIN Code"}
-                    </h4>
-                  </div>
-                  {existingPinRecord ? (
-                    <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
-                      {existingPinRecord.isLocked ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
-                          <Lock className="w-3 h-3 me-1" />
-                          {language === "ar" ? "الرمز مقفل أمنياً" : "PIN Locked"}
+              {/* Scrollable Form Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {/* TAB 1: PERSONAL & JOB INFO */}
+                {modalTab === "personal" && (
+                  <div className="space-y-4">
+                    {/* Profile Photo / Avatar Picker Section */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          <User className="w-4 h-4 text-indigo-600" />
+                          {language === "ar" ? "الصورة الشخصية والرمز التعبيري" : "Profile Picture & Avatar"}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 className="w-3 h-3 me-1" />
-                          {language === "ar" ? "مفعّل ومحمي بتشفير Hash" : "Active & Hash Encrypted"}
-                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">Supabase Storage</span>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-center gap-4">
+                        {/* Preview & File Upload Input */}
+                        <div className="relative group shrink-0">
+                          <img
+                            src={formData.avatarUrl || PRESET_AVATARS[0]}
+                            alt="Avatar Preview"
+                            className="w-16 h-16 rounded-full object-cover border-2 border-indigo-500/50 shadow-xs"
+                          />
+                          <label className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            <Camera className="w-5 h-5" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleAvatarFileUpload}
+                              className="hidden"
+                            />
+                          </label>
+                          {isUploadingAvatar && (
+                            <div className="absolute inset-0 bg-slate-900/80 rounded-full flex items-center justify-center text-white">
+                              <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 space-y-2 text-center sm:text-start rtl:sm:text-end">
+                          <div className="flex items-center gap-2 justify-center sm:justify-start rtl:sm:justify-end">
+                            <label className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors">
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>{language === "ar" ? "رفع صورة شخصية" : "Upload Photo"}</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleAvatarFileUpload}
+                                className="hidden"
+                              />
+                            </label>
+                            <span className="text-[11px] text-slate-500">
+                              {language === "ar" ? "تُحفظ الصورة في قاعدة البيانات وتُرفع على Supabase Storage" : "Synced to DB & Supabase Storage"}
+                            </span>
+                          </div>
+
+                          {/* Presets Grid */}
+                          <div className="flex items-center gap-2 pt-1 flex-wrap justify-center sm:justify-start rtl:sm:justify-end">
+                            <span className="text-[10px] text-slate-400 font-bold">{language === "ar" ? "أو اختر رمزاً:" : "Presets:"}</span>
+                            {PRESET_AVATARS.map((url, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, avatarUrl: url })}
+                                className={`w-7 h-7 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
+                                  formData.avatarUrl === url ? "border-indigo-600 scale-110 shadow-xs" : "border-slate-300 hover:border-slate-400"
+                                }`}
+                              >
+                                <img src={url} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الاسم الكامل (عربي) *" : "Full Name (Arabic) *"}</label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.fullName}
+                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          placeholder="محمد بن عبد الله الشحي"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الاسم بالإنجليزية" : "Full Name (English)"}</label>
+                        <input
+                          type="text"
+                          value={formData.fullNameEn}
+                          onChange={(e) => setFormData({ ...formData, fullNameEn: e.target.value })}
+                          placeholder="Said Rashid Al-Shehhi"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الرقم الوظيفي *" : "Employee Code *"}</label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.employeeCode}
+                          onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الرقم المدني" : "Civil / National ID"}</label>
+                        <input
+                          type="text"
+                          value={formData.civilId}
+                          onChange={(e) => setFormData({ ...formData, civilId: e.target.value })}
+                          placeholder="109847291"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "المسمى الوظيفي *" : "Job Title *"}</label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.jobTitle}
+                          onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                          placeholder="مدير المبيعات والعقود"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "القسم / الإدارة" : "Department"}</label>
+                        <select
+                          value={formData.department}
+                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        >
+                          {DEPARTMENTS.map((d) => (
+                            <option key={d} value={d}>{d}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الدور والصلاحية *" : "Role & RBAC *"}</label>
+                        <select
+                          value={formData.role}
+                          onChange={(e) => {
+                            const newRole = e.target.value as EmployeeRole;
+                            setFormData({
+                              ...formData,
+                              role: newRole,
+                              permissions: ROLE_DEFAULT_PERMISSIONS[newRole] || []
+                            });
+                          }}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        >
+                          {Object.entries(ROLE_LABELS).map(([k, v]) => (
+                            <option key={k} value={k}>
+                              {language === "ar" ? v.ar : v.en}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الفرع المخصص" : "Assigned Branch"}</label>
+                        <select
+                          value={formData.branchId}
+                          onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        >
+                          {branches.map((b) => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "الراتب الأساسي *" : "Basic Salary *"}</label>
+                        <input
+                          type="number"
+                          step="any"
+                          required
+                          value={formData.basicSalary}
+                          onChange={(e) => setFormData({ ...formData, basicSalary: parseFloat(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "إجمالي البدلات" : "Allowances"}</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={formData.allowances}
+                          onChange={(e) => setFormData({ ...formData, allowances: parseFloat(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "البنك المعتمد" : "Bank Name"}</label>
+                        <input
+                          type="text"
+                          value={formData.bankName}
+                          onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                          placeholder="بنك مسقط / بنك ظفار"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "رقم الحساب الدولي (IBAN)" : "Bank IBAN"}</label>
+                        <input
+                          type="text"
+                          value={formData.bankIban}
+                          onChange={(e) => setFormData({ ...formData, bankIban: e.target.value })}
+                          placeholder="OM4500010000000012345678901"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "رقم الهاتف" : "Phone Number"}</label>
+                        <input
+                          type="text"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="+968 99482019"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">{language === "ar" ? "البريد الإلكتروني" : "Email"}</label>
+                        <input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="said@digititech.com"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Kiosk PIN Code Management Section */}
+                    <div className="bg-linear-to-r from-indigo-50/80 via-white to-indigo-50/40 border border-indigo-100 rounded-2xl p-4 space-y-3 mt-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 rtl:space-x-reverse text-indigo-950">
+                          <Key className="w-4 h-4 text-indigo-600" />
+                          <h4 className="text-xs font-extrabold">
+                            {language === "ar" ? "رمز PIN السريع لكشك الحضور اللوحي (Kiosk PIN)" : "Tablet Kiosk Fast PIN Code"}
+                          </h4>
+                        </div>
+                        {existingPinRecord ? (
+                          <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+                            {existingPinRecord.isLocked ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                                <Lock className="w-3 h-3 me-1" />
+                                {language === "ar" ? "الرمز مقفل أمنياً" : "PIN Locked"}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                <CheckCircle2 className="w-3 h-3 me-1" />
+                                {language === "ar" ? "مفعّل ومحمي بتشفير Hash" : "Active & Hash Encrypted"}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                            <Sparkles className="w-3 h-3 me-1" />
+                            {language === "ar" ? "رمز جديد" : "New PIN"}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        {language === "ar"
+                          ? "رمز من 4 إلى 6 أرقام يستخدمه الموظف للتعريف السريع وتسجيل الحركات على شاشة الكشك التفاعلية دون الحاجة لكتابة كلمات مرور معقدة."
+                          : "4-6 digit numeric PIN used for swift identity verification and clocking on the tablet kiosk."}
+                      </p>
+
+                      {existingPinRecord?.isLocked && (
+                        <div className="flex items-center justify-between p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
+                          <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+                            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span>{language === "ar" ? "تم قفل رمز الـ PIN بسبب محاولات غير مصرح بها متكررة." : "PIN locked due to excessive failed attempts."}</span>
+                          </div>
+                          {formData.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleUnlockEmployeePinInModal(formData.id!)}
+                              className="px-2.5 py-1 bg-white hover:bg-rose-100 border border-rose-300 text-rose-700 rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
+                            >
+                              <Unlock className="w-3.5 h-3.5" />
+                              <span>{language === "ar" ? "إلغاء القفل الآن" : "Unlock PIN"}</span>
+                            </button>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                      <Sparkles className="w-3 h-3 me-1" />
-                      {language === "ar" ? "رمز جديد" : "New PIN"}
-                    </span>
-                  )}
-                </div>
 
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  {language === "ar"
-                    ? "رمز من 4 إلى 6 أرقام يستخدمه الموظف للتعريف السريع وتسجيل الحركات على شاشة الكشك التفاعلية دون الحاجة لكتابة كلمات مرور معقدة."
-                    : "4-6 digit numeric PIN used for swift identity verification and clocking on the tablet kiosk."}
-                </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                            {language === "ar"
+                              ? "رمز المرور الموحد للعمليات والصلاحيات (PIN Code)"
+                              : "Unified Operations & Security PIN Code"}
+                          </label>
+                          <p className="text-[10px] text-slate-500 mb-1.5 leading-relaxed">
+                            {language === "ar"
+                              ? "رمز سري رقمي موحد (من 4 إلى 6 أرقام) يُستخدم للتحقق السريع، التجاوزات الإدارية، الخروج من وضع الكشك، وتأكيد الصلاحيات المحمية."
+                              : "A unified numeric PIN (4 to 6 digits) used for quick verification, administrative overrides, exiting Kiosk mode, and confirming protected actions."}
+                          </p>
+                          <div className="relative">
+                            <input
+                              type={showPinPlain ? "text" : "password"}
+                              maxLength={6}
+                              pattern="[0-9]*"
+                              inputMode="numeric"
+                              value={formData.kioskPin}
+                              onChange={(e) => {
+                                const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                setFormData({ ...formData, kioskPin: digitsOnly });
+                              }}
+                              placeholder={
+                                existingPinRecord
+                                  ? (language === "ar" ? "●●●● (اتركه فارغاً للإبقاء عليه)" : "●●●● (Leave blank to keep)")
+                                  : (language === "ar" ? "مثال: 1234" : "e.g. 1234")
+                              }
+                              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold tracking-widest text-indigo-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPinPlain(!showPinPlain)}
+                              className="absolute end-2.5 top-2 text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer"
+                              title={showPinPlain ? "إخفاء الرمز" : "إظهار الرمز"}
+                            >
+                              {showPinPlain ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-slate-500" />}
+                            </button>
+                          </div>
+                        </div>
 
-                {existingPinRecord?.isLocked && (
-                  <div className="flex items-center justify-between p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
-                    <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
-                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>{language === "ar" ? "تم قفل رمز الـ PIN بسبب محاولات غير مصرح بها متكررة." : "PIN locked due to excessive failed attempts."}</span>
+                        <div className="flex items-end space-x-2 rtl:space-x-reverse">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
+                              setFormData({ ...formData, kioskPin: randomPin });
+                              setShowPinPlain(true);
+                            }}
+                            className="px-3 py-2 bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center space-x-1.5 rtl:space-x-reverse"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>{language === "ar" ? "توليد رمز تلقائي" : "Generate PIN"}</span>
+                          </button>
+                          {existingPinRecord && (
+                            <span className="text-[10px] text-slate-400 pb-2">
+                              {language === "ar" ? "آخر تحديث: " + existingPinRecord.updatedAt.split("T")[0] : "Updated: " + existingPinRecord.updatedAt.split("T")[0]}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    {formData.id && (
-                      <button
-                        type="button"
-                        onClick={() => handleUnlockEmployeePinInModal(formData.id!)}
-                        className="px-2.5 py-1 bg-white hover:bg-rose-100 border border-rose-300 text-rose-700 rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
-                      >
-                        <Unlock className="w-3.5 h-3.5" />
-                        <span>{language === "ar" ? "إلغاء القفل الآن" : "Unlock PIN"}</span>
-                      </button>
-                    )}
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      {language === "ar" ? "رمز PIN (4 إلى 6 أرقام)" : "PIN Code (4-6 digits)"}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPinPlain ? "text" : "password"}
-                        maxLength={6}
-                        pattern="[0-9]*"
-                        inputMode="numeric"
-                        value={formData.kioskPin}
-                        onChange={(e) => {
-                          const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 6);
-                          setFormData({ ...formData, kioskPin: digitsOnly });
-                        }}
-                        placeholder={
-                          existingPinRecord
-                            ? (language === "ar" ? "●●●● (اتركه فارغاً للإبقاء عليه)" : "●●●● (Leave blank to keep)")
-                            : (language === "ar" ? "مثال: 1234" : "e.g. 1234")
+                {/* TAB 2: GRANULAR PERMISSION MATRIX */}
+                {modalTab === "permissions" && (
+                  <div className="space-y-4">
+                    {/* Permissions Top Banner & Actions Bar */}
+                    <div className="bg-linear-to-r from-indigo-900 via-slate-900 to-indigo-950 rounded-2xl p-4 text-white shadow-md space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
+                          <div className="p-2 bg-indigo-500/20 border border-indigo-400/30 rounded-xl">
+                            <ShieldCheck className="w-5 h-5 text-indigo-300" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                              <span>{language === "ar" ? "مصفوفة صلاحيات النظام المخصصة" : "Custom System Permissions Matrix"}</span>
+                              <span className="px-2 py-0.5 bg-indigo-500/30 text-indigo-200 rounded-full text-[10px] font-mono border border-indigo-400/30">
+                                {formData.role}
+                              </span>
+                            </h4>
+                            <p className="text-[11px] text-slate-300 mt-0.5">
+                              {language === "ar"
+                                ? `تم منح ${formData.permissions.length} من أصل ${ALL_PERMISSIONS.length} صلاحية تفصيلية. الدور يوفر الافتراضيات والمصفوفة المخصصة تتغلب عليه.`
+                                : `Granted ${formData.permissions.length} of ${ALL_PERMISSIONS.length} granular permissions. Custom matrix overrides role defaults.`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                permissions: ROLE_DEFAULT_PERMISSIONS[formData.role] || []
+                              });
+                            }}
+                            className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center space-x-1 rtl:space-x-reverse transition-colors cursor-pointer"
+                            title="إعادة تعيين الصلاحيات للقيم الافتراضية الخاصة بالدور الحالي"
+                          >
+                            <RotateCcw className="w-3 h-3 text-indigo-300" />
+                            <span>{language === "ar" ? "الافتراضي حسب الدور" : "Role Defaults"}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                permissions: [...ALL_PERMISSIONS]
+                              });
+                            }}
+                            className="px-2.5 py-1 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg text-[11px] font-bold flex items-center space-x-1 rtl:space-x-reverse transition-colors cursor-pointer"
+                          >
+                            <CheckCheck className="w-3 h-3" />
+                            <span>{language === "ar" ? "تحديد الكل" : "Grant All"}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                permissions: []
+                              });
+                            }}
+                            className="px-2.5 py-1 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg text-[11px] font-bold flex items-center space-x-1 rtl:space-x-reverse transition-colors cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                            <span>{language === "ar" ? "إلغاء الكل" : "Revoke All"}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Permission Search Filter */}
+                      <div className="relative pt-1">
+                        <input
+                          type="text"
+                          value={permissionSearchQuery}
+                          onChange={(e) => setPermissionSearchQuery(e.target.value)}
+                          placeholder={language === "ar" ? "ابحث باسم الصلاحية أو الوصف..." : "Search permissions by name or description..."}
+                          className="w-full ps-9 pe-4 py-1.5 bg-white/10 border border-white/20 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-400"
+                        />
+                        <Search className="w-4 h-4 text-slate-400 absolute start-3 top-3" />
+                        {permissionSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setPermissionSearchQuery("")}
+                            className="absolute end-3 top-2.5 text-slate-400 hover:text-white"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 11 Module Categories List */}
+                    <div className="space-y-4">
+                      {PERMISSION_CATEGORIES_META.map((catMeta) => {
+                        const catConfigs = PERMISSION_CONFIG.filter((p) => p.category === catMeta.key);
+                        const filteredConfigs = catConfigs.filter((p) => {
+                          if (!permissionSearchQuery.trim()) return true;
+                          const q = permissionSearchQuery.toLowerCase();
+                          return p.label.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.id.toLowerCase().includes(q);
+                        });
+
+                        if (filteredConfigs.length === 0 && permissionSearchQuery.trim()) {
+                          return null;
                         }
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold tracking-widest text-indigo-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPinPlain(!showPinPlain)}
-                        className="absolute end-2.5 top-2 text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer"
-                        title={showPinPlain ? "إخفاء الرمز" : "إظهار الرمز"}
-                      >
-                        {showPinPlain ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-slate-500" />}
-                      </button>
+
+                        const grantedInCat = catConfigs.filter((p) => formData.permissions.includes(p.id)).length;
+
+                        return (
+                          <div key={catMeta.key} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                            {/* Category Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                              <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
+                                <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl">
+                                  {catMeta.key === "vouchers" && <Receipt className="w-4 h-4 text-indigo-600" />}
+                                  {catMeta.key === "pos" && <ShoppingCart className="w-4 h-4 text-emerald-600" />}
+                                  {catMeta.key === "inventory" && <Package className="w-4 h-4 text-amber-600" />}
+                                  {catMeta.key === "purchases" && <Truck className="w-4 h-4 text-blue-600" />}
+                                  {catMeta.key === "crm" && <Users className="w-4 h-4 text-violet-600" />}
+                                  {catMeta.key === "spaces" && <Building2 className="w-4 h-4 text-cyan-600" />}
+                                  {catMeta.key === "services" && <Briefcase className="w-4 h-4 text-teal-600" />}
+                                  {catMeta.key === "hr" && <UserCheck className="w-4 h-4 text-pink-600" />}
+                                  {catMeta.key === "attendance" && <Clock className="w-4 h-4 text-orange-600" />}
+                                  {catMeta.key === "requests" && <FileText className="w-4 h-4 text-purple-600" />}
+                                  {catMeta.key === "management" && <SlidersHorizontal className="w-4 h-4 text-slate-600" />}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="text-xs font-extrabold text-slate-900">
+                                      {language === "ar" ? catMeta.titleAr : catMeta.titleEn}
+                                    </h5>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                      {grantedInCat} / {catConfigs.length}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-500 mt-0.5">
+                                    {language === "ar" ? catMeta.descriptionAr : catMeta.descriptionEn}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Group Toggle Buttons */}
+                              <div className="flex items-center space-x-1.5 rtl:space-x-reverse shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const catIds = catConfigs.map((p) => p.id);
+                                    const newPerms = Array.from(new Set([...formData.permissions, ...catIds]));
+                                    setFormData({ ...formData, permissions: newPerms });
+                                  }}
+                                  className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-lg text-[10px] font-bold transition-colors cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
+                                >
+                                  <CheckSquare className="w-3 h-3 text-indigo-600" />
+                                  <span>{language === "ar" ? "تحديد الكل لهذه المجموعة" : "Select All Group"}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const catIds = catConfigs.map((p) => p.id);
+                                    const newPerms = formData.permissions.filter((id) => !catIds.includes(id));
+                                    setFormData({ ...formData, permissions: newPerms });
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-[10px] font-bold transition-colors cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
+                                >
+                                  <Square className="w-3 h-3 text-slate-400" />
+                                  <span>{language === "ar" ? "إلغاء الكل" : "Deselect Group"}</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Permission Switches Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                              {filteredConfigs.map((item) => {
+                                const isGranted = formData.permissions.includes(item.id);
+                                return (
+                                  <label
+                                    key={item.id}
+                                    className={`flex items-start space-x-3 rtl:space-x-reverse p-3 rounded-xl border transition-all cursor-pointer ${
+                                      isGranted
+                                        ? "bg-indigo-50/40 border-indigo-200 ring-1 ring-indigo-300/40"
+                                        : "bg-slate-50/50 border-slate-200 hover:border-slate-300"
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isGranted}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setFormData({
+                                            ...formData,
+                                            permissions: Array.from(new Set([...formData.permissions, item.id]))
+                                          });
+                                        } else {
+                                          setFormData({
+                                            ...formData,
+                                            permissions: formData.permissions.filter((p) => p !== item.id)
+                                          });
+                                        }
+                                      }}
+                                      className="mt-0.5 w-4 h-4 text-indigo-600 border-slate-300 rounded-sm focus:ring-indigo-500 cursor-pointer shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between gap-1">
+                                        <span className={`text-xs font-bold ${isGranted ? "text-indigo-950" : "text-slate-800"}`}>
+                                          {item.label}
+                                        </span>
+                                        <span
+                                          className={`px-1.5 py-0.2 rounded-md text-[9px] font-bold shrink-0 ${
+                                            isGranted
+                                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                              : "bg-slate-100 text-slate-400 border border-slate-200"
+                                          }`}
+                                        >
+                                          {isGranted ? (language === "ar" ? "ممنوحة" : "Active") : (language === "ar" ? "معطلة" : "Off")}
+                                        </span>
+                                      </div>
+                                      <p className="text-[10px] text-slate-500 leading-snug mt-0.5">
+                                        {item.description}
+                                      </p>
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
+                )}
 
-                  <div className="flex items-end space-x-2 rtl:space-x-reverse">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
-                        setFormData({ ...formData, kioskPin: randomPin });
-                        setShowPinPlain(true);
-                      }}
-                      className="px-3 py-2 bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center space-x-1.5 rtl:space-x-reverse"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>{language === "ar" ? "توليد رمز تلقائي" : "Generate PIN"}</span>
-                    </button>
-                    {existingPinRecord && (
-                      <span className="text-[10px] text-slate-400 pb-2">
-                        {language === "ar" ? "آخر تحديث: " + existingPinRecord.updatedAt.split("T")[0] : "Updated: " + existingPinRecord.updatedAt.split("T")[0]}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+                {/* TAB 3: FINANCIAL CAPS & GOVERNANCE */}
+                {modalTab === "financial" && (
+                  <div className="space-y-4">
+                    <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center space-x-2 rtl:space-x-reverse text-slate-800">
+                        <Coins className="w-4 h-4 text-amber-600" />
+                        <h4 className="text-xs font-bold">
+                          {language === "ar" ? "سقف الرواتب والمكافآت وخزينة الصرف (الحوكمة المالية)" : "Financial Caps & Bonus Treasury Control"}
+                        </h4>
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        {language === "ar"
+                          ? "تحديد سقف أقصى للرواتب والمكافآت لمنع تجاوز الميزانية، وتحديد خزينة أو حساب الصرف التلقائي لسندات الخزينة."
+                          : "Set maximum caps for monthly payroll and bonuses to prevent over-budgeting, and set preferred treasury for vouchers."}
+                      </p>
 
-              {/* Financial Governance & Caps Section */}
-              <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 space-y-3 mt-4">
-                <div className="flex items-center space-x-2 rtl:space-x-reverse text-slate-800">
-                  <Coins className="w-4 h-4 text-amber-600" />
-                  <h4 className="text-xs font-bold">
-                    {language === "ar" ? "سقف الرواتب والمكافآت وخزينة الصرف (الحوكمة المالية)" : "Financial Caps & Bonus Treasury Control"}
-                  </h4>
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  {language === "ar"
-                    ? "تحديد سقف أقصى للرواتب والمكافآت لمنع تجاوز الميزانية، وتحديد خزينة أو حساب الصرف التلقائي لسندات الخزينة."
-                    : "Set maximum caps for monthly payroll and bonuses to prevent over-budgeting, and set preferred treasury for vouchers."}
-                </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                            {language === "ar" ? "سقف الراتب الشهري الأقصى" : "Max Monthly Salary Cap"}
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="any"
+                              placeholder="مثال: 1500 (اختياري)"
+                              value={formData.maxSalaryCap !== undefined ? formData.maxSalaryCap : ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData({ ...formData, maxSalaryCap: val === "" ? undefined : parseFloat(val) });
+                              }}
+                              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                            />
+                            <span className="absolute end-3 top-2.5 text-[10px] font-bold text-slate-400">
+                              {companySettings.currency || "OMR"}
+                            </span>
+                          </div>
+                        </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      {language === "ar" ? "سقف الراتب الشهري الأقصى" : "Max Monthly Salary Cap"}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="any"
-                        placeholder="مثال: 1500 (اختياري)"
-                        value={formData.maxSalaryCap !== undefined ? formData.maxSalaryCap : ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData({ ...formData, maxSalaryCap: val === "" ? undefined : parseFloat(val) });
-                        }}
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                      />
-                      <span className="absolute end-3 top-2.5 text-[10px] font-bold text-slate-400">
-                        {companySettings.currency || "OMR"}
-                      </span>
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                            {language === "ar" ? "سقف المكافأة الواحدة الأقصى" : "Max Bonus Cap"}
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="any"
+                              placeholder="مثال: 300 (اختياري)"
+                              value={formData.maxBonusCap !== undefined ? formData.maxBonusCap : ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData({ ...formData, maxBonusCap: val === "" ? undefined : parseFloat(val) });
+                              }}
+                              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold text-amber-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                            />
+                            <span className="absolute end-3 top-2.5 text-[10px] font-bold text-slate-400">
+                              {companySettings.currency || "OMR"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                            {language === "ar" ? "خزينة صرف المكافآت المعتمدة" : "Bonus Treasury Account"}
+                          </label>
+                          <select
+                            value={formData.preferredBonusTreasury || "الخزينة النقدية الرئيسية"}
+                            onChange={(e) => setFormData({ ...formData, preferredBonusTreasury: e.target.value })}
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="الخزينة النقدية الرئيسية">الخزينة النقدية الرئيسية (Main Cash)</option>
+                            <option value="حساب بنك مسقط الجاري">حساب بنك مسقط الجاري (Bank Muscat)</option>
+                            <option value="حساب بنك ظفار التجاري">حساب بنك ظفار التجاري (Bank Dhofar)</option>
+                            <option value="العهدة النقدية للموارد البشرية">العهدة النقدية للموارد البشرية (Petty Cash)</option>
+                            <option value="خزينة الفرع الميداني">خزينة الفرع الميداني (Branch Treasury)</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      {language === "ar" ? "سقف المكافأة الواحدة الأقصى" : "Max Bonus Cap"}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="any"
-                        placeholder="مثال: 300 (اختياري)"
-                        value={formData.maxBonusCap !== undefined ? formData.maxBonusCap : ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData({ ...formData, maxBonusCap: val === "" ? undefined : parseFloat(val) });
-                        }}
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold text-amber-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                      />
-                      <span className="absolute end-3 top-2.5 text-[10px] font-bold text-slate-400">
-                        {companySettings.currency || "OMR"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      {language === "ar" ? "خزينة صرف المكافآت المعتمدة" : "Bonus Treasury Account"}
-                    </label>
-                    <select
-                      value={formData.preferredBonusTreasury || "الخزينة النقدية الرئيسية"}
-                      onChange={(e) => setFormData({ ...formData, preferredBonusTreasury: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="الخزينة النقدية الرئيسية">الخزينة النقدية الرئيسية (Main Cash)</option>
-                      <option value="حساب بنك مسقط الجاري">حساب بنك مسقط الجاري (Bank Muscat)</option>
-                      <option value="حساب بنك ظفار التجاري">حساب بنك ظفار التجاري (Bank Dhofar)</option>
-                      <option value="العهدة النقدية للموارد البشرية">العهدة النقدية للموارد البشرية (Petty Cash)</option>
-                      <option value="خزينة الفرع الميداني">خزينة الفرع الميداني (Branch Treasury)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
+                )}
               </div>
 
               {/* Modal Actions Footer */}
@@ -3340,6 +3672,277 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
               </div>
             </form>
 
+          </div>
+        </div>
+      )}
+
+      {/* 2.5 Standalone Granular Permission Matrix Viewer / Editor Modal */}
+      {permissionsViewerEmp && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+          <div className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white shrink-0">
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="w-9 h-9 rounded-full overflow-hidden border border-indigo-400/40 shrink-0">
+                  <img
+                    src={permissionsViewerEmp.avatarUrl || PRESET_AVATARS[0]}
+                    alt={permissionsViewerEmp.fullName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                    <span>{permissionsViewerEmp.fullName}</span>
+                    <span className="px-2 py-0.5 bg-indigo-500/30 text-indigo-200 rounded-full text-[10px] font-mono border border-indigo-400/30">
+                      {permissionsViewerEmp.employeeCode}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-300">
+                    {permissionsViewerEmp.jobTitle} • {permissionsViewerEmp.role}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPermissionsViewerEmp(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {/* Permission Banner */}
+              <div className="bg-linear-to-r from-indigo-900 via-slate-900 to-indigo-950 rounded-2xl p-4 text-white shadow-md space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                      <span>{language === "ar" ? "مصفوفة صلاحيات النظام المخصصة للموظف" : "Employee Custom Permission Matrix"}</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-300 mt-0.5">
+                      {language === "ar"
+                        ? `تم تفعيل ${viewerPermissions.length} من أصل ${ALL_PERMISSIONS.length} صلاحية نظام تفصيلية.`
+                        : `Enabled ${viewerPermissions.length} of ${ALL_PERMISSIONS.length} system permissions.`}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewerPermissions(ROLE_DEFAULT_PERMISSIONS[permissionsViewerEmp.role] || []);
+                      }}
+                      className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center space-x-1 rtl:space-x-reverse transition-colors cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3 text-indigo-300" />
+                      <span>{language === "ar" ? "افتراضي الدور" : "Role Defaults"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewerPermissions([...ALL_PERMISSIONS])}
+                      className="px-2.5 py-1 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      {language === "ar" ? "تحديد الكل" : "Grant All"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewerPermissions([])}
+                      className="px-2.5 py-1 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      {language === "ar" ? "إلغاء الكل" : "Revoke All"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative pt-1">
+                  <input
+                    type="text"
+                    value={permissionSearchQuery}
+                    onChange={(e) => setPermissionSearchQuery(e.target.value)}
+                    placeholder={language === "ar" ? "ابحث باسم الصلاحية..." : "Search permissions..."}
+                    className="w-full ps-9 pe-4 py-1.5 bg-white/10 border border-white/20 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-400"
+                  />
+                  <Search className="w-4 h-4 text-slate-400 absolute start-3 top-3" />
+                  {permissionSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setPermissionSearchQuery("")}
+                      className="absolute end-3 top-2.5 text-slate-400 hover:text-white"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 11 Module Categories */}
+              <div className="space-y-4">
+                {PERMISSION_CATEGORIES_META.map((catMeta) => {
+                  const catConfigs = PERMISSION_CONFIG.filter((p) => p.category === catMeta.key);
+                  const filteredConfigs = catConfigs.filter((p) => {
+                    if (!permissionSearchQuery.trim()) return true;
+                    const q = permissionSearchQuery.toLowerCase();
+                    return p.label.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.id.toLowerCase().includes(q);
+                  });
+
+                  if (filteredConfigs.length === 0 && permissionSearchQuery.trim()) return null;
+
+                  const grantedInCat = catConfigs.filter((p) => viewerPermissions.includes(p.id)).length;
+
+                  return (
+                    <div key={catMeta.key} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
+                          <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl">
+                            {catMeta.key === "vouchers" && <Receipt className="w-4 h-4 text-indigo-600" />}
+                            {catMeta.key === "pos" && <ShoppingCart className="w-4 h-4 text-emerald-600" />}
+                            {catMeta.key === "inventory" && <Package className="w-4 h-4 text-amber-600" />}
+                            {catMeta.key === "purchases" && <Truck className="w-4 h-4 text-blue-600" />}
+                            {catMeta.key === "crm" && <Users className="w-4 h-4 text-violet-600" />}
+                            {catMeta.key === "spaces" && <Building2 className="w-4 h-4 text-cyan-600" />}
+                            {catMeta.key === "services" && <Briefcase className="w-4 h-4 text-teal-600" />}
+                            {catMeta.key === "hr" && <UserCheck className="w-4 h-4 text-pink-600" />}
+                            {catMeta.key === "attendance" && <Clock className="w-4 h-4 text-orange-600" />}
+                            {catMeta.key === "requests" && <FileText className="w-4 h-4 text-purple-600" />}
+                            {catMeta.key === "management" && <SlidersHorizontal className="w-4 h-4 text-slate-600" />}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h5 className="text-xs font-extrabold text-slate-900">
+                                {language === "ar" ? catMeta.titleAr : catMeta.titleEn}
+                              </h5>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                {grantedInCat} / {catConfigs.length}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              {language === "ar" ? catMeta.descriptionAr : catMeta.descriptionEn}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 rtl:space-x-reverse shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const catIds = catConfigs.map((p) => p.id);
+                              setViewerPermissions(Array.from(new Set([...viewerPermissions, ...catIds])));
+                            }}
+                            className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-lg text-[10px] font-bold transition-colors cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
+                          >
+                            <CheckSquare className="w-3 h-3 text-indigo-600" />
+                            <span>{language === "ar" ? "تحديد الكل لهذه المجموعة" : "Select Group"}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const catIds = catConfigs.map((p) => p.id);
+                              setViewerPermissions(viewerPermissions.filter((id) => !catIds.includes(id)));
+                            }}
+                            className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-[10px] font-bold transition-colors cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
+                          >
+                            <Square className="w-3 h-3 text-slate-400" />
+                            <span>{language === "ar" ? "إلغاء الكل" : "Deselect Group"}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        {filteredConfigs.map((item) => {
+                          const isGranted = viewerPermissions.includes(item.id);
+                          return (
+                            <label
+                              key={item.id}
+                              className={`flex items-start space-x-3 rtl:space-x-reverse p-3 rounded-xl border transition-all cursor-pointer ${
+                                isGranted
+                                  ? "bg-indigo-50/40 border-indigo-200 ring-1 ring-indigo-300/40"
+                                  : "bg-slate-50/50 border-slate-200 hover:border-slate-300"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isGranted}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setViewerPermissions(Array.from(new Set([...viewerPermissions, item.id])));
+                                  } else {
+                                    setViewerPermissions(viewerPermissions.filter((p) => p !== item.id));
+                                  }
+                                }}
+                                className="mt-0.5 w-4 h-4 text-indigo-600 border-slate-300 rounded-sm focus:ring-indigo-500 cursor-pointer shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className={`text-xs font-bold ${isGranted ? "text-indigo-950" : "text-slate-800"}`}>
+                                    {item.label}
+                                  </span>
+                                  <span
+                                    className={`px-1.5 py-0.2 rounded-md text-[9px] font-bold shrink-0 ${
+                                      isGranted
+                                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                        : "bg-slate-100 text-slate-400 border border-slate-200"
+                                    }`}
+                                  >
+                                    {isGranted ? (language === "ar" ? "ممنوحة" : "Active") : (language === "ar" ? "معطلة" : "Off")}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-slate-500 leading-snug mt-0.5">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:px-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+              <span className="text-xs text-slate-500 font-mono">
+                {language === "ar" ? `مجموعة الصلاحيات: ${viewerPermissions.length}` : `Active permissions: ${viewerPermissions.length}`}
+              </span>
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <button
+                  type="button"
+                  onClick={() => setPermissionsViewerEmp(null)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  {language === "ar" ? "إلغاء" : "Cancel"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (permissionsViewerEmp) {
+                      const updatedEmp: Employee = {
+                        ...permissionsViewerEmp,
+                        permissions: viewerPermissions,
+                        updatedAt: new Date().toISOString()
+                      };
+                      const updatedEmployees = employees.map(e => e.id === updatedEmp.id ? updatedEmp : e);
+                      onSaveEmployees(updatedEmployees);
+                      if (onAuditLog) {
+                        onAuditLog(
+                          "EMPLOYEE_PERMISSIONS_UPDATE",
+                          `تحديث مصفوفة الصلاحيات المخصصة للموظف ${updatedEmp.fullName} (${viewerPermissions.length} صلاحية)`
+                        );
+                      }
+                      setPermissionsViewerEmp(null);
+                    }
+                  }}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer flex items-center space-x-1.5 rtl:space-x-reverse"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>{language === "ar" ? "حفظ مصفوفة الصلاحيات" : "Save Permission Matrix"}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

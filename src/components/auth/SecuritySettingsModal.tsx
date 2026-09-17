@@ -42,6 +42,7 @@ import { saveEmployeeProfile } from "../../application/hr/saveEmployeeProfile";
 import { defaultMediaStorageAdapter } from "../../lib/adapters/mediaStorageAdapter";
 import { defaultEmployeeProfileAdapter } from "../../lib/adapters/employeeProfileAdapter";
 import { useLanguage } from "../../utils/LanguageContext";
+import { hasPermission } from "../../domain/hr/employeePermissions";
 
 interface SecuritySettingsModalProps {
   session: AuthSession;
@@ -74,6 +75,12 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
   const [isSavingPassword, setIsSavingPassword] = useState<boolean>(false);
 
   // Quick PIN States
+  const isAdmin = session.user?.role === "ADMIN" || session.employee?.role === "ADMIN";
+  const hasPinPermission = session.employee
+    ? hasPermission(session.employee, "employee_pin_mgmt")
+    : hasPermission(session.user.role, "employee_pin_mgmt");
+  const canEditPin = isAdmin || hasPinPermission;
+
   const [newPin, setNewPin] = useState<string>(session.user.pinCode || "1234");
   const [pinSuccess, setPinSuccess] = useState<string>("");
   const [pinError, setPinError] = useState<string>("");
@@ -251,19 +258,33 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
     setPinError("");
     setPinSuccess("");
 
-    if (newPin.length < 4) {
-      setPinError("رمز PIN يجب ألا يقل عن 4 أرقام");
+    if (!canEditPin) {
+      setPinError(
+        language === "ar"
+          ? "إنشاء وتغيير رمز PIN السريع متوقف لهذا الحساب بناءً على سياسات الأمان والموارد البشرية. يرجى التواصل مع مدير النظام لتفعيل الصلاحية."
+          : "PIN creation and updates are disabled for this account based on security and HR policies."
+      );
       return;
     }
 
-    const res = changeUserPin(session.user.id, newPin);
+    const cleanPin = newPin.replace(/\D/g, "").slice(0, 6);
+    if (!/^\d{4,6}$/.test(cleanPin)) {
+      setPinError(
+        language === "ar"
+          ? "رمز PIN يجب أن يتكون من 4 إلى 6 أرقام فقط"
+          : "PIN Code must be between 4 and 6 numeric digits"
+      );
+      return;
+    }
+
+    const res = changeUserPin(session.user.id, cleanPin);
     if (!res.success) {
       setPinError(res.error || "فشل تحديث رمز PIN");
       return;
     }
 
     setPinSuccess("تم تحديث رمز PIN السريع بنجاح");
-    const updatedUser = { ...session.user, pinCode: newPin };
+    const updatedUser = { ...session.user, pinCode: cleanPin };
     onSessionUpdated({ ...session, user: updatedUser });
 
     if (onAuditLog) {
@@ -729,6 +750,15 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
           {/* ========================================================================= */}
           {activeTab === "pin" && (
             <form onSubmit={handlePinSubmit} className="space-y-4 max-w-md mx-auto">
+              {!canEditPin && (
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center space-x-2 rtl:space-x-reverse leading-relaxed">
+                  <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+                  <span>
+                    إنشاء وتغيير رمز PIN السريع متوقف لهذا الحساب بناءً على سياسات الأمان والموارد البشرية. يرجى التواصل مع مدير النظام لتفعيل الصلاحية.
+                  </span>
+                </div>
+              )}
+
               <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-200 leading-relaxed">
                 {language === "ar"
                   ? "رمز PIN يتيح لك فك قفل شاشة النظام بسرعة دون الحاجة لكتابة كلمة المرور الكاملة في كل مرة."
@@ -757,11 +787,12 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
                   <input
                     type="password"
                     required
+                    disabled={!canEditPin}
                     maxLength={6}
                     value={newPin}
-                    onChange={(e) => setNewPin(e.target.value)}
+                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     placeholder="1234"
-                    className="w-full text-center font-mono text-2xl tracking-widest bg-slate-950 border border-slate-700 text-white rounded-xl py-2.5 outline-none focus:border-indigo-500"
+                    className="w-full text-center font-mono text-2xl tracking-widest bg-slate-950 border border-slate-700 text-white rounded-xl py-2.5 outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1 text-center">
@@ -772,7 +803,8 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all cursor-pointer"
+                  disabled={!canEditPin}
+                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Key className="w-4 h-4" />
                   <span>{t("update")}</span>

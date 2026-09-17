@@ -23,7 +23,7 @@ async function runKioskAuthTests() {
   }
 
   // NOTE: NON-PRODUCTION TEST FIXTURES ONLY.
-  // The passwords below ('password123', 'wh654321') are used solely for isolated offline unit tests of kiosk authentication logic.
+  // The passwords below ('password123', 'wh_test_pass_9876') are used solely for isolated offline unit tests of kiosk authentication logic.
   const testDevices: KioskDevice[] = [
     {
       id: "dev-sohar-01",
@@ -50,7 +50,7 @@ async function runKioskAuthTests() {
       branchName: "فرع صحار الرئيسي",
       location: "بوابة المستودع",
       username: "kiosk.warehouse",
-      plainPassword: "wh654321",
+      plainPassword: "wh_test_pass_9876",
       deviceToken: "tok_wh_01",
       status: "SUSPENDED",
       isLocked: false,
@@ -82,7 +82,7 @@ async function runKioskAuthTests() {
   });
 
   test("Authentication failure for SUSPENDED kiosk device", () => {
-    const res = authenticateKioskAccount("kiosk.warehouse", "wh654321", testDevices);
+    const res = authenticateKioskAccount("kiosk.warehouse", "wh_test_pass_9876", testDevices);
     assert.strictEqual(res.success, false, "Authentication should fail for suspended device");
     assert.ok(res.errorMessage?.includes("معلق"), "Error message should indicate device is suspended");
   });

@@ -14,21 +14,77 @@ export type EmployeeStatus = 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | 'SUSPENDED';
 export type ContractType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'TRAINEE';
 
 export type EmployeePermission =
+  // 1. Financials & Vouchers (vouchers)
+  | 'view_vouchers'
   | 'create_vouchers'
   | 'edit_vouchers'
   | 'delete_vouchers'
+  | 'approve_vouchers'
+  | 'close_financial_period'
   | 'print_export_vouchers'
   | 'apply_discounts'
-  | 'view_reports'
+  | 'manage_general_ledger'
+  | 'view_financial_reports'
+  | 'financial_admin_override'
+  // 2. POS Terminal & Cashier (pos)
+  | 'pos_view_sales'
+  | 'pos_open_shift'
+  | 'pos_create_order'
+  | 'pos_edit_order'
+  | 'pos_apply_discount'
+  | 'pos_void_item'
+  | 'pos_cash_drawer'
+  | 'pos_close_shift_override'
+  | 'pos_settings'
+  // 3. Inventory & Warehousing (inventory)
+  | 'view_inventory'
   | 'manage_inventory'
+  | 'delete_inventory'
   | 'manage_transfers'
+  | 'approve_transfers'
+  | 'inventory_stocktake'
+  | 'inventory_categories'
+  | 'inventory_settings'
+  // 4. Purchases & Suppliers (purchases)
+  | 'view_purchases'
   | 'manage_purchases'
+  | 'delete_purchases'
   | 'manage_suppliers'
+  | 'approve_purchase_orders'
+  | 'purchases_settings'
+  // 5. CRM & Customers (crm)
+  | 'view_customers'
   | 'manage_customers'
-  | 'manage_branches'
+  | 'delete_customers'
+  | 'crm_pipeline_mgmt'
+  | 'crm_activities_mgmt'
+  | 'crm_settings'
+  // 6. Spaces, Bookings & Contracts (spaces)
+  | 'view_spaces'
+  | 'manage_spaces'
+  | 'delete_spaces'
+  | 'manage_space_bookings'
+  | 'cancel_space_bookings'
+  | 'manage_lease_contracts'
+  | 'terminate_lease_contracts'
+  | 'spaces_settings'
+  // 7. Services & Packages (services)
+  | 'view_services'
+  | 'manage_services'
+  | 'delete_services'
+  | 'manage_service_bookings'
+  | 'cancel_service_bookings'
+  | 'services_settings'
+  // 8. HR & Payroll (hr)
+  | 'view_employees'
   | 'manage_employees'
+  | 'delete_employees'
   | 'view_salaries'
-  | 'edit_settings'
+  | 'manage_payroll'
+  | 'approve_payroll'
+  | 'manage_contracts_eosb'
+  | 'hr_settings'
+  // 9. Attendance & Kiosk (attendance)
   | 'attendance_view'
   | 'attendance_create'
   | 'attendance_edit'
@@ -41,8 +97,26 @@ export type EmployeePermission =
   | 'employee_pin_mgmt'
   | 'attendance_settings'
   | 'kiosk_mode_only'
+  // 10. Requests & Documents (requests)
+  | 'view_requests'
+  | 'manage_requests'
+  | 'approve_requests'
+  | 'delete_requests'
+  | 'view_documents'
+  | 'manage_documents'
+  | 'delete_documents'
+  | 'requests_settings'
+  // 11. Branches, System & Settings (management)
+  | 'view_branches'
+  | 'manage_branches'
+  | 'delete_branches'
+  | 'view_reports'
+  | 'edit_settings'
+  | 'system_audit_logs'
   | 'auditor_read_only'
-  | 'collaborator_limited';
+  | 'collaborator_limited'
+  | 'management_admin_override';
+
 
 export interface Employee {
   id: string;
@@ -71,6 +145,7 @@ export interface Employee {
   avatarUrl?: string;
   signatureUrl?: string;
   permissions: EmployeePermission[];
+  pinCode?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;

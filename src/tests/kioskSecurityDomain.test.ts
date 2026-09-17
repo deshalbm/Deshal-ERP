@@ -9,8 +9,7 @@ import {
   checkLockoutStatus,
   calculateNextLockout,
   MAX_FAILED_ATTEMPTS,
-  LOCKOUT_DURATION_MS,
-  MASTER_KIOSK_PIN_HASH
+  LOCKOUT_DURATION_MS
 } from "../domain/kiosk/kioskSecurity";
 
 import {
@@ -18,11 +17,12 @@ import {
   generateSalt as UTILS_generateSalt,
   hashPin as UTILS_hashPin,
   verifyMasterExitPin as UTILS_verifyMasterExitPin,
+  verifyPrivilegedEmployeePin,
   MAX_FAILED_ATTEMPTS as UTILS_MAX_FAILED_ATTEMPTS,
   LOCKOUT_DURATION_MS as UTILS_LOCKOUT_DURATION_MS
 } from "../utils/kioskSecurity";
 
-import { KioskDevice } from "../types";
+import { Employee, KioskDevice } from "../types";
 
 console.log("\n================================================================");
 console.log("  DESHAL ERP — KIOSK SECURITY DOMAIN UNIT TEST SUITE");
@@ -75,16 +75,16 @@ async function runTests() {
   assert(hash1 === hash2, "hashPin is deterministic for same PIN and salt");
   assert(hash1 !== hashDifferentPin, "hashPin produces different hash for different PIN");
 
-  // TEST 4: Master Exit PIN Verification
+  // TEST 4: Master Exit PIN Verification Policy (Hardcoded Master PINs Purged)
   console.log("\n--- TEST 4: MASTER EXIT PIN VERIFICATION ---");
   const isMaster9900 = await verifyMasterExitPin("9900");
   const isMaster1234 = await verifyMasterExitPin("1234");
   const isWrongPin = await verifyMasterExitPin("0000");
-  assert(isMaster9900 === true, "verifyMasterExitPin accepts master PIN '9900'");
-  assert(isMaster1234 === true, "verifyMasterExitPin accepts master PIN '1234'");
+  assert(isMaster9900 === false, "verifyMasterExitPin rejects hardcoded master PIN '9900' (Purged Policy)");
+  assert(isMaster1234 === false, "verifyMasterExitPin rejects hardcoded master PIN '1234' (Purged Policy)");
   assert(isWrongPin === false, "verifyMasterExitPin rejects incorrect PIN '0000'");
 
-  // TEST 5: Device Secret PIN Management & Validation
+  // TEST 5: DEVICE SECRET PIN MANAGEMENT & VALIDATION ---
   console.log("\n--- TEST 5: DEVICE SECRET PIN MANAGEMENT & VALIDATION ---");
   const dummyDevice: KioskDevice = {
     id: "kiosk-dev-1",
@@ -102,7 +102,7 @@ async function runTests() {
   };
 
   const defaultPinCheck = await verifyDeviceSecretPin(dummyDevice, "1234");
-  assert(defaultPinCheck === true, "Default device without secret PIN accepts fallback master PIN '1234'");
+  assert(defaultPinCheck === false, "Unconfigured device without secret PIN rejects unauthenticated PIN '1234'");
 
   const updatedDevice = await setDeviceSecretPin(dummyDevice, "7788");
   assert(
@@ -161,6 +161,67 @@ async function runTests() {
   assert(
     LOCKOUT_DURATION_MS === UTILS_LOCKOUT_DURATION_MS && LOCKOUT_DURATION_MS === 60000,
     "LOCKOUT_DURATION_MS invariant (60,000ms) preserved"
+  );
+
+  // TEST 8: Dynamic Privileged Employee PIN Verification
+  console.log("\n--- TEST 8: DYNAMIC PRIVILEGED EMPLOYEE PIN VERIFICATION ---");
+  const dummyEmployees: Employee[] = [
+    {
+      id: "emp-admin-1",
+      employeeCode: "EMP-001",
+      fullName: "سالم المنذري (مدير)",
+      email: "salim@deshalbm.com",
+      phone: "96891111111",
+      hireDate: "2024-01-01",
+      basicSalary: 1000,
+      allowances: 200,
+      currency: "OMR",
+      jobTitle: "مدير النظام",
+      department: "الإدارة العامة",
+      role: "ADMIN",
+      status: "ACTIVE",
+      permissions: [],
+      pinCode: "8899",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    } as any,
+    {
+      id: "emp-staff-1",
+      employeeCode: "EMP-005",
+      fullName: "خالد الهنائي (موظف)",
+      email: "khaled@deshalbm.com",
+      phone: "96892222222",
+      hireDate: "2024-01-01",
+      basicSalary: 500,
+      allowances: 100,
+      currency: "OMR",
+      jobTitle: "موظف استقبال",
+      department: "الاستقبال",
+      role: "RECEPTIONIST",
+      status: "ACTIVE",
+      permissions: ["attendance_create"],
+      pinCode: "5566",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    } as any
+  ];
+
+  const adminPinResult = await verifyPrivilegedEmployeePin("8899", dummyEmployees);
+  assert(
+    adminPinResult.success === true && adminPinResult.adminName === "سالم المنذري (مدير)",
+    "verifyPrivilegedEmployeePin grants authorization for Admin employee PIN"
+  );
+
+  const staffPinResult = await verifyPrivilegedEmployeePin("5566", dummyEmployees);
+  assert(
+    staffPinResult.success === false && staffPinResult.errorMessage?.includes("لا يملك صلاحية"),
+    "verifyPrivilegedEmployeePin rejects PIN from regular staff employee without Admin/Manager role"
+  );
+
+  const invalidPinResult = await verifyPrivilegedEmployeePin("0000", dummyEmployees);
+  assert(
+    invalidPinResult.success === false,
+    "verifyPrivilegedEmployeePin rejects unregistered PIN '0000'"
   );
 
   console.log(`\n==============================================================`);

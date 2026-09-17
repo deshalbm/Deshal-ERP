@@ -68,17 +68,21 @@ export const WebsiteLayout: React.FC<WebsiteLayoutProps> = ({ initialPath = '/',
   return (
     <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e] font-sans transition-colors duration-200" dir={currentLang === 'ar' ? 'rtl' : 'ltr'}>
       {/* TOP ERP APPS BAR FOR TESTING / ADMIN REDIRECT */}
-      <div className="bg-[#002e69] text-white text-[11px] px-4 py-1.5 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#8df9a5] animate-pulse"></span>
-          <span className="font-bold">الموقع الإلكتروني الرسمي — شركة الدليل الشامل (صحار، سلطنة عُمان)</span>
+      <div className="bg-[#002e69] text-white text-[11px] px-3 sm:px-4 py-1.5 flex items-center justify-between gap-2 shadow-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-[#8df9a5] animate-pulse shrink-0"></span>
+          <span className="font-bold truncate">
+            {currentLang === 'ar'
+              ? 'الموقع الإلكتروني الرسمي — شركة الدليل الشامل (صحار، سلطنة عُمان)'
+              : 'Official Website — Al Daleel Al Shamil (Sohar, Sultanate of Oman)'}
+          </span>
         </div>
         {onNavigateToERP && (
           <button
             onClick={onNavigateToERP}
-            className="bg-[#006d33] hover:bg-emerald-600 text-white font-bold px-3 py-0.5 rounded text-[10px] transition-colors"
+            className="bg-[#006d33] hover:bg-emerald-600 text-white font-bold px-2.5 sm:px-3 py-0.5 rounded text-[10px] transition-colors shrink-0 whitespace-nowrap"
           >
-            الانتقال لنظام Deshal ERP ←
+            {currentLang === 'ar' ? 'الانتقال لنظام ERP ←' : 'Access ERP Portal →'}
           </button>
         )}
       </div>
@@ -100,11 +104,12 @@ export const WebsiteLayout: React.FC<WebsiteLayoutProps> = ({ initialPath = '/',
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
         currentLang={currentLang}
+        onToggleLang={handleToggleLang}
         onNavigateToERP={onNavigateToERP}
       />
 
       {/* PAGE BODY CONTENT */}
-      <main className="pt-24 min-h-screen max-w-[1320px] mx-auto px-4 sm:px-8">
+      <main className="min-h-screen max-w-[1320px] mx-auto px-4 sm:px-8 py-6 sm:py-8">
         {(currentPath === '/' || currentPath === '') && (
           <WebHome
             onNavigate={(tab) => {
