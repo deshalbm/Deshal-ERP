@@ -49,6 +49,17 @@ export async function fetchTenantContextFromSupabase(
   };
 
   if (!userId || !isSupabaseConfigured) {
+    if (userId) {
+      const defaultCompanyId = activeCompanyId || '00000000-0000-0000-0000-000000000001';
+      result.memberships = [{
+        id: `mem_local_${defaultCompanyId}`,
+        userId,
+        companyId: defaultCompanyId,
+        roleId: 'ADMIN',
+        isActive: true,
+        createdAt: new Date().toISOString()
+      }];
+    }
     return result;
   }
 
