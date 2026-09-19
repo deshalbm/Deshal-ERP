@@ -5,18 +5,21 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { CompanySettings, Branch } from '../../types';
+import { resolveCompanyId, resolveBranchId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Company
 // ──────────────────────────────────────────────
 
 export async function getCompany(companyId: string): Promise<CompanySettings | null> {
-  if (!isSupabaseConfigured) return null;
+  if (!isSupabaseConfigured || !companyId) return null;
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('companies') as any)
     .select('*')
-    .eq('id', companyId)
+    .eq('id', cId)
     .maybeSingle();
 
   if (error || !data) {
@@ -31,7 +34,9 @@ export async function updateCompany(
   companyId: string,
   updates: Partial<CompanySettings>
 ): Promise<{ success: boolean; error?: string }> {
-  if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+  if (!isSupabaseConfigured || !companyId) return { success: false, error: 'Supabase غير مضبوط.' };
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return { success: false, error: 'معرف الشركة غير صالح' };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('companies') as any)
@@ -43,7 +48,7 @@ export async function updateCompany(
       cr_number: updates.crNumber,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', companyId);
+    .eq('id', cId);
 
   if (error) return { success: false, error: error.message };
   return { success: true };
@@ -54,12 +59,14 @@ export async function updateCompany(
 // ──────────────────────────────────────────────
 
 export async function getBranches(companyId: string): Promise<Branch[]> {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseConfigured || !companyId) return [];
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('branches') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -75,10 +82,14 @@ export async function upsertBranch(
   companyId: string
 ): Promise<{ success: boolean; data?: Branch; error?: string }> {
   if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return { success: false, error: 'معرف الشركة غير صالح' };
+  const bId = resolveBranchId(branch.id);
+  if (!bId) return { success: false, error: 'معرف الفرع غير صالح' };
 
   const row = {
-    id: branch.id,
-    company_id: companyId,
+    id: bId,
+    company_id: cId,
     code: branch.code ?? '',
     name: branch.name,
     name_en: branch.nameEn ?? '',
@@ -104,10 +115,12 @@ export async function upsertBranch(
 }
 
 export async function deleteBranch(id: string): Promise<{ success: boolean; error?: string }> {
-  if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+  if (!isSupabaseConfigured || !id) return { success: false, error: 'Supabase غير مضبوط.' };
+  const bId = resolveBranchId(id);
+  if (!bId) return { success: false, error: 'معرف الفرع غير صالح' };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('branches') as any).delete().eq('id', id);
+  const { error } = await (supabase.from('branches') as any).delete().eq('id', bId);
   if (error) return { success: false, error: error.message };
   return { success: true };
 }

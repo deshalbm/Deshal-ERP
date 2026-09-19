@@ -45,6 +45,7 @@ import { useMasterData } from "../contexts/MasterDataContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useUIShell } from "../contexts/UIShellContext";
 import { HomeDashboard } from "../components/HomeDashboard";
+import { PersonalizedWorkspace } from "../components/workspace/PersonalizedWorkspace";
 import { POSView } from "../components/POSView";
 import { GeneralLedgerAccountsView } from "../components/accounting/GeneralLedgerAccountsView";
 import { SpacesManager } from "../components/SpacesManager";
@@ -62,6 +63,7 @@ import { RecurringSchedulesView } from "../components/RecurringSchedulesView";
 import { EmployeesManager } from "../components/EmployeesManager";
 import { RequestsDashboard } from "../components/requests/RequestsDashboard";
 import { SettingsStudio } from "../components/SettingsStudio";
+import { SettingsCenter } from "../components/settings/SettingsCenter";
 import { HelpCenterView } from "../components/help/HelpCenterView";
 import { WebsiteView } from "../components/website/WebsiteView";
 import CmsManagerView from "../components/cms/CmsManagerView";
@@ -366,22 +368,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
   return (
     <>
       {activeTab === "home" && (
-        <HomeDashboard
+        <PersonalizedWorkspace
           userName={userName}
-          onUpdateUserName={onUpdateUserName}
-          companySettings={companySettings}
-          vouchers={vouchersList}
-          customers={customersList}
-          inventory={inventoryList}
-          purchases={purchasesList}
-          branches={branchesList}
-          onSelectAction={onSelectAction}
           onNavigateTab={onNavigateTab}
-          onViewVoucher={(v) => {
-            handleSetActiveVoucher(v);
-            onNavigateTab("preview");
-          }}
-          onQuickCreateForCustomer={onCreateVoucherForCustomer}
+          onSelectAction={onSelectAction}
         />
       )}
 
@@ -744,19 +734,17 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
 
       {activeTab === "settings" && (
         <TenantModuleAccessGuard moduleCode="management" moduleTitleAr="إعدادات المنظومة" moduleTitleEn="System Settings">
-          <SettingsStudio
+          <SettingsCenter
             settings={companySettings}
             theme={designTheme}
             employees={employeesList}
             branches={branchesList}
-            activeEmployeeId={activeEmployeeId}
             auditLogs={auditLogsList}
             kioskDevices={kioskDevicesList}
             onSaveSettings={handleSaveCompanySettings}
             onSaveTheme={handleSaveDesignTheme}
             onSaveEmployees={handleSaveEmployees}
             onSaveKioskDevices={handleSaveKioskDevices}
-            onSelectActiveEmployee={handleSelectActiveEmployee}
             onClearAuditLogs={onClearAuditLogs}
             onOpenSecuritySettings={onOpenSecuritySettings}
             onResetDefaults={handleResetDefaults}

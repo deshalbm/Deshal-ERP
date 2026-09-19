@@ -6,6 +6,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
+import { resolveUserId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Types
@@ -373,11 +374,13 @@ async function fetchUserProfile(userId: string): Promise<SupabaseAuthUser | null
 
 export async function fetchUserMemberships(userId: string): Promise<any[]> {
   if (!isSupabaseConfigured || !userId) return [];
+  const validUserId = resolveUserId(userId);
+  if (!validUserId) return [];
   try {
     const { data, error } = await supabase
       .from('user_company_memberships')
       .select('id, user_id, company_id, role_id, is_active, created_at')
-      .eq('user_id', userId)
+      .eq('user_id', validUserId)
       .eq('is_active', true);
 
     if (error || !data) return [];
@@ -390,11 +393,13 @@ export async function fetchUserMemberships(userId: string): Promise<any[]> {
 
 export async function checkIsPlatformAdmin(userId: string): Promise<boolean> {
   if (!isSupabaseConfigured || !userId) return false;
+  const validUserId = resolveUserId(userId);
+  if (!validUserId) return false;
   try {
     const { data, error } = await supabase
       .from('platform_admins')
       .select('user_id')
-      .eq('user_id', userId)
+      .eq('user_id', validUserId)
       .maybeSingle();
 
     if (error || !data) return false;

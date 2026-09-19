@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { AuthSession, Branch, CompanySettings } from '../../types';
 import { useLanguage } from '../../utils/LanguageContext';
+import { useTenant } from '../../contexts/TenantContext';
 
 export interface TopNavBarProps {
   activeTab?: string;
@@ -48,8 +49,8 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   onNavigateTab,
   onToggleSidebar,
   companySettings,
-  branches = [],
-  activeBranchId,
+  branches: propBranches = [],
+  activeBranchId: propActiveBranchId,
   onSelectBranch,
   onOpenAttendanceKiosk,
   onOpenNotifications,
@@ -63,11 +64,22 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   onLogout
 }) => {
   const { language, setLanguage, isRTL } = useLanguage();
+
+  let tenantContext: any = null;
+  try {
+    tenantContext = useTenant();
+  } catch {}
+
+  const tenantState = tenantContext?.state;
+  const tenantActions = tenantContext?.actions;
+
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showBranchMenu, setShowBranchMenu] = useState(false);
+  const [showCompanyMenu, setShowCompanyMenu] = useState(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const branchMenuRef = useRef<HTMLDivElement>(null);
+  const companyMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -78,13 +90,30 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
       if (branchMenuRef.current && !branchMenuRef.current.contains(target)) {
         setShowBranchMenu(false);
       }
+      if (companyMenuRef.current && !companyMenuRef.current.contains(target)) {
+        setShowCompanyMenu(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const activeBranch = branches.find((b) => b.id === activeBranchId) || branches[0];
-  const companyDisplayName = companySettings?.companyName || (isRTL ? 'مؤسسة ديشال ERP' : 'Deshal Enterprise ERP');
+  // Resolve Effective Companies & Branches
+  const authorizedCompanies = tenantState?.authorizedCompanies?.length
+    ? tenantState.authorizedCompanies
+    : [{ id: tenantState?.activeCompanyId || '00000000-0000-0000-0000-000000000001', nameAr: companySettings?.companyName || (isRTL ? 'مؤسسة ديشال ERP' : 'Deshal Enterprise ERP') }];
+
+  const activeCompanyId = tenantState?.activeCompanyId || authorizedCompanies[0]?.id;
+  const activeCompany = authorizedCompanies.find((c: any) => c.id === activeCompanyId) || authorizedCompanies[0];
+
+  const availableBranches = tenantState?.authorizedBranches?.length
+    ? tenantState.authorizedBranches
+    : (propBranches.length > 0 ? propBranches : [{ id: 'branch-sohar', name: 'فرع صحار الرئيسي', nameEn: 'Sohar Main Branch' }]);
+
+  const effectiveActiveBranchId = tenantState?.activeBranchId || propActiveBranchId || availableBranches[0]?.id;
+  const activeBranch = availableBranches.find((b: any) => b.id === effectiveActiveBranchId) || availableBranches[0];
+
+  const companyDisplayName = activeCompany ? (isRTL ? activeCompany.nameAr : activeCompany.nameEn || activeCompany.nameAr) : (companySettings?.companyName || 'Deshal ERP');
 
   return (
     <header
@@ -141,64 +170,65 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
 
           <div className="h-6 w-px bg-slate-200 hidden md:block" />
 
-          {/* 2. الشركة والفرع (Company & Branch Selector) */}
-          {branches.length > 0 && (
-            <div className="relative" ref={branchMenuRef}>
+          {/* 2. الشركة والفرع (Company & Branch Selectors) */}
+          <div className="flex items-center gap-2">
+            {/* Company Selector */}
+            <div className="relative" ref={companyMenuRef}>
               <button
-                onClick={() => setShowBranchMenu(!showBranchMenu)}
+                onClick={() => setShowCompanyMenu(!showCompanyMenu)}
                 className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 transition-all text-xs font-bold cursor-pointer shadow-2xs"
-                title={isRTL ? 'تبديل الفرع النشط' : 'Switch Active Branch'}
+                title={isRTL ? 'تبديل الشركة / المؤسسة' : 'Switch Company'}
               >
-                <div className="w-5 h-5 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                  <GitBranch className="w-3.5 h-3.5" />
+                <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <Building2 className="w-3.5 h-3.5" />
                 </div>
                 <div className="text-start hidden sm:block">
                   <span className="block text-[10px] text-slate-500 font-medium leading-none">
-                    {isRTL ? 'الفرع النشط' : 'Active Branch'}
+                    {isRTL ? 'الشركة النشطة' : 'Active Company'}
                   </span>
-                  <span className="block text-xs font-black text-slate-900 leading-tight truncate max-w-[130px]">
-                    {activeBranch ? (isRTL ? activeBranch.name : activeBranch.nameEn || activeBranch.name) : (isRTL ? 'الفرع الرئيسي' : 'Main Branch')}
+                  <span className="block text-xs font-black text-slate-900 leading-tight truncate max-w-[120px]">
+                    {companyDisplayName}
                   </span>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 ms-0.5" />
+                {authorizedCompanies.length > 1 && (
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 ms-0.5" />
+                )}
               </button>
 
-              {/* Branch Selector Dropdown */}
-              {showBranchMenu && (
+              {/* Company Selector Dropdown */}
+              {showCompanyMenu && authorizedCompanies.length > 0 && (
                 <div className="absolute start-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in">
                   <div className="px-3 py-2 border-b border-slate-100">
                     <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
-                      {isRTL ? 'الفروع المتاحة للمؤسسة' : 'Company Branches'}
-                    </p>
-                    <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
-                      {companyDisplayName}
+                      {isRTL ? 'الشركات والمؤسسات المصرحة' : 'Authorized Companies'}
                     </p>
                   </div>
-
                   <div className="py-1 max-h-56 overflow-y-auto">
-                    {branches.map((b) => {
-                      const isSelected = activeBranch && activeBranch.id === b.id;
+                    {authorizedCompanies.map((c: any) => {
+                      const isSelected = activeCompanyId === c.id;
                       return (
                         <button
-                          key={b.id}
-                          onClick={() => {
-                            if (onSelectBranch) onSelectBranch(b.id);
-                            setShowBranchMenu(false);
+                          key={c.id}
+                          onClick={async () => {
+                            if (tenantActions?.switchCompany) {
+                              await tenantActions.switchCompany(c.id);
+                            }
+                            setShowCompanyMenu(false);
                           }}
                           className={`w-full px-3 py-2 text-start text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
                             isSelected
-                              ? 'bg-indigo-50 text-indigo-700'
+                              ? 'bg-emerald-50 text-emerald-700'
                               : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <Building className={`w-4 h-4 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                            <Building2 className={`w-4 h-4 shrink-0 ${isSelected ? 'text-emerald-600' : 'text-slate-400'}`} />
                             <div className="truncate">
-                              <p className="truncate">{isRTL ? b.name : b.nameEn || b.name}</p>
-                              <p className="text-[10px] text-slate-400 font-mono">{b.code || b.city}</p>
+                              <p className="truncate">{isRTL ? c.nameAr : c.nameEn || c.nameAr}</p>
+                              {c.crNumber && <p className="text-[10px] text-slate-400 font-mono">CR: {c.crNumber}</p>}
                             </div>
                           </div>
-                          {isSelected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                          {isSelected && <Check className="w-4 h-4 text-emerald-600 shrink-0" />}
                         </button>
                       );
                     })}
@@ -206,8 +236,79 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                 </div>
               )}
             </div>
-          )}
+
+            {/* Branch Selector */}
+            {availableBranches.length > 0 && (
+              <div className="relative" ref={branchMenuRef}>
+                <button
+                  onClick={() => setShowBranchMenu(!showBranchMenu)}
+                  className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 transition-all text-xs font-bold cursor-pointer shadow-2xs"
+                  title={isRTL ? 'تبديل الفرع النشط' : 'Switch Active Branch'}
+                >
+                  <div className="w-5 h-5 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                    <GitBranch className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="text-start hidden sm:block">
+                    <span className="block text-[10px] text-slate-500 font-medium leading-none">
+                      {isRTL ? 'الفرع النشط' : 'Active Branch'}
+                    </span>
+                    <span className="block text-xs font-black text-slate-900 leading-tight truncate max-w-[120px]">
+                      {activeBranch ? (isRTL ? activeBranch.name : activeBranch.nameEn || activeBranch.name) : (isRTL ? 'الفرع الرئيسي' : 'Main Branch')}
+                    </span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 ms-0.5" />
+                </button>
+
+                {/* Branch Selector Dropdown */}
+                {showBranchMenu && (
+                  <div className="absolute start-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in">
+                    <div className="px-3 py-2 border-b border-slate-100">
+                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
+                        {isRTL ? 'فروع الشركة النشطة' : 'Active Company Branches'}
+                      </p>
+                      <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+                        {companyDisplayName}
+                      </p>
+                    </div>
+
+                    <div className="py-1 max-h-56 overflow-y-auto">
+                      {availableBranches.map((b: any) => {
+                        const isSelected = activeBranch && activeBranch.id === b.id;
+                        return (
+                          <button
+                            key={b.id}
+                            onClick={async () => {
+                              if (tenantActions?.switchBranch) {
+                                await tenantActions.switchBranch(b.id);
+                              }
+                              if (onSelectBranch) onSelectBranch(b.id);
+                              setShowBranchMenu(false);
+                            }}
+                            className={`w-full px-3 py-2 text-start text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-indigo-50 text-indigo-700'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Building className={`w-4 h-4 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                              <div className="truncate">
+                                <p className="truncate">{isRTL ? b.name : b.nameEn || b.name}</p>
+                                <p className="text-[10px] text-slate-400 font-mono">{b.code || b.city || 'فرع'}</p>
+                              </div>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+
 
         {/* =========================================================================
             2. العناصر المطلوبة بالجانب الآخر: Productivity Actions | Kiosk | Notifications | Language | User

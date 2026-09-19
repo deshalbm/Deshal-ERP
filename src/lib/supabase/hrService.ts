@@ -10,88 +10,162 @@ import type {
   LeaveRequest,
   AttendanceMovementLog,
 } from '../../types';
-import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import {
+  isValidUuid,
+  resolveCompanyId,
+  resolveEmployeeId,
+  resolveBranchId,
+  ensureNullableUuid,
+} from '../../utils/uuid';
 import { uploadImageToStorage } from './storageService';
+
+export class HRError extends Error {
+  constructor(message: string, public code?: string) {
+    super(message);
+    this.name = 'HRError';
+  }
+}
+
+function generateStandardUuid(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function resolveRecordId(id: string | null | undefined): string {
+  if (id && isValidUuid(id)) {
+    return id.trim();
+  }
+  return generateStandardUuid();
+}
 
 // ──────────────────────────────────────────────
 // Helper: Ensure Employee Record Exists in Supabase
 // ──────────────────────────────────────────────
-async function ensureEmployeeExists(
+export async function ensureEmployeeExists(
   employeeId: string,
   companyId: string,
   employeeCode?: string,
   employeeName?: string,
   jobTitle?: string,
   department?: string
-): Promise<void> {
-  if (!isSupabaseConfigured) return;
-  try {
-    const empId = ensureValidUuid(employeeId);
-    const cId = ensureValidUuid(companyId);
-
-    // 1. Check if employee exists by ID
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existingById } = await (supabase.from('employees') as any)
-      .select('id')
-      .eq('id', empId)
-      .maybeSingle();
-
-    if (existingById) return;
-
-    // 2. Determine a unique employee code
-    let code = (employeeCode && employeeCode.trim() !== '')
-      ? employeeCode.trim()
-      : `EMP-${empId.slice(-8).toUpperCase()}`;
-
-    // Check if another employee already has this code in the company
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existingByCode } = await (supabase.from('employees') as any)
-      .select('id')
-      .eq('company_id', cId)
-      .eq('employee_code', code)
-      .maybeSingle();
-
-    if (existingByCode && existingByCode.id !== empId) {
-      // Code collision! Use unique fallback code based on empId hex suffix
-      code = `EMP-${empId.slice(-8).toUpperCase()}`;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('employees') as any).upsert({
-      id: empId,
-      company_id: cId,
-      employee_code: code,
-      full_name: employeeName || 'موظف',
-      job_title: jobTitle || 'موظف',
-      department: department || 'عام',
-      status: 'ACTIVE',
-      basic_salary: 0,
-      allowances: 0,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' });
-
-    if (error) {
-      console.error('[HRService] ensureEmployeeExists error:', error.message);
-    }
-  } catch (err) {
-    console.error('[HRService] ensureEmployeeExists error:', err);
+): Promise<string> {
+  const cId = resolveCompanyId(companyId);
+  if (!cId) {
+    throw new HRError(`معرف الشركة غير صالحة أو غير مسجل: ${companyId}`);
   }
+
+  const validEmpId = resolveEmployeeId(employeeId);
+
+  if (!isSupabaseConfigured) {
+    return validEmpId || generateStandardUuid();
+  }
+
+  // 1. Check if employee exists by ID (if valid UUID supplied)
+  if (validEmpId) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingById, error: fetchErr } = await (supabase.from('employees') as any)
+      .select('id, company_id')
+      .eq('id', validEmpId)
+      .maybeSingle();
+
+    if (fetchErr) {
+      console.error('[HRService] ensureEmployeeExists check by ID error:', fetchErr.message);
+    }
+    if (existingById?.id) {
+      if (existingById.company_id && existingById.company_id !== cId) {
+        throw new HRError(`Employee ${validEmpId} belongs to company ${existingById.company_id}, not ${cId}`);
+      }
+      return existingById.id;
+    }
+  }
+
+  // 2. If employee not found by ID, search by employee_code & company_id
+  const targetCode = (employeeCode && employeeCode.trim() !== '')
+    ? employeeCode.trim()
+    : (employeeId && !validEmpId ? employeeId.trim() : null);
+
+  if (targetCode) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingByCode, error: codeErr } = await (supabase.from('employees') as any)
+      .select('id, company_id')
+      .eq('company_id', cId)
+      .eq('employee_code', targetCode)
+      .maybeSingle();
+
+    if (codeErr) {
+      console.error('[HRService] ensureEmployeeExists check by code error:', codeErr.message);
+    }
+    if (existingByCode?.id) {
+      return existingByCode.id;
+    }
+  }
+
+  // 3. Employee does not exist. Must attempt creation only with valid inputs.
+  // Never fabricate fake UUIDs like 00000000-0000-4000-8000-f06f04000000.
+  const newEmpId = validEmpId || generateStandardUuid();
+  const finalCode = targetCode || `EMP-${newEmpId.slice(-8).toUpperCase()}`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: created, error } = await (supabase.from('employees') as any)
+    .upsert(
+      {
+        id: newEmpId,
+        company_id: cId,
+        employee_code: finalCode,
+        full_name: employeeName || 'موظف',
+        job_title: jobTitle || 'موظف',
+        department: department || 'عام',
+        status: 'ACTIVE',
+        basic_salary: 0,
+        allowances: 0,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' }
+    )
+    .select('id')
+    .single();
+
+  if (error) {
+    const isRlsError =
+      error.code === '42501' ||
+      error.message?.includes('row-level security') ||
+      error.message?.includes('401') ||
+      error.message?.includes('403');
+    const logMsg = isRlsError
+      ? `[HRService] ensureEmployeeExists RLS policy restriction for company ${cId}`
+      : `[HRService] ensureEmployeeExists error for company ${cId}: ${error.message}`;
+    console.error(logMsg);
+    throw new HRError(`Failed to ensure employee exists: ${error.message}`, error.code);
+  }
+
+  return created?.id || newEmpId;
 }
 
 // ──────────────────────────────────────────────
 // Helper: Ensure Branch & Kiosk Device Record Exist in Supabase
 // ──────────────────────────────────────────────
-async function resolveValidBranchId(branchId: string | null | undefined): Promise<string | null> {
+async function resolveValidBranchId(
+  branchId: string | null | undefined,
+  companyId?: string
+): Promise<string | null> {
   if (!isSupabaseConfigured || !branchId) return null;
-  const bId = ensureNullableUuid(branchId);
+  const bId = resolveBranchId(branchId);
   if (!bId) return null;
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.from('branches') as any)
-      .select('id')
-      .eq('id', bId)
-      .maybeSingle();
+    let query = (supabase.from('branches') as any).select('id').eq('id', bId);
+    const cId = companyId ? resolveCompanyId(companyId) : null;
+    if (cId) {
+      query = query.eq('company_id', cId);
+    }
+    const { data } = await query.maybeSingle();
 
     return data ? data.id : null;
   } catch {
@@ -107,8 +181,9 @@ async function resolveValidKioskDeviceId(
 ): Promise<string | null> {
   if (!isSupabaseConfigured || !deviceId) return null;
   const dId = ensureNullableUuid(deviceId);
-  if (!dId) return null;
-  const cId = ensureValidUuid(companyId);
+  if (!dId || !isValidUuid(dId)) return null;
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return null;
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,7 +194,7 @@ async function resolveValidKioskDeviceId(
 
     if (data) return data.id;
 
-    let validBranchId = await resolveValidBranchId(branchId);
+    let validBranchId = await resolveValidBranchId(branchId, cId);
     if (!validBranchId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: firstBranch } = await (supabase.from('branches') as any)
@@ -160,7 +235,8 @@ export async function getAttendanceRecords(
 ): Promise<AttendanceRecord[]> {
   if (!isSupabaseConfigured) return [];
 
-  const cId = ensureValidUuid(companyId);
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase.from('attendance_records') as any)
@@ -169,7 +245,9 @@ export async function getAttendanceRecords(
     .order('attendance_date', { ascending: false });
 
   if (employeeId) {
-    query = query.eq('employee_id', ensureValidUuid(employeeId));
+    const validEmpId = resolveEmployeeId(employeeId);
+    if (!validEmpId) return [];
+    query = query.eq('employee_id', validEmpId);
   }
 
   const { data, error } = await query;
@@ -228,15 +306,40 @@ export async function upsertAttendanceRecord(
   record: AttendanceRecord,
   companyId: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
-
   try {
-    const cId = ensureValidUuid(companyId);
-    const recId = ensureValidUuid(record.id);
-    const empId = ensureValidUuid(record.employeeId);
-    const validBranchId = await resolveValidBranchId(record.branchId);
+    const cId = resolveCompanyId(companyId);
+    if (!cId) {
+      return { success: false, error: 'معرف الشركة غير صالحة' };
+    }
 
-    await ensureEmployeeExists(empId, cId, record.employeeCode, record.employeeName, record.jobTitle, record.department);
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+
+    const recId = resolveRecordId(record.id);
+
+    // Sequence constraint: Ensure employee existence first and get confirmed real employee UUID
+    let realEmpId: string;
+    try {
+      realEmpId = await ensureEmployeeExists(
+        record.employeeId,
+        cId,
+        record.employeeCode,
+        record.employeeName,
+        record.jobTitle,
+        record.department
+      );
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      console.error('[HRService] upsertAttendanceRecord halted — employee resolution failed:', errMsg);
+      return { success: false, error: `Employee resolution failed: ${errMsg}` };
+    }
+
+    // Defensive invariant: employee_id must be a real valid UUID
+    if (!isValidUuid(realEmpId)) {
+      console.error('[HRService] Defensive invariant failed: realEmpId is not a valid UUID:', realEmpId);
+      return { success: false, error: 'Defensive invariant failed: invalid employee UUID' };
+    }
+
+    const validBranchId = await resolveValidBranchId(record.branchId, cId);
 
     const dateStr = record.date || new Date().toISOString().split('T')[0];
 
@@ -256,7 +359,7 @@ export async function upsertAttendanceRecord(
         {
           id: recId,
           company_id: cId,
-          employee_id: empId,
+          employee_id: realEmpId,
           branch_id: validBranchId,
           attendance_date: dateStr,
           check_in_at: checkInIso,
@@ -298,7 +401,8 @@ export async function getAttendanceMovementLogs(
 ): Promise<AttendanceMovementLog[]> {
   if (!isSupabaseConfigured) return [];
 
-  const cId = ensureValidUuid(companyId);
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('attendance_movement_logs') as any)
@@ -342,19 +446,41 @@ export async function addAttendanceMovementLog(
   log: AttendanceMovementLog,
   companyId: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
-
   try {
-    const cId = ensureValidUuid(companyId);
-    const logId = ensureValidUuid(log.id);
-    const empId = ensureValidUuid(log.employeeId);
-    const validDeviceId = await resolveValidKioskDeviceId(log.deviceId, cId, log.deviceName, log.branchId);
+    const cId = resolveCompanyId(companyId);
+    if (!cId) {
+      return { success: false, error: 'معرف الشركة غير صالحة' };
+    }
 
-    await ensureEmployeeExists(empId, cId, log.employeeCode, log.employeeName, log.jobTitle, log.department);
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+
+    const logId = resolveRecordId(log.id);
+
+    let realEmpId: string;
+    try {
+      realEmpId = await ensureEmployeeExists(
+        log.employeeId,
+        cId,
+        log.employeeCode,
+        log.employeeName,
+        log.jobTitle,
+        log.department
+      );
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      console.error('[HRService] addAttendanceMovementLog halted — employee resolution failed:', errMsg);
+      return { success: false, error: `Employee resolution failed: ${errMsg}` };
+    }
+
+    if (!isValidUuid(realEmpId)) {
+      return { success: false, error: 'Defensive invariant failed: invalid employee UUID' };
+    }
+
+    const validDeviceId = await resolveValidKioskDeviceId(log.deviceId, cId, log.deviceName, log.branchId);
 
     let finalPhotoUrl = log.photoUrl || null;
     if (log.photoUrl && log.photoUrl.startsWith('data:image/')) {
-      const fileName = `kiosk_${empId}_${Date.now()}.jpg`;
+      const fileName = `kiosk_${realEmpId}_${Date.now()}.jpg`;
       const uploadRes = await uploadImageToStorage('attendance_photos', fileName, log.photoUrl);
       if (uploadRes.publicUrl) {
         finalPhotoUrl = uploadRes.publicUrl;
@@ -365,7 +491,7 @@ export async function addAttendanceMovementLog(
     const { error } = await (supabase.from('attendance_movement_logs') as any).upsert({
       id: logId,
       company_id: cId,
-      employee_id: empId,
+      employee_id: realEmpId,
       kiosk_device_id: validDeviceId,
       movement_type_code: log.movementTypeCode || log.movementCategory || 'CHECK_IN',
       movement_category: log.movementCategory || 'CHECK_IN',
@@ -396,7 +522,8 @@ export async function addAttendanceMovementLog(
 export async function getPayrollSlips(companyId: string): Promise<PayrollSlip[]> {
   if (!isSupabaseConfigured) return [];
 
-  const cId = ensureValidUuid(companyId);
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('payroll_slips') as any)
@@ -443,21 +570,35 @@ export async function upsertPayrollSlip(
   slip: PayrollSlip,
   companyId: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
-
   try {
-    const cId = ensureValidUuid(companyId);
-    const slipId = ensureValidUuid(slip.id);
-    const empId = ensureValidUuid(slip.employeeId);
+    const cId = resolveCompanyId(companyId);
+    if (!cId) {
+      return { success: false, error: 'معرف الشركة غير صالحة' };
+    }
 
-    await ensureEmployeeExists(
-      empId,
-      cId,
-      slip.employeeCode,
-      slip.employeeName,
-      slip.jobTitle,
-      slip.department
-    );
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+
+    const slipId = resolveRecordId(slip.id);
+
+    let realEmpId: string;
+    try {
+      realEmpId = await ensureEmployeeExists(
+        slip.employeeId,
+        cId,
+        slip.employeeCode,
+        slip.employeeName,
+        slip.jobTitle,
+        slip.department
+      );
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      console.error('[HRService] upsertPayrollSlip halted — employee resolution failed:', errMsg);
+      return { success: false, error: `Employee resolution failed: ${errMsg}` };
+    }
+
+    if (!isValidUuid(realEmpId)) {
+      return { success: false, error: 'Defensive invariant failed: invalid employee UUID' };
+    }
 
     const monthStr = slip.payrollMonth || new Date().toISOString().slice(0, 7);
     const housing = slip.housingAllowance ?? 0;
@@ -475,7 +616,7 @@ export async function upsertPayrollSlip(
         {
           id: slipId,
           company_id: cId,
-          employee_id: empId,
+          employee_id: realEmpId,
           month: monthStr,
           basic_salary: slip.basicSalary ?? 0,
           total_allowances: totalAllowances,
@@ -510,7 +651,8 @@ export async function upsertPayrollSlip(
 export async function getLeaveRequests(companyId: string): Promise<LeaveRequest[]> {
   if (!isSupabaseConfigured) return [];
 
-  const cId = ensureValidUuid(companyId);
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('leave_requests') as any)
@@ -547,21 +689,35 @@ export async function upsertLeaveRequest(
   req: LeaveRequest,
   companyId: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
-
   try {
-    const cId = ensureValidUuid(companyId);
-    const reqId = ensureValidUuid(req.id);
-    const empId = ensureValidUuid(req.employeeId);
+    const cId = resolveCompanyId(companyId);
+    if (!cId) {
+      return { success: false, error: 'معرف الشركة غير صالحة' };
+    }
 
-    await ensureEmployeeExists(
-      empId,
-      cId,
-      req.employeeCode,
-      req.employeeName,
-      req.jobTitle,
-      req.department
-    );
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase غير مضبوط.' };
+
+    const reqId = resolveRecordId(req.id);
+
+    let realEmpId: string;
+    try {
+      realEmpId = await ensureEmployeeExists(
+        req.employeeId,
+        cId,
+        req.employeeCode,
+        req.employeeName,
+        req.jobTitle,
+        req.department
+      );
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      console.error('[HRService] upsertLeaveRequest halted — employee resolution failed:', errMsg);
+      return { success: false, error: `Employee resolution failed: ${errMsg}` };
+    }
+
+    if (!isValidUuid(realEmpId)) {
+      return { success: false, error: 'Defensive invariant failed: invalid employee UUID' };
+    }
 
     const daysCount = req.daysCount ?? 1;
 
@@ -571,7 +727,7 @@ export async function upsertLeaveRequest(
         {
           id: reqId,
           company_id: cId,
-          employee_id: empId,
+          employee_id: realEmpId,
           leave_type: req.leaveType ?? 'ANNUAL',
           start_date: req.startDate || new Date().toISOString().split('T')[0],
           end_date: req.endDate || new Date().toISOString().split('T')[0],

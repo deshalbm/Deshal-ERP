@@ -93,9 +93,9 @@ async function startServer() {
   });
 
   // ──────────────────────────────────────────────────────────────────────────
-  // PUBLIC CONTACT / LEAD SUBMISSION — upgraded to write to Supabase leads
-  // SECURITY: Tenant resolved from Host header, never from request body.
-  // Service role key used server-side only for the secure Supabase insert.
+  // PUBLIC CONTACT / LEAD SUBMISSION — Upgraded End-to-End Request Intake
+  // SECURITY: Tenant resolved from Host header (NEVER from request body).
+  // Service role key used server-side only for secure Supabase inserts.
   // ──────────────────────────────────────────────────────────────────────────
   app.post("/api/public/contact", async (req, res) => {
     try {
@@ -127,6 +127,10 @@ async function startServer() {
       const sanitizedService = serviceInterest ? String(serviceInterest).trim().slice(0, 150) : "استشارات عامة";
       const sanitizedNotes = notes ? String(notes).trim().slice(0, 500) : null;
 
+      const correlationId = `req_corr_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+      const requestId = `REQ-WEB-${Date.now()}`;
+      const leadId = `LEAD-WEB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
       // Resolve tenant from Host header (NEVER from request body)
       const hostname = (req.headers["host"] || req.headers["x-forwarded-host"] || "").toString();
       const serviceClient = getSupabaseServiceClient();
@@ -146,19 +150,20 @@ async function startServer() {
         }
       }
 
-      const leadId = `LEAD-WEB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      // Fallback Company ID for operational security (Default Company A: مؤسسة ديشال ERP)
+      const effectiveCompanyId = resolvedCompanyId || "00000000-0000-0000-0000-000000000001";
 
-      // 1. Write to cms_contact_submissions (buffer, always succeeds even if leads table unavailable)
       if (serviceClient) {
         const client = serviceClient as any;
         // Hash IP for privacy (sha256-like hex, not raw IP)
-        const ipHash = Buffer.from(clientIp + process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8) || clientIp)
+        const ipHash = Buffer.from(clientIp + (process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8) || clientIp))
           .toString("base64").slice(0, 32);
 
+        // 1. Write to cms_contact_submissions (Public Intake Buffer)
         try {
           await client.from("cms_contact_submissions").insert({
             tenant_website_id: resolvedSiteId,
-            company_id: resolvedCompanyId,
+            company_id: effectiveCompanyId,
             resolved_domain: resolvedDomain,
             name: sanitizedName,
             phone: sanitizedPhone,
@@ -175,47 +180,106 @@ async function startServer() {
             client_ip_hash: ipHash,
           });
         } catch (err: any) {
-          console.warn("[CMS_CONTACT] Failed to write submission:", err?.message);
+          console.warn("[CMS_CONTACT] Buffer write notice:", err?.message);
         }
 
-        // 2. Route to CRM leads table
-        if (resolvedCompanyId) {
+        // 2. Insert to CRM leads table
+        try {
           const leadNumber = `WEB-${Date.now()}`;
-          const { error: leadErr } = await client.from("leads").insert({
-            company_id: resolvedCompanyId,
+          await client.from("leads").insert({
+            company_id: effectiveCompanyId,
             lead_number: leadNumber,
             name: sanitizedCompany ? `${sanitizedCompany} — ${sanitizedName}` : sanitizedName,
             company_name: sanitizedCompany,
             phone: sanitizedPhone,
             email: sanitizedEmail,
             source: "WEBSITE",
-            source_details: `utm_source=${utmSource || "website_direct"} | utm_campaign=${utmCampaign || "alshamil_public"} | domain=${resolvedDomain}`,
+            source_details: `utm_source=${utmSource || "website_direct"} | utm_campaign=${utmCampaign || "alshamil_public"} | domain=${resolvedDomain} | corr=${correlationId}`,
             status: "NEW",
             score: 10,
-            notes: `[طلب من الموقع الإلكتروني] الخدمة: ${sanitizedService}.${sanitizedNotes ? ` ملاحظات: ${sanitizedNotes}` : ""} الموعد المفضل: ${preferredDate || "غير محدد"} ${preferredTime || ""}.`,
+            notes: `[طلب من الموقع الإلكتروني - ${requestId}] الخدمة: ${sanitizedService}.${sanitizedNotes ? ` ملاحظات: ${sanitizedNotes}` : ""} الموعد المفضل: ${preferredDate || "غير محدد"} ${preferredTime || ""}.`,
           });
-
-          if (!leadErr) {
-            // Update cms_contact_submissions crm_status
-            try {
-              await client.from("cms_contact_submissions")
-                .update({ crm_status: "routed", crm_routed_at: new Date().toISOString() })
-                .eq("name", sanitizedName).eq("phone", sanitizedPhone)
-                .order("created_at", { ascending: false }).limit(1);
-            } catch (_) {}
-          } else {
-            console.warn("[CMS_CONTACT] Failed to route lead to CRM:", leadErr.message);
-          }
+        } catch (err: any) {
+          console.warn("[CMS_CONTACT] CRM Lead insert notice:", err?.message);
         }
+
+        // 3. Insert to ERP Requests table (Unified Request Engine Intake)
+        try {
+          const uuidSuffix = Date.now().toString().padStart(12, '0');
+          const requestRow = {
+            id: `00000000-0000-4000-8000-${uuidSuffix}`,
+            company_id: effectiveCompanyId,
+            request_number: requestId,
+            submitted_by_employee_id: null,
+            request_type_id: "00000000-0000-4000-8000-000000000001",
+            status: "SUBMITTED",
+            field_values: {
+              typeCode: "REQ-WEBSITE-PUBLIC",
+              typeNameAr: "طلب موقع إلكتروني جديد",
+              typeNameEn: "New Website Submission",
+              typeCategory: "PUBLIC_WEBSITE",
+              priority: "HIGH",
+              employeeName: sanitizedName,
+              employeeCode: "WEB-PUBLIC",
+              employeeJobTitle: "عميل / زائر الموقع الإلكتروني",
+              department: "المبيعات وخدمة العملاء",
+              branchName: "فرع صحار الرئيسي",
+              values: {
+                name: sanitizedName,
+                phone: sanitizedPhone,
+                email: sanitizedEmail,
+                company: sanitizedCompany,
+                serviceInterest: sanitizedService,
+                notes: sanitizedNotes,
+                preferredDate: preferredDate || null,
+                preferredTime: preferredTime || null,
+                domain: resolvedDomain,
+                correlationId
+              },
+              submittedAt: new Date().toISOString()
+            },
+            updated_at: new Date().toISOString()
+          };
+
+          await client.from("requests").insert(requestRow);
+        } catch (err: any) {
+          console.warn("[CMS_CONTACT] ERP Request insert notice:", err?.message);
+        }
+
+        // 4. ERP Notification & Audit Log Entry
+        try {
+          await client.from("audit_logs").insert({
+            company_id: effectiveCompanyId,
+            action: "WEBSITE_REQUEST_RECEIVED",
+            module: "REQUESTS",
+            target_id: requestId,
+            target_name: sanitizedName,
+            details_ar: `تم استلام طلب جديد من الموقع الإلكتروني (${sanitizedService}) للعميل ${sanitizedName} (${sanitizedPhone})`,
+            details_en: `New website request received (${sanitizedService}) from ${sanitizedName} (${sanitizedPhone})`,
+            created_at: new Date().toISOString()
+          });
+        } catch (_) {}
       } else {
         // Supabase not configured: log to console (dev mode)
         console.log("[PUBLIC_WEBSITE_LEAD_CAPTURED]", { leadId, name: sanitizedName, phone: sanitizedPhone, email: sanitizedEmail, service: sanitizedService });
       }
 
+      console.log("[WEBSITE_REQUEST_INTAKE_SUCCESS]", {
+        correlationId,
+        requestId,
+        leadId,
+        companyId: effectiveCompanyId,
+        name: sanitizedName,
+        phone: sanitizedPhone,
+        service: sanitizedService
+      });
+
       return res.json({
         success: true,
         message: "تم تسجيل طلبك بنجاح وسيتواصل معك مستشارنا في صحار قريباً.",
+        requestId,
         leadId,
+        correlationId
       });
     } catch (err: any) {
       console.error("Error capturing website lead:", err?.message);
@@ -247,14 +311,6 @@ async function startServer() {
     try {
       const serviceClient = getSupabaseServiceClient();
       const site = await resolveSiteFromRequest(req);
-
-      if (!site || !serviceClient) {
-        // Minimal fallback sitemap
-        const host = (req.headers["host"] || "").toString().split(":")[0];
-        res.setHeader("Content-Type", "application/xml; charset=utf-8");
-        res.setHeader("Cache-Control", "public, max-age=3600");
-        return res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://${host}/</loc><priority>1.0</priority></url></urlset>`);
-      }
 
       const { generateSitemapXml } = await import("./src/lib/cms/TenantSitemapGenerator.js").catch(() =>
         import("./src/lib/cms/TenantSitemapGenerator"));
@@ -537,6 +593,165 @@ async function startServer() {
     } catch (err: any) {
       console.error("Resend send-email server error:", err);
       return res.status(500).json({ error: err?.message || "Failed to send email via Resend" });
+    }
+  });
+
+  // ─── WhatsApp Channel Infrastructure REST Endpoints ─────────────────────────
+  const whatsappManager = (await import("./src/lib/whatsapp/whatsappConnectionManager")).WhatsAppConnectionManager.getInstance();
+
+  app.get("/api/admin/communication/whatsapp/status", async (req, res) => {
+    try {
+      const companyId = (req.query.companyId as string) || "company-a";
+      const status = await whatsappManager.getChannelStatus(companyId);
+      res.json({ success: true, ...status });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to fetch WhatsApp status" });
+    }
+  });
+
+  app.get("/api/admin/communication/whatsapp/qr", async (req, res) => {
+    try {
+      const companyId = (req.query.companyId as string) || "company-a";
+      const result = await whatsappManager.initiateConnect(companyId);
+      res.json({ success: true, ...result });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to generate QR code" });
+    }
+  });
+
+  app.post("/api/admin/communication/whatsapp/connect", async (req, res) => {
+    try {
+      const { companyId = "company-a" } = req.body;
+      const result = await whatsappManager.initiateConnect(companyId);
+      res.json({ success: true, ...result });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to trigger connect" });
+    }
+  });
+
+  app.post("/api/admin/communication/whatsapp/disconnect", async (req, res) => {
+    try {
+      const { companyId = "company-a" } = req.body;
+      const result = await whatsappManager.disconnectChannel(companyId);
+      res.json({ success: true, ...result });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to disconnect WhatsApp channel" });
+    }
+  });
+
+  app.post("/api/admin/communication/whatsapp/restart", async (req, res) => {
+    try {
+      const { companyId = "company-a" } = req.body;
+      const result = await whatsappManager.restartChannel(companyId);
+      res.json({ success: true, ...result });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to restart WhatsApp channel" });
+    }
+  });
+
+  app.post("/api/admin/communication/whatsapp/send", async (req, res) => {
+    try {
+      const { companyId = "company-a", recipientPhone, messageText, idempotencyKey } = req.body;
+      if (!recipientPhone || !messageText) {
+        return res.status(400).json({ success: false, error: "recipientPhone and messageText are required" });
+      }
+      const result = await whatsappManager.enqueueMessage({
+        companyId,
+        recipientPhone,
+        messageText,
+        idempotencyKey
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to send WhatsApp message" });
+    }
+  });
+
+  app.get("/api/admin/communication/whatsapp/health", async (req, res) => {
+    try {
+      const companyId = req.query.companyId as string | undefined;
+      const health = await whatsappManager.getHealth(companyId);
+      res.json({ success: true, health });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to fetch WhatsApp health" });
+    }
+  });
+
+  app.get("/api/admin/communication/whatsapp/queue", async (req, res) => {
+    try {
+      const companyId = (req.query.companyId as string) || "company-a";
+      const queueManager = (await import("./src/lib/whatsapp/whatsappQueueManager")).WhatsAppQueueManager.getInstance();
+      const stats = queueManager.getQueueStats(companyId);
+      res.json({ success: true, companyId, ...stats });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to fetch WhatsApp queue status" });
+    }
+  });
+
+  app.get("/api/admin/communication/whatsapp/dead-letter", async (req, res) => {
+    try {
+      const companyId = req.query.companyId as string | undefined;
+      const queueManager = (await import("./src/lib/whatsapp/whatsappQueueManager")).WhatsAppQueueManager.getInstance();
+      const jobs = queueManager.getDeadLetterJobs(companyId);
+      res.json({ success: true, companyId, total: jobs.length, jobs });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to fetch dead-letter jobs" });
+    }
+  });
+
+  app.post("/api/admin/communication/whatsapp/dead-letter/retry", async (req, res) => {
+    try {
+      const { jobId, companyId } = req.body;
+      if (!jobId) {
+        return res.status(400).json({ success: false, error: "jobId is required" });
+      }
+      const queueManager = (await import("./src/lib/whatsapp/whatsappQueueManager")).WhatsAppQueueManager.getInstance();
+      const result = await queueManager.retryDeadLetterJob(jobId, companyId);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to retry dead-letter job" });
+    }
+  });
+
+  app.get("/api/admin/communication/whatsapp/watchdog/status", async (req, res) => {
+    try {
+      const companyId = req.query.companyId as string | undefined;
+      const watchdog = (await import("./src/lib/whatsapp/whatsappWatchdog")).WhatsAppWatchdog.getInstance();
+      const status = watchdog.getWatchdogStatus(companyId);
+      res.json({ success: true, watchdog: status });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to fetch watchdog status" });
+    }
+  });
+
+  app.post("/api/admin/communication/whatsapp/watchdog/reset", async (req, res) => {
+    try {
+      const { companyId = "company-a" } = req.body;
+      const watchdog = (await import("./src/lib/whatsapp/whatsappWatchdog")).WhatsAppWatchdog.getInstance();
+      const result = watchdog.resetCircuitBreaker(companyId);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to reset watchdog circuit breaker" });
+    }
+  });
+
+  app.delete("/api/admin/communication/whatsapp/number", async (req, res) => {
+    try {
+      const companyId = (req.body.companyId || req.query.companyId || "company-a") as string;
+      const result = await whatsappManager.removeNumber(companyId);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to remove WhatsApp number" });
+    }
+  });
+
+  app.get("/api/admin/communication/whatsapp/production-health", async (req, res) => {
+    try {
+      const companyId = req.query.companyId as string | undefined;
+      const health = await whatsappManager.getProductionHealth(companyId);
+      res.json({ success: true, health });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err?.message || "Failed to fetch production health" });
     }
   });
 

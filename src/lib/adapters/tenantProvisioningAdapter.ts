@@ -126,7 +126,10 @@ export class SupabaseTenantProvisioningAdapter implements ProvisioningAdapter {
     }
 
     try {
-      // Check if tenant record already exists for target company
+      // 1. Check if tenant record already exists for target company
+      let tenantId: string = '';
+      let alreadyActive: boolean = false;
+
       const { data: existingTenant } = await supabase
         .from('tenants')
         .select('id, company_id, status')
@@ -134,44 +137,83 @@ export class SupabaseTenantProvisioningAdapter implements ProvisioningAdapter {
         .maybeSingle();
 
       if (existingTenant) {
-        return {
-          success: true,
-          tenantId: (existingTenant as any).id,
-          companyId: request.companyId,
-          alreadyActive: (existingTenant as any).status === 'ACTIVE'
-        };
+        tenantId = (existingTenant as any).id;
+        alreadyActive = (existingTenant as any).status === 'ACTIVE';
+      } else {
+        // Generate tenant code & insert tenant registry record
+        const tenantCode = 'TNT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+
+        const { data: newTenant, error: insertError } = await (supabase.from('tenants') as any)
+          .insert({
+            company_id: request.companyId,
+            tenant_code: tenantCode,
+            name: 'Existing Company Tenant',
+            status: 'READY',
+            subscription_plan: request.subscriptionPlan || 'ENTERPRISE',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select('id, company_id')
+          .single();
+
+        if (insertError || !newTenant) {
+          return {
+            success: false,
+            tenantId: '',
+            companyId: request.companyId,
+            error: insertError?.message || 'Failed to create tenant registry record for existing company.'
+          };
+        }
+
+        tenantId = newTenant.id;
       }
 
-      // Generate tenant code
-      const tenantCode = 'TNT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      // 2. Invoke System RBAC Seeding RPC Function (Permissions, 7 Roles & Permission Matrix)
+      try {
+        await (supabase.rpc as any)('seed_system_permissions_and_roles', {
+          p_company_id: request.companyId
+        });
+      } catch (seedErr) {
+        console.warn('[TenantProvisioningAdapter] seed_system_permissions_and_roles RPC call skipped/failed:', seedErr);
+      }
 
-      // Insert tenant registry record linking existing company
-      const { data: newTenant, error: insertError } = await (supabase.from('tenants') as any)
-        .insert({
+      // 3. Initialize Standard 12 Tenant Modules (Idempotent)
+      const canonicalModules = [
+        'crm', 'pos', 'inventory', 'purchases', 'accounting', 'hr',
+        'attendance', 'spaces', 'services', 'requests', 'documents', 'kiosk'
+      ];
+
+      const moduleEntries = canonicalModules.map(m => ({
+        tenant_id: tenantId,
+        module_code: m,
+        is_enabled: true
+      }));
+
+      await (supabase.from('tenant_modules') as any)
+        .upsert(moduleEntries, { onConflict: 'tenant_id,module_code' });
+
+      // 4. Ensure Company Profiles are registered in user_company_memberships
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('company_id', request.companyId);
+
+      if (profiles && profiles.length > 0) {
+        const membershipEntries = (profiles as any[]).map(p => ({
+          user_id: p.id,
           company_id: request.companyId,
-          tenant_code: tenantCode,
-          name: 'Existing Company Tenant',
-          status: 'READY',
-          subscription_plan: request.subscriptionPlan || 'ENTERPRISE',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select('id, company_id')
-        .single();
+          is_active: true
+        }));
 
-      if (insertError || !newTenant) {
-        return {
-          success: false,
-          tenantId: '',
-          companyId: request.companyId,
-          error: insertError?.message || 'Failed to create tenant registry record for existing company.'
-        };
+        await (supabase.from('user_company_memberships') as any)
+          .upsert(membershipEntries, { onConflict: 'user_id,company_id' });
       }
 
       return {
         success: true,
-        tenantId: newTenant.id,
-        companyId: request.companyId
+        tenantId,
+        companyId: request.companyId,
+        alreadyActive
       };
     } catch (err: any) {
       return {

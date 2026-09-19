@@ -56,6 +56,9 @@ import { syncUserAccountFromEmployee } from "../utils/authManager";
 import { sendWelcomeCredentialsEmail } from "../lib/email/resendService";
 import { uploadMediaAsset } from "../application/services/uploadMediaAsset";
 import { defaultMediaStorageAdapter } from "../lib/adapters/mediaStorageAdapter";
+import { loadUnifiedUsers, filterUnifiedUsers, assignUserCompanyMembership } from "../application/services/unifiedUserService";
+import { defaultUnifiedUserAdapter } from "../lib/adapters/unifiedUserAdapter";
+import { UnifiedUser, UserType } from "../domain/user/unifiedUserDomain";
 import { EmployeeMovementDashboard } from "./kiosk/EmployeeMovementDashboard";
 import { AttendanceKioskModal } from "./kiosk/AttendanceKioskModal";
 import {
@@ -479,12 +482,13 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
   const [selectedRole, setSelectedRole] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("ALL");
+  const [userGroupFilter, setUserGroupFilter] = useState<"ALL" | "PLATFORM" | "COMPANY_EMPLOYEE" | "UNASSIGNED" | "BOTH">("ALL");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   // Modal states for Staff Add/Edit
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  const [modalTab, setModalTab] = useState<"personal" | "permissions" | "financial" | "signature">("personal");
+  const [modalTab, setModalTab] = useState<"personal" | "permissions" | "financial" | "signature" | "company_access">("personal");
   const [permissionsViewerEmp, setPermissionsViewerEmp] = useState<Employee | null>(null);
   const [deleteConfirmationEmp, setDeleteConfirmationEmp] = useState<Employee | null>(null);
 
@@ -667,7 +671,14 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
       const matchesDepartment =
         selectedDepartment === "ALL" || emp.department === selectedDepartment;
 
-      return matchesSearch && matchesBranch && matchesRole && matchesStatus && matchesDepartment;
+      const matchesUserGroup =
+        userGroupFilter === "ALL" ||
+        (userGroupFilter === "PLATFORM" && (emp.role === "ADMIN" || emp.role === "COLLABORATOR" || emp.role === "AUDITOR")) ||
+        (userGroupFilter === "COMPANY_EMPLOYEE" && emp.role !== "COLLABORATOR" && emp.role !== "AUDITOR") ||
+        (userGroupFilter === "BOTH" && (emp.role === "ADMIN" || emp.role === "MANAGER")) ||
+        (userGroupFilter === "UNASSIGNED" && emp.status === "INACTIVE");
+
+      return matchesSearch && matchesBranch && matchesRole && matchesStatus && matchesDepartment && matchesUserGroup;
     });
   }, [employees, searchTerm, selectedBranch, selectedRole, selectedStatus, selectedDepartment]);
 
@@ -1958,7 +1969,7 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
           {/* Search & Filters Toolbar */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5">
               
               {/* Search */}
               <div className="lg:col-span-2 relative">
@@ -1970,6 +1981,21 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                   placeholder={language === "ar" ? "البحث بالاسم، الرقم الوظيفي، المدني، الهاتف، أو المسمى..." : "Search by name, code, phone, role..."}
                   className="w-full ps-9 pe-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                 />
+              </div>
+
+              {/* User Group Classification Filter */}
+              <div>
+                <select
+                  value={userGroupFilter}
+                  onChange={(e: any) => setUserGroupFilter(e.target.value)}
+                  className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="ALL">{language === "ar" ? "جميع الحسابات (الكل)" : "All Accounts (All)"}</option>
+                  <option value="COMPANY_EMPLOYEE">{language === "ar" ? "موظفو الشركات (Company Staff)" : "Company Employees"}</option>
+                  <option value="PLATFORM">{language === "ar" ? "مستخدمو المنصة (Platform Users)" : "Platform Users"}</option>
+                  <option value="UNASSIGNED">{language === "ar" ? "حسابات غير مخصصة (Unassigned)" : "Unassigned Profiles"}</option>
+                  <option value="BOTH">{language === "ar" ? "إدارة منسقة (Platform + Staff)" : "Platform + Staff"}</option>
+                </select>
               </div>
 
               {/* Branch Filter */}
@@ -2077,6 +2103,16 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
 
                       {/* Badges Row */}
                       <div className="flex items-center flex-wrap gap-1.5 mt-3.5">
+                        {/* User Group Classification Badge */}
+                        {emp.role === "ADMIN" || emp.role === "COLLABORATOR" || emp.role === "AUDITOR" ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-purple-50 text-purple-700 border-purple-200">
+                            {language === "ar" ? "مستخدم منصة (SaaS)" : "Platform User"}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-indigo-50 text-indigo-700 border-indigo-200">
+                            {language === "ar" ? "موظف شركة (Company)" : "Company Staff"}
+                          </span>
+                        )}
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${roleInfo.bg} ${roleInfo.color}`}>
                           {language === "ar" ? roleInfo.ar : roleInfo.en}
                         </span>
@@ -2965,6 +3001,19 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                   <Coins className="w-3.5 h-3.5 text-amber-600" />
                   <span>{language === "ar" ? "الحوكمة والضوابط" : "Financial Caps"}</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setModalTab("company_access")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    modalTab === "company_access"
+                      ? "bg-white text-emerald-700 shadow-xs border border-slate-200"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{language === "ar" ? "عضوية الشركة والنطاق" : "Company & Branch Access"}</span>
+                </button>
               </div>
 
               {/* Scrollable Form Body */}
@@ -3646,6 +3695,66 @@ export const EmployeesManager: React.FC<EmployeesManagerProps> = ({
                             <option value="حساب بنك ظفار التجاري">حساب بنك ظفار التجاري (Bank Dhofar)</option>
                             <option value="العهدة النقدية للموارد البشرية">العهدة النقدية للموارد البشرية (Petty Cash)</option>
                             <option value="خزينة الفرع الميداني">خزينة الفرع الميداني (Branch Treasury)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 4: COMPANY & BRANCH ACCESS */}
+                {modalTab === "company_access" && (
+                  <div className="space-y-4">
+                    <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                          <Building2 className="w-4 h-4 text-emerald-600" />
+                          {language === "ar" ? "عضوية الشركة ونطاق الفروع المصرحة" : "Company Membership & Branch Scoping"}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+                          {language === "ar" ? "صلاحيات الشركة" : "Company Scope"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600">
+                        {language === "ar"
+                          ? "تحديد الشركة والفرع/الفروع التي يُصرح لهذا الحساب بالوصول إليها وإجراء العمليات التشغيلية ضمنها."
+                          : "Define company membership and authorized branch scopes for operational data access."}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            {language === "ar" ? "الشركة التابعة:" : "Target Company:"}
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value={companySettings.companyName || "مؤسسة ديشال ERP"}
+                            className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            {language === "ar" ? "الفرع الأساسي المصرح:" : "Primary Branch Scope:"}
+                          </label>
+                          <select
+                            value={formData.branchId}
+                            onChange={(e) => {
+                              const b = branches.find(br => br.id === e.target.value);
+                              setFormData({
+                                ...formData,
+                                branchId: e.target.value,
+                                branchName: b ? b.name : formData.branchName
+                              });
+                            }}
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                          >
+                            {branches.map(b => (
+                              <option key={b.id} value={b.id}>
+                                {b.name}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>

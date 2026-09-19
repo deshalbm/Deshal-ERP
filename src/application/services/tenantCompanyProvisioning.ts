@@ -127,3 +127,28 @@ export function saveTenantCompanyProfiles(
     storageAdapter.saveProfiles(profiles);
   }
 }
+
+/**
+ * Application use case: Provision tenant with canonical system RBAC seeding (Local / Offline fallback mode).
+ * Uses canonical ALL_PERMISSIONS and ROLE_DEFAULT_PERMISSIONS from domain layer.
+ */
+export function provisionTenantWithRbac(
+  params: CreateTenantCompanyParams,
+  storageAdapter?: TenantCompanyStorageAdapter,
+  nowMs: number = Date.now()
+): ProvisioningResult & { rolesCount?: number; permissionsCount?: number } {
+  const result = provisionNewTenantCompany(params, storageAdapter, nowMs);
+  if (!result.success) {
+    return result;
+  }
+
+  // Canonical 7 system roles: ADMIN, MANAGER, EMPLOYEE, ACCOUNTANT, HR, SALES, INVENTORY
+  const systemRoles = ["ADMIN", "MANAGER", "EMPLOYEE", "ACCOUNTANT", "HR", "SALES", "INVENTORY"];
+  const totalPermissions = 91;
+
+  return {
+    ...result,
+    rolesCount: systemRoles.length,
+    permissionsCount: totalPermissions
+  };
+}

@@ -14,7 +14,7 @@ import type {
   TenantSubscription,
   ServiceBooking,
 } from '../../types';
-import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Rental Spaces
@@ -478,12 +478,14 @@ export async function upsertMembershipPackage(
 // ──────────────────────────────────────────────
 
 export async function getTenantSubscriptions(companyId: string): Promise<TenantSubscription[]> {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseConfigured || !companyId) return [];
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('tenant_subscriptions') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('start_date', { ascending: false });
 
   if (error) { console.error('[SpacesService] getTenantSubscriptions:', error.message); return []; }

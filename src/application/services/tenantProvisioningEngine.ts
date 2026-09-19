@@ -193,16 +193,19 @@ export async function activateExistingCompanyAsTenantUseCase(
     };
   }
 
+  // 4. Update status to ACTIVE upon passing health check
+  await adapter.updateTenantStatus(activationResult.tenantId, "ACTIVE");
+
   return {
     success: true,
     tenant: {
       id: activationResult.tenantId,
-      tenantCode: "TNT-EXISTING",
-      name: "Existing Company Tenant",
+      tenantCode: healthData.tenant?.tenantCode || "TNT-EXISTING",
+      name: healthData.tenant?.name || "Existing Company Tenant",
       companyId: request.companyId,
-      status: "READY",
+      status: "ACTIVE",
       subscriptionPlan: request.subscriptionPlan || "ENTERPRISE",
-      createdAt: new Date().toISOString(),
+      createdAt: healthData.tenant?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
   };

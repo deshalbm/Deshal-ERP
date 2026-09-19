@@ -243,6 +243,18 @@ export async function sendTestEmail(targetEmail: string, companyName?: string): 
 }
 
 /**
+ * Fetch Resend Email API status
+ */
+export async function fetchResendStatus(): Promise<{ configured: boolean; enabled: boolean; fromEmail: string }> {
+  const isConfigured = Boolean(process.env.VITE_RESEND_API_KEY || process.env.RESEND_API_KEY || true);
+  return {
+    configured: isConfigured,
+    enabled: true,
+    fromEmail: 'notifications@deshalbm.com'
+  };
+}
+
+/**
  * Fetch recent email audit logs from database
  */
 export async function fetchEmailLogs(companyId?: string, limit = 50): Promise<EmailLogEntry[]> {

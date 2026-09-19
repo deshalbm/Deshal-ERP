@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2, Clock, Calendar, Building2, User, FileText, ArrowRight } from 'lucide-react';
-import { Customer } from '../../types';
+import { Mail, Phone, MapPin, Send, CheckCircle2, Clock, Calendar, Building2, User, FileText, ArrowRight, RefreshCw, Hash } from 'lucide-react';
+import { Customer, EmployeeRequest } from '../../types';
 import { loadCustomers, saveCustomers } from '../../utils/storage';
+import { loadEmployeeRequests, saveEmployeeRequests } from '../../utils/requestsStorage';
 
 interface WebContactProps {
   onNavigate: (tab: string) => void;
@@ -21,20 +22,60 @@ export const WebContact: React.FC<WebContactProps> = ({ onNavigate, prefilledInt
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [confirmedRequestId, setConfirmedRequestId] = useState('');
+  const [confirmedLeadId, setConfirmedLeadId] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.phone.trim()) {
       setErrorMsg('الرجاء إدخال الاسم ورقم الهاتف على الأقل للتواصل.');
       return;
     }
 
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    let serverRequestId = `REQ-WEB-${Date.now()}`;
+    let serverLeadId = `LEAD-WEB-${Date.now()}`;
+
     try {
-      // Create ERP Customer / Lead Entry
+      // 1. Post to Server API Endpoint
+      const response = await fetch('/api/public/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          company: formData.company.trim(),
+          serviceInterest: formData.serviceInterest,
+          notes: formData.notes,
+          preferredDate: formData.preferredDate,
+          preferredTime: formData.preferredTime
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'فشل تسجيل الطلب عبر الخادم.');
+      }
+
+      if (data.requestId) serverRequestId = data.requestId;
+      if (data.leadId) serverLeadId = data.leadId;
+    } catch (apiErr: any) {
+      console.warn('[WebContact] API post warning (proceeding with local fallback):', apiErr?.message);
+    }
+
+    try {
+      setConfirmedRequestId(serverRequestId);
+      setConfirmedLeadId(serverLeadId);
+
+      // 2. Local Customers / Lead Storage
       const customers = loadCustomers();
       const newLead: Customer = {
-        id: `CUST-WEB-${Date.now()}`,
+        id: serverLeadId,
         name: formData.name.trim(),
         contactPerson: formData.name.trim(),
         phone: formData.phone.trim(),
@@ -43,18 +84,70 @@ export const WebContact: React.FC<WebContactProps> = ({ onNavigate, prefilledInt
         city: 'صحار',
         type: formData.company ? 'CORPORATE' : 'INDIVIDUAL',
         status: 'LEAD',
-        notes: `[طلب من الموقع الإلكتروني] الخدمة المهتم بها: ${formData.serviceInterest}. التاريخ المفضل: ${formData.preferredDate} الساعة ${formData.preferredTime}. ملاحظات: ${formData.notes}`,
+        notes: `[طلب من الموقع الإلكتروني - ${serverRequestId}] الخدمة المهتم بها: ${formData.serviceInterest}. التاريخ المفضل: ${formData.preferredDate} الساعة ${formData.preferredTime}. ملاحظات: ${formData.notes}`,
         tags: ['موقع إلكتروني', 'طلب استشارة', 'صحار'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-
       saveCustomers([newLead, ...customers]);
+
+      // 3. Local Employee Requests Storage (ERP Requests Module Intake)
+      const requests = loadEmployeeRequests();
+      const newRequest: EmployeeRequest = {
+        id: serverRequestId,
+        requestNumber: serverRequestId,
+        typeId: 'tpl-web-public',
+        typeCode: 'REQ-WEBSITE-PUBLIC',
+        typeNameAr: 'طلب استشارة ومساحات أعمال (موقع إلكتروني)',
+        typeNameEn: 'Website Consultation & Booking Request',
+        typeCategory: 'ADMINISTRATIVE',
+        employeeId: 'emp-public-client',
+        employeeCode: 'WEB-CLIENT',
+        employeeName: formData.name.trim(),
+        department: 'المبيعات وخدمة العملاء',
+        branchName: 'فرع صحار الرئيسي',
+        status: 'SUBMITTED',
+        priority: 'HIGH',
+        currentStageIndex: 0,
+        values: {
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          company: formData.company.trim(),
+          serviceInterest: formData.serviceInterest,
+          notes: formData.notes,
+          preferredDate: formData.preferredDate,
+          preferredTime: formData.preferredTime
+        },
+        approvals: [],
+        timeline: [
+          {
+            id: `time-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            action: 'SUBMITTED',
+            actionLabelAr: 'تم تسجيل الطلب عبر الموقع الإلكتروني',
+            actionLabelEn: 'Submitted via Public Website',
+            actorId: 'public-user',
+            actorName: formData.name.trim(),
+            actorRole: 'زائر الموقع الإلكتروني',
+            detailsAr: `تم تسجيل الطلب رقم ${serverRequestId} وتوجيهه إلى فريق الاستشارات بمحافظة شمال الباطنة (صحار)`,
+            detailsEn: `Request ${serverRequestId} registered and routed to consulting team`
+          }
+        ],
+        attachments: [],
+        comments: [],
+        submittedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      saveEmployeeRequests([newRequest, ...requests]);
+
       setSubmitted(true);
       setErrorMsg('');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setErrorMsg('حدث خطأ أثناء حفظ الطلب. الرجاء المحاولة مرة أخرى.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -67,14 +160,23 @@ export const WebContact: React.FC<WebContactProps> = ({ onNavigate, prefilledInt
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-bold text-[#006d33] bg-emerald-50 px-3 py-1 rounded-full">تم استلام طلبك بنجاح</span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#002e69]">تم تأكيد طلب حجز جلستك الاستشارية!</h2>
+            <span className="text-xs font-bold text-[#006d33] bg-emerald-50 px-3 py-1 rounded-full">تم استلام طلبك وتوثيقه بنجاح</span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#002e69]">تم تأكيد حجز جلستك الاستشارية!</h2>
             <p className="text-sm text-slate-600 max-w-lg mx-auto leading-relaxed">
-              شكراً لتواصلك مع منظومة الدليل الشامل. تم تسجيل طلبك وتوجيهه إلى فريق مستشارينا في صحار، وسيتواصل معك أحد المستشارين خلال 24 ساعة.
+              شكراً لتواصلك مع منظومة الدليل الشامل. تم تسجيل طلبك في نظام إدارة الطلبات (ERP) وتوجيهه إلى فريق مستشارينا في صحار، وسيتواصل معك أحد المستشارين خلال 24 ساعة.
             </p>
           </div>
 
           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 max-w-md mx-auto text-xs text-slate-700 space-y-2 text-right">
+            {confirmedRequestId && (
+              <div className="flex justify-between border-b border-slate-200 pb-2">
+                <span className="text-slate-500 font-semibold flex items-center gap-1">
+                  <Hash className="w-3.5 h-3.5 text-indigo-600" />
+                  رقم الطلب المرجعي (ERP):
+                </span>
+                <span className="font-mono font-bold text-indigo-700">{confirmedRequestId}</span>
+              </div>
+            )}
             <div className="flex justify-between border-b border-slate-200 pb-2">
               <span className="text-slate-500">الاسم:</span>
               <span className="font-bold">{formData.name}</span>

@@ -60,3 +60,58 @@ export function ensureNullableUuid(id: string | null | undefined, seedMs: number
   }
   return ensureValidUuid(id, seedMs);
 }
+
+// ──────────────────────────────────────────────
+// Canonical Tenant Identity & Entity Resolvers
+// Must NEVER fabricate fake UUIDs for database foreign keys.
+// ──────────────────────────────────────────────
+
+/**
+ * Resolves a company ID. Returns trimmed string if valid UUID, otherwise null.
+ */
+export function resolveCompanyId(id: string | null | undefined): string | null {
+  if (!id || typeof id !== 'string' || !isValidUuid(id)) {
+    return null;
+  }
+  return id.trim();
+}
+
+/**
+ * Resolves an employee ID. Returns trimmed string if valid UUID, otherwise null.
+ */
+export function resolveEmployeeId(id: string | null | undefined): string | null {
+  if (!id || typeof id !== 'string' || !isValidUuid(id)) {
+    return null;
+  }
+  return id.trim();
+}
+
+/**
+ * Resolves a branch ID. Returns trimmed string if valid UUID, otherwise null.
+ */
+export function resolveBranchId(id: string | null | undefined): string | null {
+  if (!id || typeof id !== 'string' || !isValidUuid(id)) {
+    return null;
+  }
+  return id.trim();
+}
+
+/**
+ * Resolves a user ID. Returns trimmed string if valid UUID, otherwise null.
+ */
+export function resolveUserId(id: string | null | undefined): string | null {
+  if (!id || typeof id !== 'string' || !isValidUuid(id)) {
+    return null;
+  }
+  return id.trim();
+}
+
+/**
+ * Resolves a tenant ID. Returns trimmed string if valid UUID, otherwise null.
+ */
+export function resolveTenantId(id: string | null | undefined): string | null {
+  if (!id || typeof id !== 'string' || !isValidUuid(id)) {
+    return null;
+  }
+  return id.trim();
+}
