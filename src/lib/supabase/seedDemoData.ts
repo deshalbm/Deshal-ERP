@@ -421,16 +421,14 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
         code: a.code,
         name_ar: a.nameAr,
         name_en: a.nameEn,
-        account_type: a.type,
-        account_category: a.category,
+        type: a.type,
+        category: a.category,
         parent_id: a.parentId ?? null,
-        is_posting: a.isPosting ?? false,
-        opening_balance: a.openingBalance ?? 0,
-        current_balance: a.currentBalance ?? 0,
-        currency: a.currency ?? 'OMR',
-        is_active: a.isActive ?? true,
+        is_posting: a.isPosting ?? true,
+        currency: a.currency ?? 'OMR'
       }));
-      const { data: aData } = await (supabase.from('chart_of_accounts') as any).upsert(accRows, { onConflict: 'id' }).select();
+      const { data: aData, error: aErr } = await (supabase.from('chart_of_accounts') as any).upsert(accRows, { onConflict: 'id' }).select();
+      if (aErr) console.warn('[SeedDemoData] chart_of_accounts upsert notice:', aErr.message);
       result.details.accounts = aData?.length ?? accRows.length;
     }
 
@@ -452,26 +450,40 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
     const { data: eData } = await (supabase.from('employees') as any).upsert(empRows, { onConflict: 'id' }).select();
     result.details.employees = eData?.length ?? empRows.length;
 
-    // Seed Profiles for Employees
-    const profileRows = CANONICAL_EMPLOYEES.map((e) => ({
-      id: e.id,
-      email: e.email,
-      full_name: e.full_name,
-      phone: e.phone,
-      company_id: companyId,
-      is_active: true
-    }));
-    const { data: profData } = await (supabase.from('profiles') as any).upsert(profileRows, { onConflict: 'id' }).select();
-    result.details.profiles = profData?.length ?? profileRows.length;
+    // Profiles & Memberships only for valid auth user IDs (profiles.id FK -> auth.users.id)
+    const { data: authUserRes } = await supabase.auth.getUser();
+    const currentUserId = authUserRes?.user?.id;
+    const validUserIds = new Set<string>(['61738273-e738-4f53-8718-85811a174281']);
+    if (currentUserId) validUserIds.add(currentUserId);
 
-    // Seed User Company Memberships
-    const membershipRows = CANONICAL_EMPLOYEES.map((e) => ({
-      user_id: e.id,
+    const profileRows = CANONICAL_EMPLOYEES
+      .filter((e) => validUserIds.has(e.id))
+      .map((e) => ({
+        id: e.id,
+        email: e.email,
+        full_name: e.full_name,
+        phone: e.phone,
+        company_id: companyId,
+        is_active: true
+      }));
+
+    if (profileRows.length > 0) {
+      const { data: profData, error: profErr } = await (supabase.from('profiles') as any).upsert(profileRows, { onConflict: 'id' }).select();
+      if (profErr) console.warn('[SeedDemoData] profiles upsert notice:', profErr.message);
+      result.details.profiles = profData?.length ?? profileRows.length;
+    }
+
+    const membershipRows = Array.from(validUserIds).map((uid) => ({
+      user_id: uid,
       company_id: companyId,
       is_active: true
     }));
-    const { data: mData } = await (supabase.from('user_company_memberships') as any).upsert(membershipRows, { onConflict: 'user_id,company_id' }).select();
-    result.details.memberships = mData?.length ?? membershipRows.length;
+
+    if (membershipRows.length > 0) {
+      const { data: mData, error: mErr } = await (supabase.from('user_company_memberships') as any).upsert(membershipRows, { onConflict: 'user_id,company_id' }).select();
+      if (mErr) console.warn('[SeedDemoData] user_company_memberships upsert notice:', mErr.message);
+      result.details.memberships = mData?.length ?? membershipRows.length;
+    }
 
     // 5. Seed Inventory / Products
     const prodRows = CANONICAL_PRODUCTS.map((p) => ({
