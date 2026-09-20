@@ -6,6 +6,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import { DEFAULT_CHART_OF_ACCOUNTS } from '../../utils/accountingStorage';
+import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 
 export interface SeedResult {
   success: boolean;
@@ -416,14 +417,14 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
     // 2. Seed Chart of Accounts
     if (DEFAULT_CHART_OF_ACCOUNTS.length > 0) {
       const accRows = DEFAULT_CHART_OF_ACCOUNTS.map((a) => ({
-        id: a.id,
+        id: ensureValidUuid(a.id),
         company_id: companyId,
         code: a.code,
         name_ar: a.nameAr,
         name_en: a.nameEn,
         type: a.type,
         category: a.category,
-        parent_id: a.parentId ?? null,
+        parent_id: ensureNullableUuid(a.parentId),
         is_posting: a.isPosting ?? true,
         currency: a.currency ?? 'OMR'
       }));
