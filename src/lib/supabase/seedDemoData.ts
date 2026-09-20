@@ -28,12 +28,12 @@ export interface SeedResult {
 }
 
 // ──────────────────────────────────────────────
-// Canonical Default Baseline Seed Datasets
+// Canonical Default Baseline Seed Datasets (Strict Postgres Types)
 // ──────────────────────────────────────────────
 
 export const CANONICAL_BRANCHES = [
   {
-    id: 'brn-sohar',
+    id: '00000000-0000-0000-0000-000000000101',
     code: 'MAIN',
     name_ar: 'فرع صحار الرئيسي',
     name_en: 'Sohar Main Branch',
@@ -41,7 +41,7 @@ export const CANONICAL_BRANCHES = [
     is_active: true
   },
   {
-    id: 'brn-muscat',
+    id: '00000000-0000-0000-0000-000000000102',
     code: 'BR-MUSCAT',
     name_ar: 'فرع مسقط - العذيبة',
     name_en: 'Muscat Al Azaiba Branch',
@@ -52,229 +52,208 @@ export const CANONICAL_BRANCHES = [
 
 export const CANONICAL_EMPLOYEES = [
   {
-    id: 'emp-101',
+    id: '61738273-e738-4f53-8718-85811a174281',
     employee_code: 'EMP-101',
     full_name: 'أحمد بن سعيد المعمري',
-    full_name_en: 'Ahmed Saeed Al Maamari',
+    job_title: 'المدير العام والتنفيذي',
     email: 'deshalbm.com@gmail.com',
     phone: '+968 99112233',
-    role: 'ADMIN',
-    job_title: 'المدير العام والتنفيذي',
-    department: 'الإدارة العليا',
     status: 'ACTIVE',
     basic_salary: 2500,
-    allowances: 400
+    housing_allowance: 250,
+    transport_allowance: 150,
+    other_allowances: 0
   },
   {
-    id: 'emp-102',
+    id: '00000000-0000-0000-0000-000000000202',
     employee_code: 'EMP-102',
     full_name: 'فاطمة بنت سالم البلوشي',
-    full_name_en: 'Fatma Salim Al Balushi',
+    job_title: 'مديرة الموارد البشرية والشؤون الإدارية',
     email: 'fatma.albalushi@deshalbm.com',
     phone: '+968 98223344',
-    role: 'HR',
-    job_title: 'مديرة الموارد البشرية والشؤون الإدارية',
-    department: 'الموارد البشرية',
     status: 'ACTIVE',
     basic_salary: 1400,
-    allowances: 250
+    housing_allowance: 150,
+    transport_allowance: 100,
+    other_allowances: 0
   },
   {
-    id: 'emp-103',
+    id: '00000000-0000-0000-0000-000000000203',
     employee_code: 'EMP-103',
     full_name: 'سالم بن عبدالله الهنائي',
-    full_name_en: 'Salim Abdullah Al Hinai',
+    job_title: 'كبير المحاسبين الماليين',
     email: 'salim.alhinai@deshalbm.com',
     phone: '+968 97334455',
-    role: 'ACCOUNTANT',
-    job_title: 'كبير المحاسبين الماليين',
-    department: 'المالية والمحاسبة',
     status: 'ACTIVE',
     basic_salary: 1200,
-    allowances: 200
+    housing_allowance: 120,
+    transport_allowance: 80,
+    other_allowances: 0
   },
   {
-    id: 'emp-104',
+    id: '00000000-0000-0000-0000-000000000204',
     employee_code: 'EMP-104',
     full_name: 'خالد بن محمد الزدجالي',
-    full_name_en: 'Khalid Mohammad Al Zadjali',
+    job_title: 'أخصائي المبيعات ونقاط البيع',
     email: 'khalid.alzadjali@deshalbm.com',
     phone: '+968 96445566',
-    role: 'SALES',
-    job_title: 'أخصائي المبيعات ونقاط البيع',
-    department: 'المبيعات والتسويق',
     status: 'ACTIVE',
     basic_salary: 950,
-    allowances: 150
+    housing_allowance: 100,
+    transport_allowance: 50,
+    other_allowances: 0
   },
   {
-    id: 'emp-105',
+    id: '00000000-0000-0000-0000-000000000205',
     employee_code: 'EMP-105',
     full_name: 'مريم بنت راشد المقبالي',
-    full_name_en: 'Maryam Rashid Al Maqbali',
+    job_title: 'مستشارة إدارة المشاريع وحاضنة الأعمال',
     email: 'maryam.almaqbali@deshalbm.com',
     phone: '+968 95556677',
-    role: 'EMPLOYEE',
-    job_title: 'مستشارة إدارة المشاريع وحاضنة الأعمال',
-    department: 'الاستشارات والتطوير',
     status: 'ACTIVE',
     basic_salary: 1100,
-    allowances: 180
+    housing_allowance: 110,
+    transport_allowance: 70,
+    other_allowances: 0
   }
 ];
 
 export const CANONICAL_CUSTOMERS = [
   {
-    id: 'cust-101',
+    id: '00000000-0000-0000-0000-000000000401',
     name: 'شركة صحار التنموية ش.م.ع.م',
     contact_person: 'المهندس ناصر المعمري',
     email: 'info@sohardev.om',
     phone: '+968 99123456',
     address: 'ولاية صحار - المنطقة الصناعية',
     city: 'صحار',
-    country: 'Sultanate of Oman',
+    country: 'سلطنة عمان',
     tax_id: 'OM987261',
     cr_number: '1092837',
     customer_type: 'CORPORATE',
-    status: 'ACTIVE',
-    credit_limit: 15000,
-    notes: 'عميل استراتيجي - عقد استشارات وإيجار مكتب'
+    status: 'ACTIVE'
   },
   {
-    id: 'cust-102',
+    id: '00000000-0000-0000-0000-000000000402',
     name: 'مؤسسة الباطنة للتجارة والمقاولات',
     contact_person: 'سالم الشامسي',
     email: 'contact@batinatrade.om',
     phone: '+968 92345678',
     address: 'صحار - فلج القبائل',
     city: 'صحار',
-    country: 'Sultanate of Oman',
+    country: 'سلطنة عمان',
     tax_id: 'OM2091823',
     cr_number: '2091823',
     customer_type: 'CORPORATE',
-    status: 'ACTIVE',
-    credit_limit: 8000,
-    notes: 'عميل خدمات محاسبة ومساحة عمل'
+    status: 'ACTIVE'
   },
   {
-    id: 'cust-103',
+    id: '00000000-0000-0000-0000-000000000403',
     name: 'عبدالله بن سالم الشحي',
     contact_person: 'عبدالله الشحي',
     email: 'abdullah.alshehhi@gmail.com',
     phone: '+968 95678901',
     address: 'صحار - الهمبار',
     city: 'صحار',
-    country: 'Sultanate of Oman',
+    country: 'سلطنة عمان',
+    tax_id: '',
+    cr_number: '',
     customer_type: 'INDIVIDUAL',
-    status: 'ACTIVE',
-    credit_limit: 2000,
-    notes: 'حجز قاعة اجتماعات واستوديو بودكاست'
+    status: 'ACTIVE'
   },
   {
-    id: 'cust-104',
+    id: '00000000-0000-0000-0000-000000000404',
     name: 'شركة الخليج للحلول الرقمية',
     contact_person: 'أيمن الرئيسي',
     email: 'sales@gulfdigital.om',
     phone: '+968 91234567',
     address: 'مسقط - العذيبة الشمالية',
     city: 'مسقط',
-    country: 'Sultanate of Oman',
+    country: 'سلطنة عمان',
     tax_id: 'OM3049182',
     cr_number: '3049182',
     customer_type: 'CORPORATE',
-    status: 'ACTIVE',
-    credit_limit: 10000,
-    notes: 'عقد توريد وتشغيل أكشاك حضور ذكية'
+    status: 'ACTIVE'
   }
 ];
 
 export const CANONICAL_SUPPLIERS = [
   {
-    id: 'sup-101',
+    id: '00000000-0000-0000-0000-000000000501',
     name: 'شركة عُمان للتجهيزات المكتوبة وتكنولوجيا المعلومات',
-    contact_person: 'سعيد البلوشي',
-    email: 'supply@omantech.om',
     phone: '+968 24501234',
-    address: 'مسقط - غلا الصناعية',
+    email: 'supply@omantech.om',
     city: 'مسقط',
+    tax_id: 'OM1094832',
     cr_number: '1094832',
-    tax_id: 'OM1094832'
+    category: 'أجهزة وتقنية'
   },
   {
-    id: 'sup-102',
+    id: '00000000-0000-0000-0000-000000000502',
     name: 'مؤسسة النماء للتوريدات العمومية',
-    contact_person: 'حمد الشامسي',
-    email: 'info@namaa-supply.om',
     phone: '+968 26845678',
-    address: 'صحار - المنطقة الصناعية',
+    email: 'info@namaa-supply.om',
     city: 'صحار',
+    tax_id: 'OM3049281',
     cr_number: '3049281',
-    tax_id: 'OM3049281'
+    category: 'عام'
   }
 ];
 
 export const CANONICAL_PRODUCTS = [
   {
-    id: 'prod-101',
+    id: '00000000-0000-0000-0000-000000000601',
     sku: 'KSK-PRO-01',
     barcode: '6901234567890',
-    name: 'جهاز كشك الحضور والخدمات الذكي Touch-Kiosk Pro',
+    name_ar: 'جهاز كشك الحضور والخدمات الذكي Touch-Kiosk Pro',
+    name_en: 'Touch-Kiosk Pro Device',
     category: 'أجهزة وأنظمة',
-    warehouse: 'المستودع الرئيسي - صحار',
     unit: 'جهاز',
-    quantity: 15,
     cost_price: 320.000,
-    selling_price: 450.000,
-    status: 'ACTIVE'
+    selling_price: 450.000
   },
   {
-    id: 'prod-102',
+    id: '00000000-0000-0000-0000-000000000602',
     sku: 'SRV-FEAS-01',
     barcode: '6901234567891',
-    name: 'دراسة جدوى متكاملة لتأسيس مشروع تجاري',
+    name_ar: 'دراسة جدوى متكاملة لتأسيس مشروع تجاري',
+    name_en: 'Feasibility Study Service',
     category: 'استشارات وتأسيس',
-    warehouse: 'المستودع الرئيسي - صحار',
     unit: 'دراسة',
-    quantity: 99,
     cost_price: 600.000,
-    selling_price: 1200.000,
-    status: 'ACTIVE'
+    selling_price: 1200.000
   },
   {
-    id: 'prod-103',
+    id: '00000000-0000-0000-0000-000000000603',
     sku: 'SPC-MTG-01',
     barcode: '6901234567892',
-    name: 'حجز قاعة الاجتماعات الكبرى (بالساعة)',
+    name_ar: 'حجز قاعة الاجتماعات الكبرى (بالساعة)',
+    name_en: 'Main Conference Room Booking',
     category: 'حجوزات المساحات',
-    warehouse: 'المستودع الرئيسي - صحار',
     unit: 'ساعة',
-    quantity: 500,
     cost_price: 10.000,
-    selling_price: 25.000,
-    status: 'ACTIVE'
+    selling_price: 25.000
   },
   {
-    id: 'prod-104',
+    id: '00000000-0000-0000-0000-000000000604',
     sku: 'SUB-COWORK-01',
     barcode: '6901234567893',
-    name: 'اشتراك مساحة عمل مشتركة - باقة رواد الأعمال',
+    name_ar: 'اشتراك مساحة عمل مشتركة - باقة رواد الأعمال',
+    name_en: 'Coworking Membership Plan',
     category: 'اشتراكات المساحات',
-    warehouse: 'المستودع الرئيسي - صحار',
     unit: 'شهر',
-    quantity: 50,
     cost_price: 30.000,
-    selling_price: 85.000,
-    status: 'ACTIVE'
+    selling_price: 85.000
   }
 ];
 
 export const CANONICAL_SPACES = [
   {
-    id: 'space-101',
+    id: '00000000-0000-0000-0000-000000000701',
     code: 'SPC-01',
     name_ar: 'قاعة الاجتماعات الكبرى - صحار',
     name_en: 'Main Conference Room - Sohar',
-    space_type: 'MEETING_ROOM',
+    type: 'MEETING_ROOM',
     capacity: 14,
     hourly_rate: 25.000,
     daily_rate: 150.000,
@@ -282,11 +261,11 @@ export const CANONICAL_SPACES = [
     status: 'AVAILABLE'
   },
   {
-    id: 'space-102',
+    id: '00000000-0000-0000-0000-000000000702',
     code: 'SPC-02',
     name_ar: 'استوديو البودكاست والإعلام الرقمي',
     name_en: 'Podcast & Media Studio',
-    space_type: 'MEDIA_STUDIO',
+    type: 'HALL',
     capacity: 5,
     hourly_rate: 35.000,
     daily_rate: 200.000,
@@ -294,11 +273,11 @@ export const CANONICAL_SPACES = [
     status: 'AVAILABLE'
   },
   {
-    id: 'space-103',
+    id: '00000000-0000-0000-0000-000000000703',
     code: 'SPC-03',
     name_ar: 'مكتب خاص للمؤسسات الناشئة',
     name_en: 'Private Startup Office Suite',
-    space_type: 'PRIVATE_OFFICE',
+    type: 'OFFICE',
     capacity: 4,
     hourly_rate: 15.000,
     daily_rate: 80.000,
@@ -307,83 +286,53 @@ export const CANONICAL_SPACES = [
   }
 ];
 
-export const CANONICAL_SERVICES = [
-  {
-    id: 'srv-101',
-    code: 'CONS-01',
-    name: 'خدمة تأسيس الشركات ودراسات الجدوى',
-    name_en: 'Company Formation & Feasibility Service',
-    category: 'CONSULTING',
-    base_price: 1200.000,
-    pricing_model: 'FIXED_PRICE',
-    status: 'ACTIVE'
-  },
-  {
-    id: 'srv-102',
-    code: 'CONS-02',
-    name: 'خدمة الهيكلة المالية والاستشارات المحاسبية',
-    name_en: 'Financial Structuring & Accounting Advisory',
-    category: 'CONSULTING',
-    base_price: 650.000,
-    pricing_model: 'HOURLY',
-    status: 'ACTIVE'
-  },
-  {
-    id: 'srv-103',
-    code: 'CONS-03',
-    name: 'إعداد وتطوير الهياكل التنظيمية ولوائح العمل',
-    name_en: 'Organizational Structuring & HR Policy Manual',
-    category: 'CONSULTING',
-    base_price: 850.000,
-    pricing_model: 'FIXED_PRICE',
-    status: 'ACTIVE'
-  }
-];
-
 export const CANONICAL_VOUCHERS = [
   {
-    id: 'vch-101',
+    id: '00000000-0000-0000-0000-000000000801',
     voucher_number: 'RV-2026-001',
-    voucher_date: '2026-09-01',
-    customer_id: 'cust-101',
-    customer_name: 'شركة صحار التنموية ش.م.ع.م',
+    type: 'RECEIPT',
+    date: '2026-09-01',
+    received_from: 'شركة صحار التنموية ش.م.ع.م',
     amount: 1850.000,
+    total_amount: 1850.000,
     currency: 'OMR',
     payment_method: 'BANK_TRANSFER',
     status: 'POSTED',
-    description: 'دفعة مقدمة لحجز قاعة الاجتماعات وحاضنة الأعمال - سبتمبر 2026'
+    notes: 'دفعة مقدمة لحجز قاعة الاجتماعات وحاضنة الأعمال - سبتمبر 2026'
   },
   {
-    id: 'vch-102',
+    id: '00000000-0000-0000-0000-000000000802',
     voucher_number: 'RV-2026-002',
-    voucher_date: '2026-09-10',
-    customer_id: 'cust-103',
-    customer_name: 'عبدالله بن سالم الشحي',
+    type: 'RECEIPT',
+    date: '2026-09-10',
+    received_from: 'عبدالله بن سالم الشحي',
     amount: 250.000,
+    total_amount: 250.000,
     currency: 'OMR',
     payment_method: 'CASH',
     status: 'POSTED',
-    description: 'سداد رسوم استوديو البودكاست وتصوير المحتوى الرقمي'
+    notes: 'سداد رسوم استوديو البودكاست وتصوير المحتوى الرقمي'
   },
   {
-    id: 'vch-103',
+    id: '00000000-0000-0000-0000-000000000803',
     voucher_number: 'RV-2026-003',
-    voucher_date: '2026-09-15',
-    customer_id: 'cust-102',
-    customer_name: 'مؤسسة الباطنة للتجارة والمقاولات',
+    type: 'RECEIPT',
+    date: '2026-09-15',
+    received_from: 'مؤسسة الباطنة للتجارة والمقاولات',
     amount: 1200.000,
+    total_amount: 1200.000,
     currency: 'OMR',
     payment_method: 'CARD',
     status: 'POSTED',
-    description: 'مقابل خدمات استشارية وإعداد دراسة جدوى تسويقية'
+    notes: 'مقابل خدمات استشارية وإعداد دراسة جدوى تسويقية'
   }
 ];
 
 export const CANONICAL_POS_ORDERS = [
   {
-    id: 'pos-101',
+    id: '00000000-0000-0000-0000-000000000901',
     order_number: 'POS-2026-001',
-    customer_id: 'cust-101',
+    customer_id: '00000000-0000-0000-0000-000000000401',
     customer_name: 'شركة صحار التنموية ش.م.ع.م',
     cashier_name: 'خالد الزدجالي',
     order_date: new Date().toISOString(),
@@ -400,7 +349,7 @@ export const CANONICAL_POS_ORDERS = [
 
 export const CANONICAL_SHIFTS = [
   {
-    id: 'shift-101',
+    id: '00000000-0000-0000-0000-000000000951',
     shift_number: 'SHIFT-2026-001',
     cashier_name: 'خالد الزدجالي',
     opened_at: new Date(Date.now() - 4 * 3600000).toISOString(),
@@ -446,10 +395,10 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
     const { data: compData } = await (supabase.from('companies') as any).upsert([
       {
         id: companyId,
-        name_ar: 'مؤسسة ديشال ERP',
-        name_en: 'Deshal Enterprise ERP',
-        cr_number: '1092837',
-        tax_number: 'OM1092837',
+        name_ar: 'شركة ديشال لإدارة الأعمال ش.م.م',
+        name_en: 'Deshal Business Management LLC',
+        cr_number: '1489201',
+        tax_number: 'OM99281726',
         is_active: true,
         updated_at: new Date().toISOString()
       }
@@ -494,10 +443,11 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
     result.details.customers = cData?.length ?? custRows.length;
 
     // 4. Seed Employees & Profiles / Memberships
+    const mainBranchId = '00000000-0000-0000-0000-000000000101';
     const empRows = CANONICAL_EMPLOYEES.map((e) => ({
       ...e,
       company_id: companyId,
-      primary_branch_id: 'brn-sohar'
+      branch_id: mainBranchId
     }));
     const { data: eData } = await (supabase.from('employees') as any).upsert(empRows, { onConflict: 'id' }).select();
     result.details.employees = eData?.length ?? empRows.length;
@@ -507,12 +457,9 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
       id: e.id,
       email: e.email,
       full_name: e.full_name,
-      full_name_en: e.full_name_en,
       phone: e.phone,
-      role: e.role,
       company_id: companyId,
-      branch_id: 'brn-sohar',
-      status: 'ACTIVE'
+      is_active: true
     }));
     const { data: profData } = await (supabase.from('profiles') as any).upsert(profileRows, { onConflict: 'id' }).select();
     result.details.profiles = profData?.length ?? profileRows.length;
@@ -546,35 +493,40 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
     const spaceRows = CANONICAL_SPACES.map((sp) => ({
       ...sp,
       company_id: companyId,
-      branch_id: 'brn-sohar',
-      branch_name: 'فرع صحار الرئيسي'
+      branch_id: mainBranchId
     }));
     const { data: spData } = await (supabase.from('spaces') as any).upsert(spaceRows, { onConflict: 'id' }).select();
     result.details.spaces = spData?.length ?? spaceRows.length;
 
-    // 8. Seed Services
-    const srvRows = CANONICAL_SERVICES.map((sv) => ({
-      ...sv,
-      company_id: companyId,
-      branch_id: 'brn-sohar'
-    }));
-    const { data: svData } = await (supabase.from('consulting_services') as any).upsert(srvRows, { onConflict: 'id' }).select();
-    result.details.services = svData?.length ?? srvRows.length;
-
-    // 9. Seed Vouchers (Receipt Vouchers)
+    // 8. Seed Vouchers (Receipt Vouchers)
     const vchRows = CANONICAL_VOUCHERS.map((v) => ({
       ...v,
       company_id: companyId,
-      branch_id: 'brn-sohar'
+      branch_id: mainBranchId,
+      branch_name: 'فرع صحار الرئيسي'
     }));
     const { data: vData } = await (supabase.from('vouchers') as any).upsert(vchRows, { onConflict: 'id' }).select();
     result.details.vouchers = vData?.length ?? vchRows.length;
+
+    // 9. Seed Kiosk Devices
+    const kioskRows = [
+      {
+        id: '00000000-0000-0000-0000-000000000301',
+        company_id: companyId,
+        branch_id: mainBranchId,
+        device_code: 'KSK-SOHAR-01',
+        name: 'كشك حضور صحار الذكي',
+        location: 'مدخل الاستقبال الرئيسي - صحار',
+        is_active: true
+      }
+    ];
+    await (supabase.from('kiosk_devices') as any).upsert(kioskRows, { onConflict: 'id' }).select();
 
     // 10. Seed POS Orders & Shifts
     const posRows = CANONICAL_POS_ORDERS.map((po) => ({
       ...po,
       company_id: companyId,
-      branch_id: 'brn-sohar'
+      branch_id: mainBranchId
     }));
     const { data: poData } = await (supabase.from('pos_orders') as any).upsert(posRows, { onConflict: 'id' }).select();
     result.details.posOrders = poData?.length ?? posRows.length;
@@ -582,7 +534,7 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
     const shiftRows = CANONICAL_SHIFTS.map((sh) => ({
       ...sh,
       company_id: companyId,
-      branch_id: 'brn-sohar'
+      branch_id: mainBranchId
     }));
     await (supabase.from('cashier_shifts') as any).upsert(shiftRows, { onConflict: 'id' }).select();
 
