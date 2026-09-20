@@ -539,8 +539,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
             voucher={activeVoucher}
             settings={companySettings}
             theme={designTheme}
-            onPrint={handlePrint}
-            onExportPdf={handleExportPdf}
+            onPrint={() => typeof handlePrint === "function" && handlePrint()}
+            onExportPdf={() => typeof handleExportPdf === "function" && handleExportPdf()}
             onUpdateTheme={handleSaveDesignTheme}
           />
         </TenantModuleAccessGuard>
@@ -553,20 +553,26 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
             settings={companySettings}
             theme={designTheme}
             onSelectVoucher={(v) => {
-              handleSetActiveVoucher(v);
-              setActiveTab("editor");
+              if (v && typeof v === "object" && "voucherNumber" in v) {
+                handleSetActiveVoucher(v);
+                setActiveTab("editor");
+              }
             }}
-            onDeleteVoucher={handleDeleteVoucher}
-            onDeleteMultipleVouchers={handleDeleteMultipleVouchers}
-            onDuplicateVoucher={handleDuplicateVoucher}
-            onNewVoucher={handleCreateNewVoucher}
+            onDeleteVoucher={(id) => typeof handleDeleteVoucher === "function" && handleDeleteVoucher(id)}
+            onDeleteMultipleVouchers={(ids) => typeof handleDeleteMultipleVouchers === "function" && handleDeleteMultipleVouchers(ids)}
+            onDuplicateVoucher={(v) => typeof handleDuplicateVoucher === "function" && handleDuplicateVoucher(v)}
+            onNewVoucher={() => typeof handleCreateNewVoucher === "function" && handleCreateNewVoucher()}
             onPrintVoucher={(v) => {
-              handleSetActiveVoucher(v);
-              handlePrint();
+              if (v && typeof v === "object" && "voucherNumber" in v) {
+                handleSetActiveVoucher(v);
+                if (typeof handlePrint === "function") handlePrint(v);
+              }
             }}
             onExportPdfVoucher={(v) => {
-              handleSetActiveVoucher(v);
-              handleExportPdf();
+              if (v && typeof v === "object" && "voucherNumber" in v) {
+                handleSetActiveVoucher(v);
+                if (typeof handleExportPdf === "function") handleExportPdf(v);
+              }
             }}
           />
         </TenantModuleAccessGuard>

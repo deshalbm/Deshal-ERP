@@ -426,7 +426,7 @@ export const VoucherHistory: React.FC<VoucherHistoryProps> = ({
           </select>
 
           <button
-            onClick={onNewVoucher}
+            onClick={() => typeof onNewVoucher === "function" && onNewVoucher()}
             className="flex items-center gap-1 px-4 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 shadow-md cursor-pointer ms-auto"
           >
             <Plus className="w-4 h-4" />
@@ -551,7 +551,7 @@ export const VoucherHistory: React.FC<VoucherHistoryProps> = ({
                           </button>
 
                           <button
-                            onClick={() => onSelectVoucher(v)}
+                            onClick={() => typeof onSelectVoucher === "function" && onSelectVoucher(v)}
                             title={t("edit")}
                             className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer"
                           >
@@ -559,7 +559,7 @@ export const VoucherHistory: React.FC<VoucherHistoryProps> = ({
                           </button>
 
                           <button
-                            onClick={() => onPrintVoucher(v)}
+                            onClick={() => typeof onPrintVoucher === "function" && onPrintVoucher(v)}
                             title={t("print")}
                             className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer"
                           >
@@ -567,7 +567,7 @@ export const VoucherHistory: React.FC<VoucherHistoryProps> = ({
                           </button>
 
                           <button
-                            onClick={() => onExportPdfVoucher(v)}
+                            onClick={() => typeof onExportPdfVoucher === "function" && onExportPdfVoucher(v)}
                             title={t("exportPdf")}
                             className="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-pointer"
                           >
@@ -575,7 +575,7 @@ export const VoucherHistory: React.FC<VoucherHistoryProps> = ({
                           </button>
 
                           <button
-                            onClick={() => onDuplicateVoucher(v)}
+                            onClick={() => typeof onDuplicateVoucher === "function" && onDuplicateVoucher(v)}
                             title={t("duplicate")}
                             className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer"
                           >
@@ -583,7 +583,7 @@ export const VoucherHistory: React.FC<VoucherHistoryProps> = ({
                           </button>
 
                           <button
-                            onClick={() => onDeleteVoucher(v.id)}
+                            onClick={() => typeof onDeleteVoucher === "function" && onDeleteVoucher(v.id)}
                             title={t("delete")}
                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
                           >

@@ -128,8 +128,14 @@ export function loadVouchers(): ReceiptVoucher[] {
 
 export function saveVouchers(vouchers: ReceiptVoucher[]): void {
   try {
+    if (!Array.isArray(vouchers)) {
+      console.warn("[Storage] saveVouchers ignored non-array payload:", typeof vouchers);
+      return;
+    }
+
     const processed: ReceiptVoucher[] = [];
     vouchers.forEach((v) => {
+      if (!v || typeof v !== "object" || "nativeEvent" in v || "preventDefault" in v) return;
       const totalAmt = v.totalAmount ?? v.amount ?? 0;
       const paidAmt = v.paidAmount ?? v.amount ?? totalAmt;
       const remainingAmt = Math.max(0, totalAmt - paidAmt);
@@ -164,7 +170,23 @@ export function saveVouchers(vouchers: ReceiptVoucher[]): void {
       }
     });
 
-    localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(processed));
+    // Clean any accidental non-serializable DOM or circular fields
+    const safeList = processed.map((item) => {
+      const clean: Record<string, any> = {};
+      for (const [k, val] of Object.entries(item)) {
+        if (
+          typeof val !== "function" &&
+          val !== window &&
+          !(val instanceof Event) &&
+          !(val instanceof Element)
+        ) {
+          clean[k] = val;
+        }
+      }
+      return clean;
+    });
+
+    localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(safeList));
   } catch (e) {
     console.error("Failed to save vouchers:", e);
   }

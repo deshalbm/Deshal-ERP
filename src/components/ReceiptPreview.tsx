@@ -329,7 +329,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
           )}
 
           <button
-            onClick={onPrint}
+            onClick={() => typeof onPrint === "function" && onPrint()}
             className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all"
           >
             <Printer className="w-4 h-4" />
@@ -337,7 +337,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
           </button>
 
           <button
-            onClick={onExportPdf}
+            onClick={() => typeof onExportPdf === "function" && onExportPdf()}
             className="flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all"
           >
             <FileDown className="w-4 h-4" />

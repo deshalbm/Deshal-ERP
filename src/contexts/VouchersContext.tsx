@@ -288,8 +288,14 @@ export const VouchersProvider: React.FC<VouchersProviderProps> = ({
 
   const printVoucher = useCallback(
     (targetVoucher?: ReceiptVoucher) => {
-      const v = targetVoucher || activeVoucher;
-      if (targetVoucher) {
+      const isValidTarget =
+        targetVoucher &&
+        typeof targetVoucher === "object" &&
+        "voucherNumber" in targetVoucher &&
+        !("nativeEvent" in targetVoucher) &&
+        !("preventDefault" in targetVoucher);
+      const v = isValidTarget ? targetVoucher : activeVoucher;
+      if (isValidTarget && targetVoucher) {
         setActiveVoucher(targetVoucher);
       }
       triggerAuditLog(
@@ -313,8 +319,14 @@ export const VouchersProvider: React.FC<VouchersProviderProps> = ({
 
   const exportPdfVoucher = useCallback(
     async (targetVoucher?: ReceiptVoucher) => {
-      const v = targetVoucher || activeVoucher;
-      if (targetVoucher) {
+      const isValidTarget =
+        targetVoucher &&
+        typeof targetVoucher === "object" &&
+        "voucherNumber" in targetVoucher &&
+        !("nativeEvent" in targetVoucher) &&
+        !("preventDefault" in targetVoucher);
+      const v = isValidTarget ? targetVoucher : activeVoucher;
+      if (isValidTarget && targetVoucher) {
         setActiveVoucher(targetVoucher);
       }
       triggerAuditLog(
