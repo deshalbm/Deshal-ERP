@@ -134,12 +134,13 @@ async function safeFetch<T>(
  */
 function filterCleanEmployees(employees: Employee[]): Employee[] {
   if (!Array.isArray(employees)) return [];
-  return employees.filter(
+  const cleaned = employees.filter(
     (e: any) =>
       e &&
-      !['emp-1', 'emp-2', 'emp-3', 'emp-4', 'emp-5'].includes(e.id) &&
-      !['EMP-001', 'EMP-002', 'EMP-003', 'EMP-004', 'EMP-005'].includes(e.employeeCode)
+      Boolean(e.fullName || e.email || e.id) &&
+      (!['emp-1', 'emp-2', 'emp-3', 'emp-4', 'emp-5'].includes(e.id) || Boolean(e.fullName && e.email))
   );
+  return cleaned.length > 0 ? cleaned : employees;
 }
 
 /**
@@ -183,11 +184,8 @@ export async function fetchAllERPData(
     };
   }
 
-  // Pure Supabase mode: attempt background seeding if core tables are unpopulated
-  if (companyId) {
-    const { seedDemoDataToSupabase } = await import('../../lib/supabase/seedDemoData');
-    seedDemoDataToSupabase(companyId).catch((e) => console.warn('[ERPDataLoader] Auto-seed notice:', e));
-  }
+  // Pure Supabase mode: clean production initialization mode
+  // Demo auto-seeding disabled to ensure production database remains clean for real user setup.
 
   const errors: ApiErrorResult[] = [];
 

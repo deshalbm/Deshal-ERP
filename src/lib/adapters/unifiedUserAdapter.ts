@@ -269,10 +269,7 @@ export const defaultUnifiedUserAdapter: UnifiedUserPort = {
       const { data: profilesData, error: profilesErr } = await (supabase.from('profiles') as any)
         .select('*');
 
-      if (profilesErr || !profilesData) {
-        console.warn('[UnifiedUserAdapter] Profiles fetch error:', profilesErr);
-        return [];
-      }
+      const safeProfiles = (!profilesErr && Array.isArray(profilesData)) ? profilesData : [];
 
       // 2. Fetch Platform Admins
       const { data: adminsData } = await (supabase.from('platform_admins') as any).select('user_id, role, created_at, created_by');
@@ -297,28 +294,93 @@ export const defaultUnifiedUserAdapter: UnifiedUserPort = {
 
       // 4. Fetch Employees
       const { data: employeesData } = await (supabase.from('employees') as any).select('*');
-      const employeesByEmail: Record<string, any> = {};
-      const employeesById: Record<string, any> = {};
-      if (employeesData) {
-        employeesData.forEach((e: any) => {
-          if (e.email) employeesByEmail[e.email.toLowerCase()] = e;
-          if (e.id) employeesById[e.id] = e;
-        });
+      let allEmployees: any[] = Array.isArray(employeesData) ? employeesData : [];
+      if (allEmployees.length === 0) {
+        try {
+          if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            allEmployees = loadEmployees();
+          }
+        } catch {
+          allEmployees = [];
+        }
       }
 
-      // 5. Aggregate into UnifiedUsers
-      return profilesData.map((p: any) => {
+      const employeesByEmail: Record<string, any> = {};
+      const employeesById: Record<string, any> = {};
+      allEmployees.forEach((e: any) => {
+        if (e.email) employeesByEmail[e.email.toLowerCase()] = e;
+        if (e.id) employeesById[e.id] = e;
+      });
+
+      const matchedEmployeeIds = new Set<string>();
+      const unifiedUsers: UnifiedUser[] = [];
+
+      // 5. Aggregate profiles into UnifiedUsers
+      safeProfiles.forEach((p: any) => {
         const platformAdminRow = adminMap.get(p.id) || null;
         const userMemberships = membershipsByUserId[p.id] || [];
         const empRecord = (p.email && employeesByEmail[p.email.toLowerCase()]) || employeesById[p.id] || null;
 
-        return mapRowToUnifiedUser({
-          profile: p,
-          platformAdminRow,
-          membershipRows: userMemberships,
-          employeeRow: empRecord
-        });
+        if (empRecord && empRecord.id) {
+          matchedEmployeeIds.add(empRecord.id);
+        }
+
+        unifiedUsers.push(
+          mapRowToUnifiedUser({
+            profile: p,
+            platformAdminRow,
+            membershipRows: userMemberships,
+            employeeRow: empRecord
+          })
+        );
       });
+
+      // 6. Include employees that do not have a matching profile row yet
+      allEmployees.forEach((emp: any) => {
+        const empId = emp.id;
+        if (!empId || matchedEmployeeIds.has(empId)) return;
+
+        const isPlatformAdmin = emp.role === 'ADMIN';
+        const membership: CompanyMembershipScope = {
+          companyId: emp.company_id || emp.companyId || activeCompanyId || '00000000-0000-0000-0000-000000000001',
+          companyNameAr: 'مؤسسة ديشال ERP',
+          roleId: emp.role || 'EMPLOYEE',
+          allowedBranchIds: (emp.branch_id || emp.branchId) ? [emp.branch_id || emp.branchId] : [],
+          allowedBranchNames: (emp.branch_name || emp.branchName) ? [emp.branch_name || emp.branchName] : [],
+          isActive: emp.status !== 'INACTIVE',
+          createdAt: emp.created_at || emp.createdAt || new Date().toISOString()
+        };
+
+        unifiedUsers.push(
+          mapRowToUnifiedUser({
+            profile: {
+              id: emp.id,
+              email: emp.email || `${(emp.employee_code || emp.employeeCode || emp.id).toLowerCase()}@deshalbm.com`,
+              full_name: emp.full_name || emp.fullName,
+              full_name_en: emp.full_name_en || emp.fullNameEn,
+              civil_id: emp.civil_id || emp.civilId,
+              phone: emp.phone,
+              avatar_url: emp.avatar_url || emp.avatarUrl,
+              role: emp.role,
+              status: emp.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
+              created_at: emp.created_at || emp.createdAt || new Date().toISOString()
+            },
+            platformAdminRow: isPlatformAdmin ? { user_id: emp.id, role: 'PLATFORM_ADMIN' } : null,
+            membershipRows: [membership],
+            employeeRow: {
+              id: emp.id,
+              employee_code: emp.employee_code || emp.employeeCode,
+              company_id: emp.company_id || emp.companyId || activeCompanyId || '00000000-0000-0000-0000-000000000001',
+              primary_branch_id: emp.primary_branch_id || emp.branch_id || emp.branchId,
+              department: emp.department,
+              role: emp.role,
+              status: emp.status
+            }
+          })
+        );
+      });
+
+      return unifiedUsers;
     } catch (err) {
       console.warn('[UnifiedUserAdapter] Failed to query unified users:', err);
       return [];

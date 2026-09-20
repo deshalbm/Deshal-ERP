@@ -155,6 +155,7 @@ import { QuickCreateModal } from "./components/navigation/QuickCreateModal";
 import { ContextualHelpDrawer } from "./components/help/ContextualHelpDrawer";
 import { HelpCenterView } from "./components/help/HelpCenterView";
 import { ERPOnboardingModal } from "./components/onboarding/ERPOnboardingModal";
+import { FirstLoginSetupWizard } from "./components/onboarding/FirstLoginSetupWizard";
 import { NotificationsDrawer, ERPNotification } from "./components/notifications/NotificationsDrawer";
 import { WebsiteView } from "./components/website/WebsiteView";
 import CmsManagerView from "./components/cms/CmsManagerView";
@@ -190,6 +191,31 @@ function AppContent() {
     handleUnlockScreen,
     handleSessionUpdated
   } = useAuthLifecycleActions();
+
+  const [isFirstLoginSetupOpen, setIsFirstLoginSetupOpen] = useState(false);
+
+  useEffect(() => {
+    if (authSession && authSession.user) {
+      const cId = (authSession.user as any)?.companyId || (authSession.employee as any)?.companyId || DEFAULT_COMPANY_ID;
+      const userRole = String(authSession.user.role || 'ADMIN');
+
+      let isCompleted = false;
+      try {
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+          isCompleted =
+            localStorage.getItem(`rv_deshal_setup_completed_${cId}`) === 'true' ||
+            localStorage.getItem('rv_deshal_setup_completed_global') === 'true';
+        }
+      } catch {
+        isCompleted = false;
+      }
+
+      const isAdminRole = userRole === 'ADMIN' || userRole === 'PLATFORM_ADMIN' || userRole === 'MANAGER';
+      if (!isCompleted && isAdminRole) {
+        setIsFirstLoginSetupOpen(true);
+      }
+    }
+  }, [authSession]);
 
   // Load live data from Supabase PostgreSQL
   useEffect(() => {
@@ -390,6 +416,28 @@ function AppContent() {
             isOpen={uiState.isOnboardingOpen}
             onClose={() => uiActions.setOnboardingOpen(false)}
             onNavigateTab={uiActions.navigateWithHistory}
+          />
+
+          {/* First Login Setup Wizard (For Platform & Company Admins) */}
+          <FirstLoginSetupWizard
+            isOpen={isFirstLoginSetupOpen}
+            userRole={authSession?.user?.role || 'ADMIN'}
+            userEmail={authSession?.user?.email || 'admin@deshalbm.com'}
+            userName={authSession?.user?.fullName || 'مسؤول النظام'}
+            companyId={(authSession?.user as any)?.companyId || (authSession?.employee as any)?.companyId || DEFAULT_COMPANY_ID}
+            existingSettings={loadCompanySettings()}
+            onClose={() => setIsFirstLoginSetupOpen(false)}
+            onCompleteSetup={() => {
+              setIsFirstLoginSetupOpen(false);
+              auditActions.triggerAuditLog(
+                'INITIAL_SETUP_COMPLETED',
+                'SYSTEM',
+                authSession?.user?.id || 'admin',
+                authSession?.user?.fullName || 'مسؤول النظام',
+                'تم إعتماد التأسيس الأولي للمنشأة بنجاح',
+                'Initial enterprise setup completed successfully'
+              );
+            }}
           />
 
           {/* Mobile Bottom Navigation (Smart Touch Navigation for Phones / Tablets) */}

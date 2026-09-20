@@ -176,9 +176,9 @@ export function saveVouchers(vouchers: ReceiptVoucher[]): void {
       for (const [k, val] of Object.entries(item)) {
         if (
           typeof val !== "function" &&
-          val !== window &&
-          !(val instanceof Event) &&
-          !(val instanceof Element)
+          (typeof window === "undefined" || val !== window) &&
+          !(typeof Event !== "undefined" && val instanceof Event) &&
+          !(typeof Element !== "undefined" && val instanceof Element)
         ) {
           clean[k] = val;
         }

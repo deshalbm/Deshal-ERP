@@ -10,7 +10,14 @@ const getEnvVar = (key: string): string => {
   } catch {
     // Ignore
   }
-  return process.env[key] || '';
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key];
+    }
+  } catch {
+    // Ignore
+  }
+  return '';
 };
 
 const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');

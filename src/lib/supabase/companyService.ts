@@ -46,12 +46,52 @@ export async function updateCompany(
       logo_url: updates.logoUrl,
       tax_number: updates.taxId,
       cr_number: updates.crNumber,
+      is_setup_completed: true,
+      setup_completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq('id', cId);
 
   if (error) return { success: false, error: error.message };
   return { success: true };
+}
+
+export async function markSetupCompleted(
+  companyId: string,
+  userId?: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured || !companyId) return { success: true };
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return { success: false, error: 'معرف الشركة غير صالح' };
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('companies') as any)
+      .update({
+        is_setup_completed: true,
+        setup_completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', cId);
+
+    if (error) {
+      console.warn('[CompanyService] update setup completion notice:', error.message);
+    }
+
+    if (userId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('profiles') as any)
+        .update({
+          is_first_login: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to mark setup completed' };
+  }
 }
 
 // ──────────────────────────────────────────────
