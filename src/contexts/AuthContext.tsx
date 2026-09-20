@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
 
   const companyId = useMemo(() => {
     if (!authSession && !supabaseAuthUser) return '';
-    return supabaseAuthUser?.companyId || authSession?.user?.id || DEFAULT_COMPANY_ID;
+    return supabaseAuthUser?.companyId || (authSession?.user as any)?.companyId || DEFAULT_COMPANY_ID;
   }, [supabaseAuthUser, authSession]);
 
   const isKioskTabletUser = useMemo(() => {

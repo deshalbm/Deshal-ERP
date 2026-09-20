@@ -194,8 +194,8 @@ function AppContent() {
   // Load live data from Supabase PostgreSQL
   useEffect(() => {
     if (isSupabaseConfigured && (supabaseAuthUser || authSession)) {
-      const cId = supabaseAuthUser?.companyId || authSession?.user?.id;
-      const validCompanyId = resolveCompanyId(cId);
+      const cId = supabaseAuthUser?.companyId || (authSession?.user as any)?.companyId || DEFAULT_COMPANY_ID;
+      const validCompanyId = resolveCompanyId(cId) || DEFAULT_COMPANY_ID;
       if (!validCompanyId) return;
 
       Promise.all([
