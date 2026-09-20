@@ -36,6 +36,7 @@ export interface FirstLoginSetupWizardProps {
   userRole?: 'PLATFORM_ADMIN' | 'COMPANY_ADMIN' | 'MANAGER' | string;
   userEmail?: string;
   userName?: string;
+  userId?: string;
   companyId?: string;
   existingSettings?: CompanySettings;
   onClose: () => void;
@@ -56,6 +57,7 @@ export const FirstLoginSetupWizard: React.FC<FirstLoginSetupWizardProps> = ({
   userRole = 'COMPANY_ADMIN',
   userEmail = 'admin@deshalbm.com',
   userName = 'مسؤول النظام',
+  userId,
   companyId = '00000000-0000-0000-0000-000000000001',
   existingSettings,
   onClose,
@@ -293,7 +295,7 @@ export const FirstLoginSetupWizard: React.FC<FirstLoginSetupWizardProps> = ({
       }
 
       // 4. Mark setup as completed in Supabase DB & LocalStorage
-      await companySvc.markSetupCompleted(companyId, adminEmployee.id);
+      await companySvc.markSetupCompleted(companyId, userId || adminEmployee.id);
 
       try {
         if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {

@@ -195,26 +195,53 @@ function AppContent() {
   const [isFirstLoginSetupOpen, setIsFirstLoginSetupOpen] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     if (authSession && authSession.user) {
       const cId = (authSession.user as any)?.companyId || (authSession.employee as any)?.companyId || DEFAULT_COMPANY_ID;
+      const uId = authSession.user.id;
       const userRole = String(authSession.user.role || 'ADMIN');
 
-      let isCompleted = false;
+      let isCompletedLocally = false;
       try {
         if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-          isCompleted =
+          isCompletedLocally =
             localStorage.getItem(`rv_deshal_setup_completed_${cId}`) === 'true' ||
             localStorage.getItem('rv_deshal_setup_completed_global') === 'true';
         }
       } catch {
-        isCompleted = false;
+        isCompletedLocally = false;
+      }
+
+      if (isCompletedLocally) {
+        setIsFirstLoginSetupOpen(false);
+        return;
       }
 
       const isAdminRole = userRole === 'ADMIN' || userRole === 'PLATFORM_ADMIN' || userRole === 'MANAGER';
-      if (!isCompleted && isAdminRole) {
-        setIsFirstLoginSetupOpen(true);
+      if (!isAdminRole) {
+        setIsFirstLoginSetupOpen(false);
+        return;
       }
+
+      // Check remote Supabase DB to maintain setup status across Hard Refreshes & cache resets
+      companySvc.checkIsSetupCompleted(cId, uId).then((isDbCompleted) => {
+        if (!isMounted) return;
+        if (isDbCompleted) {
+          try {
+            if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+              localStorage.setItem(`rv_deshal_setup_completed_${cId}`, 'true');
+              localStorage.setItem('rv_deshal_setup_completed_global', 'true');
+            }
+          } catch {}
+          setIsFirstLoginSetupOpen(false);
+        } else {
+          setIsFirstLoginSetupOpen(true);
+        }
+      });
     }
+    return () => {
+      isMounted = false;
+    };
   }, [authSession]);
 
   // Load live data from Supabase PostgreSQL
@@ -424,10 +451,18 @@ function AppContent() {
             userRole={authSession?.user?.role || 'ADMIN'}
             userEmail={authSession?.user?.email || 'admin@deshalbm.com'}
             userName={authSession?.user?.fullName || 'مسؤول النظام'}
+            userId={authSession?.user?.id}
             companyId={(authSession?.user as any)?.companyId || (authSession?.employee as any)?.companyId || DEFAULT_COMPANY_ID}
             existingSettings={loadCompanySettings()}
             onClose={() => setIsFirstLoginSetupOpen(false)}
             onCompleteSetup={() => {
+              const cId = (authSession?.user as any)?.companyId || DEFAULT_COMPANY_ID;
+              try {
+                if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+                  localStorage.setItem(`rv_deshal_setup_completed_${cId}`, 'true');
+                  localStorage.setItem('rv_deshal_setup_completed_global', 'true');
+                }
+              } catch {}
               setIsFirstLoginSetupOpen(false);
               auditActions.triggerAuditLog(
                 'INITIAL_SETUP_COMPLETED',

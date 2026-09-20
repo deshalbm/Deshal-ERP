@@ -5,7 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { CompanySettings, Branch } from '../../types';
-import { resolveCompanyId, resolveBranchId } from '../../utils/uuid';
+import { resolveCompanyId, resolveBranchId, resolveUserId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Company
@@ -91,6 +91,47 @@ export async function markSetupCompleted(
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message || 'Failed to mark setup completed' };
+  }
+}
+
+export async function checkIsSetupCompleted(
+  companyId: string,
+  userId?: string
+): Promise<boolean> {
+  if (!isSupabaseConfigured || !companyId) return false;
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return false;
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: comp } = await (supabase.from('companies') as any)
+      .select('is_setup_completed')
+      .eq('id', cId)
+      .maybeSingle();
+
+    if (comp?.is_setup_completed === true) {
+      return true;
+    }
+
+    if (userId) {
+      const uId = resolveUserId(userId);
+      if (uId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: prof } = await (supabase.from('profiles') as any)
+          .select('is_first_login')
+          .eq('id', uId)
+          .maybeSingle();
+
+        if (prof && prof.is_first_login === false) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  } catch (err) {
+    console.warn('[CompanyService] checkIsSetupCompleted check error:', err);
+    return false;
   }
 }
 
