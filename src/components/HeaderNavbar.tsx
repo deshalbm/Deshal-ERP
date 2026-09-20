@@ -679,7 +679,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
             {/* Attendance Kiosk Quick Launcher */}
             {onOpenAttendanceKiosk && (
               <button
-                onClick={onOpenAttendanceKiosk}
+                onClick={() => typeof onOpenAttendanceKiosk === "function" && onOpenAttendanceKiosk()}
                 title={language === "ar" ? "فتح كشك الحضور والانصراف اللوحي (Kiosk)" : "Launch Attendance Tablet Kiosk"}
                 className="flex items-center space-x-1 rtl:space-x-reverse p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-bold rounded-lg bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 transition-all cursor-pointer shadow-2xs"
               >
@@ -690,7 +690,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
 
             {/* AI Assistant Quick Trigger */}
             <button
-              onClick={onOpenAiAssistant}
+              onClick={() => typeof onOpenAiAssistant === "function" && onOpenAiAssistant()}
               title={t("quickAiAssist")}
               className="flex items-center space-x-1 rtl:space-x-reverse p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-all cursor-pointer"
             >
@@ -702,7 +702,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
             <div className="hidden sm:flex items-center space-x-1.5 rtl:space-x-reverse">
               {/* Print Button */}
               <button
-                onClick={onPrint}
+                onClick={() => typeof onPrint === "function" && onPrint()}
                 title={t("print")}
                 className="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
               >
@@ -712,7 +712,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
 
               {/* Export PDF Button */}
               <button
-                onClick={onExportPdf}
+                onClick={() => typeof onExportPdf === "function" && onExportPdf()}
                 title={t("exportPdf")}
                 className="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-all cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
               >
@@ -722,7 +722,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
 
               {/* New Voucher Button */}
               <button
-                onClick={onNewVoucher}
+                onClick={() => typeof onNewVoucher === "function" && onNewVoucher()}
                 title={t("newVoucher")}
                 className="flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all cursor-pointer"
               >
@@ -746,7 +746,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                 <div className={`absolute ${isRTL ? "left-0" : "right-0"} mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 z-50 animate-in fade-in`}>
                   <button
                     onClick={() => {
-                      onNewVoucher();
+                      if (typeof onNewVoucher === "function") onNewVoucher();
                       setShowQuickActionsDropdown(false);
                     }}
                     className="w-full px-3 py-2 text-start rtl:text-end text-xs font-bold text-slate-900 hover:bg-slate-50 flex items-center space-x-2 rtl:space-x-reverse"
@@ -756,7 +756,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                   </button>
                   <button
                     onClick={() => {
-                      onPrint();
+                      if (typeof onPrint === "function") onPrint();
                       setShowQuickActionsDropdown(false);
                     }}
                     className="w-full px-3 py-2 text-start rtl:text-end text-xs text-slate-700 hover:bg-slate-50 flex items-center space-x-2 rtl:space-x-reverse"
@@ -766,7 +766,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                   </button>
                   <button
                     onClick={() => {
-                      onExportPdf();
+                      if (typeof onExportPdf === "function") onExportPdf();
                       setShowQuickActionsDropdown(false);
                     }}
                     className="w-full px-3 py-2 text-start rtl:text-end text-xs text-slate-700 hover:bg-slate-50 flex items-center space-x-2 rtl:space-x-reverse"
