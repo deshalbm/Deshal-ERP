@@ -183,8 +183,11 @@ export async function fetchAllERPData(
     };
   }
 
-  // Pure Supabase mode: clear legacy localStorage keys
-  clearAllLocalStorage();
+  // Pure Supabase mode: attempt background seeding if core tables are unpopulated
+  if (companyId) {
+    const { seedDemoDataToSupabase } = await import('../../lib/supabase/seedDemoData');
+    seedDemoDataToSupabase(companyId).catch((e) => console.warn('[ERPDataLoader] Auto-seed notice:', e));
+  }
 
   const errors: ApiErrorResult[] = [];
 
@@ -251,6 +254,7 @@ export async function fetchAllERPData(
 
   // Employee post-processing & local persistence sync
   const cleanEmps = filterCleanEmployees(rEmployees.data);
+  const finalEmployees = cleanEmps.length > 0 ? cleanEmps : loadEmployees();
   if (cleanEmps.length > 0) {
     saveEmployees(cleanEmps);
   }
@@ -260,28 +264,37 @@ export async function fetchAllERPData(
   if (rPayroll.data.length > 0) savePayrollSlips(rPayroll.data);
   if (rLeaves.data.length > 0) saveLeaveRequests(rLeaves.data);
 
+  const fallbackBranches = loadBranches();
+  const fallbackCustomers = loadCustomers();
+  const fallbackInventory = loadInventory();
+  const fallbackSuppliers = loadSuppliers();
+  const fallbackVouchers = loadVouchers();
+  const fallbackSpaces = loadRentalSpaces();
+  const fallbackServices = loadConsultingServices();
+  const fallbackAccounts = loadAccounts();
+
   return {
-    customers: rCustomers.data,
-    employees: cleanEmps,
-    inventory: rInventory.data,
-    suppliers: rSuppliers.data,
-    branches: rBranches.data,
+    customers: rCustomers.data.length > 0 ? rCustomers.data : fallbackCustomers,
+    employees: finalEmployees,
+    inventory: rInventory.data.length > 0 ? rInventory.data : fallbackInventory,
+    suppliers: rSuppliers.data.length > 0 ? rSuppliers.data : fallbackSuppliers,
+    branches: rBranches.data.length > 0 ? rBranches.data : fallbackBranches,
     stockMovements: rMovements.data,
     stockTransfers: rTransfers.data as StockTransfer[],
     attendance: rAttendance.data.length > 0 ? rAttendance.data : loadAttendanceRecords(),
     movementLogs: rMovementLogs.data,
     payroll: rPayroll.data.length > 0 ? rPayroll.data : loadPayrollSlips(),
     leaves: rLeaves.data.length > 0 ? rLeaves.data : loadLeaveRequests(),
-    vouchers: rVouchers.data,
+    vouchers: rVouchers.data.length > 0 ? rVouchers.data : fallbackVouchers,
     purchases: rPurchases.data,
-    spaces: rSpaces.data,
+    spaces: rSpaces.data.length > 0 ? rSpaces.data : fallbackSpaces,
     spaceBookings: rSpaceBookings.data,
     leaseContracts: rLeaseContracts.data,
-    consultingServices: rConsultingServices.data,
+    consultingServices: rConsultingServices.data.length > 0 ? rConsultingServices.data : fallbackServices,
     membershipPackages: rMembershipPackages.data,
     tenantSubs: rTenantSubs.data,
     serviceBookings: rServiceBookings.data,
-    accounts: rAccounts.data,
+    accounts: rAccounts.data.length > 0 ? rAccounts.data : fallbackAccounts,
     journalEntries: rJournalEntries.data,
     fiscalPeriods: rFiscalPeriods.data,
     costCenters: rCostCenters.data,
