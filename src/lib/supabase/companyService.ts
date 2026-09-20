@@ -135,8 +135,6 @@ export async function upsertBranch(
     name_en: branch.nameEn ?? '',
     city: branch.city ?? 'صحار',
     is_active: (branch.status ?? 'ACTIVE') === 'ACTIVE',
-    phone: branch.phone ?? '',
-    email: branch.email ?? '',
     updated_at: new Date().toISOString(),
   };
 
