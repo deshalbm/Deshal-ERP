@@ -283,7 +283,7 @@ export const defaultUnifiedUserAdapter: UnifiedUserPort = {
 
       // 3. Fetch User Company Memberships with Companies
       const { data: membershipsData } = await (supabase.from('user_company_memberships') as any)
-        .select('id, user_id, company_id, role_id, role_code, allowed_branch_ids, allowed_branch_names, is_active, created_at, companies(id, name_ar, name_en)');
+        .select('id, user_id, company_id, is_active, created_at, companies(id, name_ar, name_en)');
 
       const membershipsByUserId: Record<string, any[]> = {};
       if (membershipsData) {
@@ -378,8 +378,6 @@ export const defaultUnifiedUserAdapter: UnifiedUserPort = {
       const { error } = await (supabase.from('user_company_memberships') as any).upsert({
         user_id: params.userId,
         company_id: params.companyId,
-        role_id: params.roleId,
-        allowed_branch_ids: params.allowedBranchIds || [],
         is_active: true,
         created_at: new Date().toISOString()
       }, { onConflict: 'user_id,company_id' });

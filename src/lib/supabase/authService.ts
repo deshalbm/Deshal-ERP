@@ -379,7 +379,7 @@ export async function fetchUserMemberships(userId: string): Promise<any[]> {
   try {
     const { data, error } = await supabase
       .from('user_company_memberships')
-      .select('id, user_id, company_id, role_id, is_active, created_at')
+      .select('id, user_id, company_id, is_active, created_at')
       .eq('user_id', validUserId)
       .eq('is_active', true);
 

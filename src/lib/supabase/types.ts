@@ -98,7 +98,6 @@ export interface Database {
           id: string;
           user_id: string;
           company_id: string;
-          role_id: string;
           is_active: boolean;
           created_at: string;
         };
@@ -106,7 +105,6 @@ export interface Database {
           id?: string;
           user_id: string;
           company_id: string;
-          role_id: string;
           is_active?: boolean;
           created_at?: string;
         };
@@ -114,7 +112,6 @@ export interface Database {
           id?: string;
           user_id?: string;
           company_id?: string;
-          role_id?: string;
           is_active?: boolean;
         };
       };

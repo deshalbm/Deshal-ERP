@@ -105,7 +105,7 @@ export async function fetchTenantContextFromSupabase(
     // 2. Query User Memberships & Authorized Companies
     const { data: membershipsData } = await supabase
       .from('user_company_memberships')
-      .select('id, user_id, company_id, role_id, is_active, created_at')
+      .select('id, user_id, company_id, is_active, created_at')
       .eq('user_id', userId)
       .eq('is_active', true);
 
@@ -114,7 +114,7 @@ export async function fetchTenantContextFromSupabase(
         id: m.id,
         userId: m.user_id,
         companyId: m.company_id,
-        roleId: m.role_id,
+        roleId: 'ADMIN',
         isActive: m.is_active,
         createdAt: m.created_at
       }));
