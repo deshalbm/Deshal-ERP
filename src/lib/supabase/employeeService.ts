@@ -5,7 +5,7 @@
 
 import { supabase, isSupabaseConfigured, handleSupabaseError } from './client';
 import type { Employee } from '../../types';
-import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Read
@@ -14,7 +14,8 @@ import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 export async function getEmployees(companyId: string): Promise<Employee[]> {
   if (!isSupabaseConfigured) return [];
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('employees') as any)

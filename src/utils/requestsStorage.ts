@@ -9,6 +9,7 @@ import {
   RequestStatus,
   Employee
 } from '../types';
+import { resolveCompanyId } from './uuid';
 
 const STORAGE_KEY_REQUEST_TYPES = 'deshal_request_types_v1';
 const STORAGE_KEY_REQUESTS = 'deshal_employee_requests_v1';
@@ -1116,17 +1117,19 @@ export function loadEmployeeRequests(): EmployeeRequest[] {
   }
 }
 
-export function saveEmployeeRequests(requests: EmployeeRequest[]): void {
+export function saveEmployeeRequests(requests: EmployeeRequest[], companyId?: string): void {
   try {
     localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(requests));
     
-    // Asynchronously sync to Supabase when configured
-    import('../lib/supabase/requestsService').then((svc) => {
-      const companyId = '00000000-0000-0000-0000-000000000001';
-      for (const req of requests) {
-        svc.upsertEmployeeRequest(req, companyId).catch(console.error);
-      }
-    }).catch(console.error);
+    // Asynchronously sync to Supabase when configured with a valid companyId
+    const validCompanyId = resolveCompanyId(companyId);
+    if (validCompanyId) {
+      import('../lib/supabase/requestsService').then((svc) => {
+        for (const req of requests) {
+          svc.upsertEmployeeRequest(req, validCompanyId).catch(console.error);
+        }
+      }).catch(console.error);
+    }
   } catch (err) {
     console.error('Error saving employee requests:', err);
   }

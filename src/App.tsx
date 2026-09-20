@@ -13,6 +13,7 @@ import * as purchasesSvc from "./lib/supabase/purchasesService";
 import * as spacesSvc from "./lib/supabase/spacesService";
 import * as auditSvc from "./lib/supabase/auditService";
 import { filterCleanEmployees } from "./application/hr/cleanEmployeesList";
+import { resolveCompanyId } from "./utils/uuid";
 const DEFAULT_COMPANY_ID = "00000000-0000-0000-0000-000000000001";
 import {
   ReceiptVoucher,
@@ -192,28 +193,31 @@ function AppContent() {
 
   // Load live data from Supabase PostgreSQL
   useEffect(() => {
-    if (isSupabaseConfigured) {
-      const cId = supabaseAuthUser?.companyId || DEFAULT_COMPANY_ID;
+    if (isSupabaseConfigured && (supabaseAuthUser || authSession)) {
+      const cId = supabaseAuthUser?.companyId || authSession?.user?.id;
+      const validCompanyId = resolveCompanyId(cId);
+      if (!validCompanyId) return;
+
       Promise.all([
-        customerSvc.getCustomers(cId),
-        employeeSvc.getEmployees(cId),
-        inventorySvc.getInventoryItems(cId),
-        supplierSvc.getSuppliers(cId),
-        companySvc.getBranches(cId),
-        inventorySvc.getStockMovements(cId),
-        inventorySvc.getStockTransfers(cId),
-        hrSvc.getAttendanceRecords(cId),
-        hrSvc.getPayrollSlips(cId),
-        hrSvc.getLeaveRequests(cId),
-        purchasesSvc.getVouchers(cId),
-        purchasesSvc.getPurchases(cId),
-        spacesSvc.getRentalSpaces(cId),
-        spacesSvc.getSpaceBookings(cId),
-        spacesSvc.getLeaseContracts(cId),
-        accountingSvc.getAccounts(cId),
-        accountingSvc.getJournalEntries(cId),
-        accountingSvc.getFiscalPeriods(cId),
-        auditSvc.getAuditLogs(cId),
+        customerSvc.getCustomers(validCompanyId),
+        employeeSvc.getEmployees(validCompanyId),
+        inventorySvc.getInventoryItems(validCompanyId),
+        supplierSvc.getSuppliers(validCompanyId),
+        companySvc.getBranches(validCompanyId),
+        inventorySvc.getStockMovements(validCompanyId),
+        inventorySvc.getStockTransfers(validCompanyId),
+        hrSvc.getAttendanceRecords(validCompanyId),
+        hrSvc.getPayrollSlips(validCompanyId),
+        hrSvc.getLeaveRequests(validCompanyId),
+        purchasesSvc.getVouchers(validCompanyId),
+        purchasesSvc.getPurchases(validCompanyId),
+        spacesSvc.getRentalSpaces(validCompanyId),
+        spacesSvc.getSpaceBookings(validCompanyId),
+        spacesSvc.getLeaseContracts(validCompanyId),
+        accountingSvc.getAccounts(validCompanyId),
+        accountingSvc.getJournalEntries(validCompanyId),
+        accountingSvc.getFiscalPeriods(validCompanyId),
+        auditSvc.getAuditLogs(validCompanyId),
       ]).then(([
         custs, emps, inv, supp, branch,
         mvmts, trs, att, payroll, leaves,

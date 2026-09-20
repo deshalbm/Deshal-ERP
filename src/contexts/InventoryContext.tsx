@@ -24,6 +24,7 @@ import * as purchasesSvc from "../lib/supabase/purchasesService";
 import * as supplierSvc from "../lib/supabase/supplierService";
 import { isSupabaseConfigured } from "../lib/supabase/client";
 import { logActivity } from "../utils/auditLogger";
+import { resolveCompanyId } from "../utils/uuid";
 
 const DEFAULT_COMPANY_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -190,8 +191,8 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({
       if (erpData?.setInventoryList) {
         erpData.setInventoryList(items);
       }
-      const cId = erpData?.companyId || DEFAULT_COMPANY_ID;
-      if (isSupabaseConfigured) {
+      const cId = resolveCompanyId(erpData?.companyId);
+      if (isSupabaseConfigured && cId) {
         Promise.all(items.map((item) => inventorySvc.upsertInventoryItem(item, cId))).catch(console.error);
       }
       triggerAuditLog(
@@ -213,8 +214,8 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({
       if (erpData?.setPurchasesList) {
         erpData.setPurchasesList(purchases);
       }
-      const cId = erpData?.companyId || DEFAULT_COMPANY_ID;
-      if (isSupabaseConfigured) {
+      const cId = resolveCompanyId(erpData?.companyId);
+      if (isSupabaseConfigured && cId) {
         Promise.all(purchases.map((p) => purchasesSvc.upsertPurchaseInvoice(p, cId))).catch(console.error);
       }
       triggerAuditLog(
@@ -236,8 +237,8 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({
       if (erpData?.setSuppliersList) {
         erpData.setSuppliersList(suppliers);
       }
-      const cId = erpData?.companyId || DEFAULT_COMPANY_ID;
-      if (isSupabaseConfigured) {
+      const cId = resolveCompanyId(erpData?.companyId);
+      if (isSupabaseConfigured && cId) {
         Promise.all(suppliers.map((s) => supplierSvc.upsertSupplier(s, cId))).catch(console.error);
       }
     },

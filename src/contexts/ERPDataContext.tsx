@@ -1,7 +1,7 @@
 /**
- * ERP Data Context
- * Central React context replacing prop drilling in App.tsx.
- * Provides all entities with loading states and Supabase-backed mutations.
+ * ERP Data Context — Deshal ERP
+ * Central React context providing all entities, structured loading state machine,
+ * AbortController lifecycle safety, realtime subscriptions, and targeted refreshes.
  */
 
 import React, {
@@ -11,55 +11,61 @@ import React, {
   useEffect,
   useCallback,
   useRef,
+  useMemo,
 } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase/client';
+import { isSupabaseConfigured } from '../lib/supabase/client';
 import type { Session } from '@supabase/supabase-js';
 import type { SupabaseAuthUser } from '../lib/supabase/authService';
 import { getCurrentSession } from '../lib/supabase/authService';
+import { processOfflineSyncQueue, enqueueOfflineMutation } from '../lib/supabase/syncService';
+import { resolveCompanyId } from '../utils/uuid';
+import type { ApiErrorResult } from '../lib/supabase/errorMapper';
+import { fetchAllERPData } from '../application/services/erpDataLoader';
+import { useERPRealtimeSubscriptions } from '../hooks/useERPRealtimeSubscriptions';
+
 import * as customerSvc from '../lib/supabase/customerService';
 import * as employeeSvc from '../lib/supabase/employeeService';
 import * as inventorySvc from '../lib/supabase/inventoryService';
-import * as supplierSvc from '../lib/supabase/supplierService';
-import * as companyS from '../lib/supabase/companyService';
 import * as hrSvc from '../lib/supabase/hrService';
 import * as accountingSvc from '../lib/supabase/accountingService';
 import * as purchasesSvc from '../lib/supabase/purchasesService';
 import * as spacesSvc from '../lib/supabase/spacesService';
-import * as auditSvc from '../lib/supabase/auditService';
-import * as requestsSvc from '../lib/supabase/requestsService';
-import { processOfflineSyncQueue, enqueueOfflineMutation } from '../lib/supabase/syncService';
 
 // Fallback local storage imports (used when Supabase is not configured)
 import {
-  loadCustomers, saveCustomers,
-  loadEmployees, saveEmployees,
-  loadInventory, saveInventory,
-  loadSuppliers, saveSuppliers,
-  loadBranches, saveBranches,
-  loadStockMovements, saveStockMovements,
-  loadAttendanceRecords, saveAttendanceRecords,
-  loadPayrollSlips, savePayrollSlips,
-  loadLeaveRequests, saveLeaveRequests,
-  loadVouchers, saveVouchers,
-  loadPurchases, savePurchases,
-  loadRentalSpaces, saveRentalSpaces,
-  loadSpaceBookings, saveSpaceBookings,
-  loadLeaseContracts, saveLeaseContracts,
-  loadConsultingServices, saveConsultingServices,
-  loadMembershipPackages, saveMembershipPackages,
-  loadTenantSubscriptions, saveTenantSubscriptions,
-  loadServiceBookings, saveServiceBookings,
-  loadCompanySettings, saveCompanySettings,
-  loadRecurringSchedules, saveRecurringSchedules,
-  clearAllLocalStorage,
+  saveCustomers,
+  saveEmployees,
+  saveInventory,
+  saveSuppliers,
+  saveBranches,
+  saveStockMovements,
+  saveAttendanceRecords,
+  savePayrollSlips,
+  saveLeaveRequests,
+  saveVouchers,
+  savePurchases,
+  saveRentalSpaces,
+  saveSpaceBookings,
+  saveLeaseContracts,
+  saveConsultingServices,
+  saveMembershipPackages,
+  saveTenantSubscriptions,
+  saveServiceBookings,
+  saveCompanySettings,
+  saveRecurringSchedules,
+  loadEmployees,
+  loadAttendanceRecords,
+  loadPayrollSlips,
+  loadLeaveRequests,
+  loadCompanySettings,
 } from '../utils/storage';
 import {
-  loadAccounts, saveAccounts,
-  loadJournalEntries, saveJournalEntries,
-  loadFiscalPeriods, saveFiscalPeriods,
-  loadCostCenters, saveCostCenters,
+  saveAccounts,
+  saveJournalEntries,
+  saveFiscalPeriods,
+  saveCostCenters,
 } from '../utils/accountingStorage';
-import { loadAuditLogs, saveAuditLogs } from '../utils/auditLogger';
+import { saveAuditLogs } from '../utils/auditLogger';
 import {
   loadAttendanceMovementLogs,
   saveAttendanceMovementLogs,
@@ -74,8 +80,10 @@ import type {
 } from '../types';
 
 // ──────────────────────────────────────────────
-// Context Types
+// Context Types & State Machine
 // ──────────────────────────────────────────────
+
+export type DataLoadingState = 'INITIAL_LOADING' | 'READY' | 'REFRESHING' | 'ERROR';
 
 export interface ERPDataContextType {
   // Auth
@@ -85,7 +93,13 @@ export interface ERPDataContextType {
   isAuthLoading: boolean;
 
   // Loading states
-  isDataLoading: boolean;
+  isDataLoading: boolean; // Backward compatibility (isInitialLoading || isRefreshing)
+  dataState: DataLoadingState;
+  isInitialLoading: boolean;
+  isRefreshing: boolean;
+  isReady: boolean;
+  isError: boolean;
+  dataError: ApiErrorResult | null;
 
   // Core entities
   customersList: Customer[];
@@ -145,8 +159,15 @@ export interface ERPDataContextType {
   setCompanySettings: (settings: CompanySettings) => void;
   setSchedulesList: (schedules: RecurringSchedule[]) => void;
 
-  // Utility
+  // Utility & Refreshes
   refreshAllData: () => Promise<void>;
+  refreshCustomers: () => Promise<void>;
+  refreshInventory: () => Promise<void>;
+  refreshEmployees: () => Promise<void>;
+  refreshHR: () => Promise<void>;
+  refreshAccounting: () => Promise<void>;
+  refreshVouchers: () => Promise<void>;
+  refreshSpaces: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -166,6 +187,12 @@ export function useERPData(): ERPDataContextType {
       companyId: '00000000-0000-0000-0000-000000000001',
       isAuthLoading: false,
       isDataLoading: false,
+      dataState: 'READY',
+      isInitialLoading: false,
+      isRefreshing: false,
+      isReady: true,
+      isError: false,
+      dataError: null,
       customersList: [],
       employeesList: [],
       inventoryList: [],
@@ -221,6 +248,13 @@ export function useERPData(): ERPDataContextType {
       setCompanySettings: () => {},
       setSchedulesList: () => {},
       refreshAllData: async () => {},
+      refreshCustomers: async () => {},
+      refreshInventory: async () => {},
+      refreshEmployees: async () => {},
+      refreshHR: async () => {},
+      refreshAccounting: async () => {},
+      refreshVouchers: async () => {},
+      refreshSpaces: async () => {},
       signOut: async () => {},
     };
   }
@@ -236,7 +270,10 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
   const [authSession, setAuthSession] = useState<Session | null>(null);
   const [companyId, setCompanyId] = useState<string>('');
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isDataLoading, setIsDataLoading] = useState(false);
+
+  // Loading state machine
+  const [dataState, setDataState] = useState<DataLoadingState>('INITIAL_LOADING');
+  const [dataError, setDataError] = useState<ApiErrorResult | null>(null);
 
   // All entity states — initialized from localStorage as fallback
   const [customersList, setCustomersListState] = useState<Customer[]>([]);
@@ -248,11 +285,6 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
   const [stockTransfersList, setStockTransfersListState] = useState<StockTransfer[]>([]);
   const [attendanceList, setAttendanceListState] = useState<AttendanceRecord[]>(() => loadAttendanceRecords());
   const [movementLogsList, setMovementLogsListState] = useState<AttendanceMovementLog[]>(() => loadAttendanceMovementLogs());
-
-  // inside loadDataFromSupabase
-  // Promise.all includes hrSvc.getAttendanceMovementLogs(cId)
-  // setMovementLogsListState(movementLogs)
-
   const [payrollSlipsList, setPayrollSlipsListState] = useState<PayrollSlip[]>(() => loadPayrollSlips());
   const [leaveRequestsList, setLeaveRequestsListState] = useState<LeaveRequest[]>(() => loadLeaveRequests());
   const [vouchersList, setVouchersListState] = useState<ReceiptVoucher[]>([]);
@@ -275,6 +307,9 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
   const companyIdRef = useRef(companyId);
   companyIdRef.current = companyId;
 
+  // AbortController for in-flight request cancellation & race-condition protection
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   // ── Auth initialization ──────────────────────
   useEffect(() => {
     let isMounted = true;
@@ -296,6 +331,86 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // ── Core Data Loading Orchestration ──────────
+  const loadAllData = useCallback(async (cId: string, isBackgroundRefresh = false) => {
+    // 1. Guard against unauthenticated or missing company ID
+    const validCompanyId = resolveCompanyId(cId);
+    if (!validCompanyId) {
+      setDataState('READY');
+      setDataError(null);
+      return;
+    }
+
+    // 2. Cancel previous in-flight requests to prevent race conditions
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // 3. Update loading state machine
+    if (isBackgroundRefresh) {
+      setDataState('REFRESHING');
+    } else {
+      setDataState('INITIAL_LOADING');
+    }
+
+    try {
+      const batch = await fetchAllERPData(validCompanyId, controller.signal);
+
+      // Check if this request was aborted or if company context switched while loading
+      if (controller.signal.aborted || companyIdRef.current !== cId) {
+        return;
+      }
+
+      // Populate local React state
+      setCustomersListState(batch.customers);
+      setEmployeesListState(batch.employees);
+      setInventoryListState(batch.inventory);
+      setSuppliersListState(batch.suppliers);
+      setBranchesListState(batch.branches);
+      setStockMovementsListState(batch.stockMovements);
+      setStockTransfersListState(batch.stockTransfers);
+      setAttendanceListState(batch.attendance);
+      setMovementLogsListState(batch.movementLogs);
+      setPayrollSlipsListState(batch.payroll);
+      setLeaveRequestsListState(batch.leaves);
+      setVouchersListState(batch.vouchers);
+      setPurchasesListState(batch.purchases);
+      setRentalSpacesListState(batch.spaces);
+      setSpaceBookingsListState(batch.spaceBookings);
+      setLeaseContractsListState(batch.leaseContracts);
+      setConsultingServicesListState(batch.consultingServices);
+      setMembershipPackagesListState(batch.membershipPackages);
+      setTenantSubscriptionsListState(batch.tenantSubs);
+      setServiceBookingsListState(batch.serviceBookings);
+      setAccountsListState(batch.accounts);
+      setJournalEntriesListState(batch.journalEntries);
+      setFiscalPeriodsListState(batch.fiscalPeriods);
+      setCostCentersListState(batch.costCenters);
+      setAuditLogsListState(batch.auditLogs);
+      setCompanySettingsState(batch.companySettings);
+      setSchedulesListState(batch.schedules);
+
+      if (batch.errors.length > 0) {
+        setDataState('ERROR');
+        setDataError(batch.errors[0]);
+      } else {
+        setDataState('READY');
+        setDataError(null);
+      }
+    } catch (err: any) {
+      if (!controller.signal.aborted && companyIdRef.current === cId) {
+        setDataState('ERROR');
+        setDataError({
+          code: 'DATABASE_ERROR',
+          message: err?.message || 'فشل تحميل بيانات النظام',
+          originalError: err,
+        });
+      }
+    }
+  }, []);
+
   // ── Online / Offline Auto-Sync Listener ──────
   useEffect(() => {
     const handleOnline = async () => {
@@ -303,7 +418,7 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
         console.log('[ERPDataContext] Network online reconnected! Flushing offline queue to Supabase...');
         const { processedCount } = await processOfflineSyncQueue();
         if (processedCount > 0) {
-          loadAllData(companyIdRef.current);
+          loadAllData(companyIdRef.current, true);
         }
       }
     };
@@ -312,166 +427,134 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
     return () => {
       window.removeEventListener('online', handleOnline);
     };
-  }, []);
+  }, [loadAllData]);
 
   // ── Load all data when companyId is available ─
   useEffect(() => {
-    if (!isAuthLoading) {
+    if (!isAuthLoading && (authSession || authUser) && companyId) {
       loadAllData(companyId);
+    } else if (!isAuthLoading && !companyId) {
+      setDataState('READY');
+      setDataError(null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId, isAuthLoading]);
+  }, [companyId, isAuthLoading, authSession, authUser, loadAllData]);
 
-  // ── Data loading ─────────────────────────────
-  const loadAllData = useCallback(async (cId: string) => {
-    setIsDataLoading(true);
+  // ── Realtime Subscriptions ───────────────────
+  useERPRealtimeSubscriptions(companyId, {
+    onCustomersUpdate: setCustomersListState,
+    onInventoryUpdate: setInventoryListState,
+    onEmployeesUpdate: setEmployeesListState,
+    onJournalEntriesUpdate: setJournalEntriesListState,
+    onVouchersUpdate: setVouchersListState,
+  });
 
-    if (isSupabaseConfigured && cId) {
-      // Pure Supabase Mode: Clear all legacy local storage keys
-      clearAllLocalStorage();
+  // ── Targeted Entity Refresh Functions ─────────
+  const refreshAllData = useCallback(async () => {
+    await loadAllData(companyIdRef.current, true);
+  }, [loadAllData]);
 
-      // Load from Supabase in parallel
-      const [
-        customers, employees, inventory, suppliers, branches,
-        stockMovements, stockTransfers, attendance, movementLogs, payroll, leaves,
-        vouchers, purchases, spaces, spaceBookings, leaseContracts,
-        consultingServices, membershipPackages, tenantSubs, serviceBookings,
-        accounts, journalEntries, fiscalPeriods, costCenters, auditLogs, requests,
-      ] = await Promise.all([
-        customerSvc.getCustomers(cId),
-        employeeSvc.getEmployees(cId),
-        inventorySvc.getInventoryItems(cId),
-        supplierSvc.getSuppliers(cId),
-        companyS.getBranches(cId),
-        inventorySvc.getStockMovements(cId),
-        inventorySvc.getStockTransfers(cId),
+  const refreshCustomers = useCallback(async () => {
+    if (!companyIdRef.current || !isSupabaseConfigured) return;
+    try {
+      const customers = await customerSvc.getCustomers(companyIdRef.current);
+      setCustomersListState(customers);
+    } catch (e) {
+      console.error('[ERPDataContext] Failed to refresh customers:', e);
+    }
+  }, []);
+
+  const refreshInventory = useCallback(async () => {
+    if (!companyIdRef.current || !isSupabaseConfigured) return;
+    try {
+      const inventory = await inventorySvc.getInventoryItems(companyIdRef.current);
+      setInventoryListState(inventory);
+    } catch (e) {
+      console.error('[ERPDataContext] Failed to refresh inventory:', e);
+    }
+  }, []);
+
+  const refreshEmployees = useCallback(async () => {
+    if (!companyIdRef.current || !isSupabaseConfigured) return;
+    try {
+      const employees = await employeeSvc.getEmployees(companyIdRef.current);
+      if (employees && employees.length > 0) {
+        setEmployeesListState(employees);
+        saveEmployees(employees);
+      }
+    } catch (e) {
+      console.error('[ERPDataContext] Failed to refresh employees:', e);
+    }
+  }, []);
+
+  const refreshHR = useCallback(async () => {
+    if (!companyIdRef.current || !isSupabaseConfigured) return;
+    const cId = companyIdRef.current;
+    try {
+      const [att, logs, slips, leaves] = await Promise.all([
         hrSvc.getAttendanceRecords(cId),
         hrSvc.getAttendanceMovementLogs(cId),
         hrSvc.getPayrollSlips(cId),
         hrSvc.getLeaveRequests(cId),
-        purchasesSvc.getVouchers(cId),
-        purchasesSvc.getPurchases(cId),
-        spacesSvc.getRentalSpaces(cId),
-        spacesSvc.getSpaceBookings(cId),
-        spacesSvc.getLeaseContracts(cId),
-        spacesSvc.getConsultingServices(cId),
-        spacesSvc.getMembershipPackages(cId),
-        spacesSvc.getTenantSubscriptions(cId),
-        spacesSvc.getServiceBookings(cId),
+      ]);
+      setAttendanceListState(att);
+      setMovementLogsListState(logs);
+      setPayrollSlipsListState(slips);
+      setLeaveRequestsListState(leaves);
+    } catch (e) {
+      console.error('[ERPDataContext] Failed to refresh HR:', e);
+    }
+  }, []);
+
+  const refreshAccounting = useCallback(async () => {
+    if (!companyIdRef.current || !isSupabaseConfigured) return;
+    const cId = companyIdRef.current;
+    try {
+      const [accounts, entries, periods, centers] = await Promise.all([
         accountingSvc.getAccounts(cId),
         accountingSvc.getJournalEntries(cId),
         accountingSvc.getFiscalPeriods(cId),
         accountingSvc.getCostCenters(cId),
-        auditSvc.getAuditLogs(cId),
-        requestsSvc.getEmployeeRequests(cId),
       ]);
-
-      setCustomersListState(customers);
-
-      if (Array.isArray(employees)) {
-        const cleanEmps = employees.filter(
-          (e: any) =>
-            e &&
-            !['emp-1', 'emp-2', 'emp-3', 'emp-4', 'emp-5'].includes(e.id) &&
-            !['EMP-001', 'EMP-002', 'EMP-003', 'EMP-004', 'EMP-005'].includes(e.employeeCode)
-        );
-        setEmployeesListState(cleanEmps);
-        saveEmployees(cleanEmps);
-      } else {
-        const localEmps = loadEmployees();
-        setEmployeesListState(localEmps);
-      }
-
-      setInventoryListState(inventory);
-      setSuppliersListState(suppliers);
-      setBranchesListState(branches);
-      setStockMovementsListState(stockMovements);
-      setStockTransfersListState(stockTransfers as StockTransfer[]);
-
-      if (attendance && attendance.length > 0) {
-        setAttendanceListState(attendance);
-        saveAttendanceRecords(attendance);
-      } else {
-        const localAtt = loadAttendanceRecords();
-        setAttendanceListState(localAtt);
-      }
-
-      setMovementLogsListState(movementLogs);
-      saveAttendanceMovementLogs(movementLogs);
-
-      if (payroll && payroll.length > 0) {
-        setPayrollSlipsListState(payroll);
-        savePayrollSlips(payroll);
-      } else {
-        const localPayroll = loadPayrollSlips();
-        setPayrollSlipsListState(localPayroll);
-      }
-
-      if (leaves && leaves.length > 0) {
-        setLeaveRequestsListState(leaves);
-        saveLeaveRequests(leaves);
-      } else {
-        const localLeaves = loadLeaveRequests();
-        setLeaveRequestsListState(localLeaves);
-      }
-
-      setVouchersListState(vouchers);
-      setPurchasesListState(purchases);
-      setRentalSpacesListState(spaces);
-      setSpaceBookingsListState(spaceBookings);
-      setLeaseContractsListState(leaseContracts);
-      setConsultingServicesListState(consultingServices);
-      setMembershipPackagesListState(membershipPackages);
-      setTenantSubscriptionsListState(tenantSubs);
-      setServiceBookingsListState(serviceBookings);
       setAccountsListState(accounts);
-      setJournalEntriesListState(journalEntries);
-      setFiscalPeriodsListState(fiscalPeriods);
-      setCostCentersListState(costCenters);
-      setAuditLogsListState(auditLogs);
-
-    } else {
-      // Fallback: Load from localStorage
-      setCustomersListState(loadCustomers());
-      setEmployeesListState(loadEmployees());
-      setInventoryListState(loadInventory());
-      setSuppliersListState(loadSuppliers());
-      setBranchesListState(loadBranches());
-      setStockMovementsListState(loadStockMovements());
-      setAttendanceListState(loadAttendanceRecords());
-      setPayrollSlipsListState(loadPayrollSlips());
-      setLeaveRequestsListState(loadLeaveRequests());
-      setVouchersListState(loadVouchers());
-      setPurchasesListState(loadPurchases());
-      setRentalSpacesListState(loadRentalSpaces());
-      setSpaceBookingsListState(loadSpaceBookings());
-      setLeaseContractsListState(loadLeaseContracts());
-      setConsultingServicesListState(loadConsultingServices());
-      setMembershipPackagesListState(loadMembershipPackages());
-      setTenantSubscriptionsListState(loadTenantSubscriptions());
-      setServiceBookingsListState(loadServiceBookings());
-      setAccountsListState(loadAccounts());
-      setJournalEntriesListState(loadJournalEntries());
-      setFiscalPeriodsListState(loadFiscalPeriods());
-      setCostCentersListState(loadCostCenters());
-      setAuditLogsListState(loadAuditLogs());
-      setSchedulesListState(loadRecurringSchedules());
+      setJournalEntriesListState(entries);
+      setFiscalPeriodsListState(periods);
+      setCostCentersListState(centers);
+    } catch (e) {
+      console.error('[ERPDataContext] Failed to refresh accounting:', e);
     }
-
-    setIsDataLoading(false);
   }, []);
 
-  const refreshAllData = useCallback(() => loadAllData(companyIdRef.current), [loadAllData]);
+  const refreshVouchers = useCallback(async () => {
+    if (!companyIdRef.current || !isSupabaseConfigured) return;
+    try {
+      const vouchers = await purchasesSvc.getVouchers(companyIdRef.current);
+      setVouchersListState(vouchers);
+    } catch (e) {
+      console.error('[ERPDataContext] Failed to refresh vouchers:', e);
+    }
+  }, []);
 
-  // ── Supabase-aware save wrappers ─────────────
-  // Each setter: updates state + persists to Supabase (or localStorage fallback)
+  const refreshSpaces = useCallback(async () => {
+    if (!companyIdRef.current || !isSupabaseConfigured) return;
+    const cId = companyIdRef.current;
+    try {
+      const [spaces, bookings, contracts] = await Promise.all([
+        spacesSvc.getRentalSpaces(cId),
+        spacesSvc.getSpaceBookings(cId),
+        spacesSvc.getLeaseContracts(cId),
+      ]);
+      setRentalSpacesListState(spaces);
+      setSpaceBookingsListState(bookings);
+      setLeaseContractsListState(contracts);
+    } catch (e) {
+      console.error('[ERPDataContext] Failed to refresh spaces:', e);
+    }
+  }, []);
 
+  // ── Setters & Mutations ──────────────────────
   const setCustomersList = useCallback((customers: Customer[]) => {
     setCustomersListState(customers);
-    if (!isSupabaseConfigured || !companyIdRef.current) {
-      saveCustomers(customers);
-    }
-    // Individual upserts are done in component handlers
+    if (!isSupabaseConfigured || !companyIdRef.current) saveCustomers(customers);
   }, []);
 
   const setEmployeesList = useCallback((employees: Employee[]) => {
@@ -501,7 +584,6 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
 
   const setStockTransfersList = useCallback((transfers: StockTransfer[]) => {
     setStockTransfersListState(transfers);
-    // Transfers are written individually via inventoryService
   }, []);
 
   const setAttendanceList = useCallback((records: AttendanceRecord[]) => {
@@ -633,99 +715,27 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
   const handleSignOut = useCallback(async () => {
     const { signOut } = await import('../lib/supabase/authService');
     await signOut();
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     setAuthUser(null);
     setAuthSession(null);
     setCompanyId('');
+    setDataState('READY');
+    setDataError(null);
   }, []);
 
-  // ── Realtime subscriptions ───────────────────
-  useEffect(() => {
-    if (!isSupabaseConfigured || !companyId) return;
-
-    const channel = supabase
-      .channel(`erp-company-${companyId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'customers',
-        filter: `company_id=eq.${companyId}`,
-      }, () => {
-        customerSvc.getCustomers(companyId).then(setCustomersListState);
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'products',
-        filter: `company_id=eq.${companyId}`,
-      }, () => {
-        inventorySvc.getInventoryItems(companyId).then(setInventoryListState);
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'employees',
-        filter: `company_id=eq.${companyId}`,
-      }, () => {
-        employeeSvc.getEmployees(companyId).then((fetched) => {
-          if (fetched && fetched.length > 0) {
-            setEmployeesListState(fetched);
-            saveEmployees(fetched);
-          }
-        });
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'journal_entries',
-        filter: `company_id=eq.${companyId}`,
-      }, () => {
-        accountingSvc.getJournalEntries(companyId).then(setJournalEntriesListState);
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'pos_orders',
-        filter: `company_id=eq.${companyId}`,
-      }, () => {
-        // POS Order updated in Realtime
-        purchasesSvc.getVouchers(companyId).then(setVouchersListState);
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'cashier_shifts',
-        filter: `company_id=eq.${companyId}`,
-      }, () => {
-        // Cashier shift state change
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'activities',
-        filter: `company_id=eq.${companyId}`,
-      }, () => {
-        // CRM Activity updated in Realtime
-        customerSvc.getCustomers(companyId).then(setCustomersListState);
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'leads',
-        filter: `company_id=eq.${companyId}`,
-      }, () => {
-        // Lead state change
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [companyId]);
+  // Compute backward-compatible loading flags
+  const isInitialLoading = dataState === 'INITIAL_LOADING';
+  const isRefreshing = dataState === 'REFRESHING';
+  const isReady = dataState === 'READY';
+  const isError = dataState === 'ERROR';
+  const isDataLoading = isInitialLoading || isRefreshing;
 
   // ── Context value ────────────────────────────
-  const contextValue: ERPDataContextType = {
+  const contextValue: ERPDataContextType = useMemo(() => ({
     authUser, authSession, companyId, isAuthLoading,
-    isDataLoading,
+    isDataLoading, dataState, isInitialLoading, isRefreshing, isReady, isError, dataError,
     customersList, employeesList, inventoryList, suppliersList, branchesList,
     stockMovementsList, stockTransfersList, attendanceList, movementLogsList, payrollSlipsList,
     leaveRequestsList, vouchersList, purchasesList, rentalSpacesList, spaceBookingsList,
@@ -741,8 +751,41 @@ export function ERPDataProvider({ children }: { children: React.ReactNode }) {
     setFiscalPeriodsList, setCostCentersList, setAuditLogsList,
     setCompanySettings, setSchedulesList,
     refreshAllData,
+    refreshCustomers,
+    refreshInventory,
+    refreshEmployees,
+    refreshHR,
+    refreshAccounting,
+    refreshVouchers,
+    refreshSpaces,
     signOut: handleSignOut,
-  };
+  }), [
+    authUser, authSession, companyId, isAuthLoading,
+    isDataLoading, dataState, isInitialLoading, isRefreshing, isReady, isError, dataError,
+    customersList, employeesList, inventoryList, suppliersList, branchesList,
+    stockMovementsList, stockTransfersList, attendanceList, movementLogsList, payrollSlipsList,
+    leaveRequestsList, vouchersList, purchasesList, rentalSpacesList, spaceBookingsList,
+    leaseContractsList, consultingServicesList, membershipPackagesList,
+    tenantSubscriptionsList, serviceBookingsList, accountsList, journalEntriesList,
+    fiscalPeriodsList, costCentersList, auditLogsList, companySettings, schedulesList,
+    setCustomersList, setEmployeesList, setInventoryList, setSuppliersList,
+    setBranchesList, setStockMovementsList, setStockTransfersList, setAttendanceList,
+    setMovementLogsList, setPayrollSlipsList, setLeaveRequestsList, setVouchersList, setPurchasesList,
+    setRentalSpacesList, setSpaceBookingsList, setLeaseContractsList,
+    setConsultingServicesList, setMembershipPackagesList, setTenantSubscriptionsList,
+    setServiceBookingsList, setAccountsList, setJournalEntriesList,
+    setFiscalPeriodsList, setCostCentersList, setAuditLogsList,
+    setCompanySettings, setSchedulesList,
+    refreshAllData,
+    refreshCustomers,
+    refreshInventory,
+    refreshEmployees,
+    refreshHR,
+    refreshAccounting,
+    refreshVouchers,
+    refreshSpaces,
+    handleSignOut,
+  ]);
 
   return (
     <ERPDataContext.Provider value={contextValue}>

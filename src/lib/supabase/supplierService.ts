@@ -5,14 +5,18 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { Supplier } from '../../types';
+import { resolveCompanyId } from '../../utils/uuid';
 
 export async function getSuppliers(companyId: string): Promise<Supplier[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('suppliers') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('name', { ascending: true });
 
   if (error) {

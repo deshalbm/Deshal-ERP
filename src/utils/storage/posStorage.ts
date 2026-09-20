@@ -1,4 +1,5 @@
 import { POSOrder, POSHeldCart, CashierShift } from "../../types";
+import { resolveCompanyId } from "../uuid";
 
 const POS_ORDERS_STORAGE_KEY = "rv_studio_pos_orders_list";
 const POS_HELD_CARTS_STORAGE_KEY = "rv_studio_pos_held_carts";
@@ -22,13 +23,14 @@ export function loadPOSOrders(): POSOrder[] {
   return [];
 }
 
-export function savePOSOrders(orders: POSOrder[], companyId: string = "00000000-0000-0000-0000-000000000001"): void {
+export function savePOSOrders(orders: POSOrder[], companyId: string = ""): void {
   try {
     localStorage.setItem(POS_ORDERS_STORAGE_KEY, JSON.stringify(orders));
-    if (orders.length > 0 && typeof window !== "undefined") {
+    const validCompanyId = resolveCompanyId(companyId);
+    if (orders.length > 0 && validCompanyId && typeof window !== "undefined") {
       const latest = orders[0];
       import("../../lib/supabase/posService")
-        .then((svc) => svc.upsertPOSOrder(latest, companyId))
+        .then((svc) => svc.upsertPOSOrder(latest, validCompanyId))
         .catch(console.error);
     }
   } catch (e) {
@@ -74,13 +76,14 @@ export function loadCashierShifts(): CashierShift[] {
   return [];
 }
 
-export function saveCashierShifts(shifts: CashierShift[], companyId: string = "00000000-0000-0000-0000-000000000001"): void {
+export function saveCashierShifts(shifts: CashierShift[], companyId: string = ""): void {
   try {
     localStorage.setItem(CASHIER_SHIFTS_STORAGE_KEY, JSON.stringify(shifts));
-    if (shifts.length > 0 && typeof window !== "undefined") {
+    const validCompanyId = resolveCompanyId(companyId);
+    if (shifts.length > 0 && validCompanyId && typeof window !== "undefined") {
       const latest = shifts[0];
       import("../../lib/supabase/posService")
-        .then((svc) => svc.upsertCashierShift(latest, companyId))
+        .then((svc) => svc.upsertCashierShift(latest, validCompanyId))
         .catch(console.error);
     }
   } catch (e) {

@@ -9,6 +9,7 @@ import { useERPData } from "./ERPDataContext";
 import * as purchasesSvc from "../lib/supabase/purchasesService";
 import { isSupabaseConfigured } from "../lib/supabase/client";
 import { enqueueOfflineMutation } from "../lib/supabase/syncService";
+import { resolveCompanyId } from "../utils/uuid";
 import { logActivity } from "../utils/auditLogger";
 
 const DEFAULT_COMPANY_ID = "00000000-0000-0000-0000-000000000001";
@@ -141,8 +142,8 @@ export const VouchersProvider: React.FC<VouchersProviderProps> = ({
         erpData.setVouchersList(updatedList);
       }
 
-      const cId = erpData?.companyId || DEFAULT_COMPANY_ID;
-      if (isSupabaseConfigured) {
+      const cId = resolveCompanyId(erpData?.companyId);
+      if (isSupabaseConfigured && cId) {
         if (typeof navigator !== "undefined" && !navigator.onLine) {
           enqueueOfflineMutation({ entityType: "VOUCHER", action: "UPSERT", payload: activeVoucher, companyId: cId });
         } else {

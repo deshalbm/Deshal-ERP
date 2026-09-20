@@ -20,6 +20,7 @@ import {
 import * as accountingSvc from '../lib/supabase/accountingService';
 import { isSupabaseConfigured } from '../lib/supabase/client';
 import { useERPData } from './ERPDataContext';
+import { resolveCompanyId } from '../utils/uuid';
 
 const DEFAULT_COMPANY_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -112,13 +113,13 @@ export const AccountingProvider: React.FC<AccountingProviderProps> = ({
     if (erpData?.setFiscalPeriodsList) erpData.setFiscalPeriodsList(internalFiscalPeriods);
   }, [internalFiscalPeriods, erpData]);
 
-  const companyId = erpData?.companyId || DEFAULT_COMPANY_ID;
+  const companyId = resolveCompanyId(erpData?.companyId);
 
   const saveAccountsAction = useCallback(
     (updated: Account[]) => {
       setInternalAccounts(updated);
       saveAccounts(updated);
-      if (isSupabaseConfigured) {
+      if (isSupabaseConfigured && companyId) {
         Promise.all(updated.map((acc) => accountingSvc.upsertAccount(acc, companyId))).catch(console.error);
       }
     },
@@ -129,7 +130,7 @@ export const AccountingProvider: React.FC<AccountingProviderProps> = ({
     (updated: JournalEntry[]) => {
       setInternalJournalEntries(updated);
       saveJournalEntries(updated);
-      if (isSupabaseConfigured) {
+      if (isSupabaseConfigured && companyId) {
         Promise.all(updated.map((entry) => accountingSvc.saveJournalEntry(entry, companyId))).catch(console.error);
       }
     },

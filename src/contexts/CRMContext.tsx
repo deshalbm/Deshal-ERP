@@ -16,6 +16,7 @@ import * as customerSvc from "../lib/supabase/customerService";
 import { isSupabaseConfigured } from "../lib/supabase/client";
 import { enqueueOfflineMutation } from "../lib/supabase/syncService";
 import { logActivity } from "../utils/auditLogger";
+import { resolveCompanyId } from "../utils/uuid";
 
 const DEFAULT_COMPANY_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -149,8 +150,8 @@ export const CRMProvider: React.FC<CRMProviderProps> = ({
           erpData.setCustomersList(updated);
         }
 
-        const cId = erpData?.companyId || DEFAULT_COMPANY_ID;
-        if (isSupabaseConfigured) {
+        const cId = resolveCompanyId(erpData?.companyId);
+        if (isSupabaseConfigured && cId) {
           if (typeof navigator !== 'undefined' && !navigator.onLine) {
             enqueueOfflineMutation({ entityType: 'CUSTOMER', action: 'UPSERT', payload: customer, companyId: cId });
           } else {

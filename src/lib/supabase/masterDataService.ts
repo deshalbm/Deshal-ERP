@@ -4,7 +4,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { MasterLocation, InventoryItem } from '../../types';
-import { ensureValidUuid } from '../../utils/uuid';
+import { ensureValidUuid, resolveCompanyId } from '../../utils/uuid';
 
 // Fallback Master Locations for Oman
 export const DEFAULT_MASTER_LOCATIONS: MasterLocation[] = [
@@ -60,7 +60,8 @@ export async function searchProductsAndServicesServerSide(
 ): Promise<{ products: InventoryItem[]; total: number }> {
   if (!isSupabaseConfigured) return { products: [], total: 0 };
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return { products: [], total: 0 };
   const offset = (page - 1) * limit;
 
   let req = (supabase.from('products') as any)
@@ -69,11 +70,11 @@ export async function searchProductsAndServicesServerSide(
 
   if (query && query.trim()) {
     const q = `%${query.trim()}%`;
-    req = req.or(`name.ilike.${q},sku.ilike.${q},barcode.ilike.${q},category.ilike.${q}`);
+    req = req.or(`name_ar.ilike.${q},name_en.ilike.${q},sku.ilike.${q},barcode.ilike.${q},category.ilike.${q}`);
   }
 
   const { data, count, error } = await req
-    .order('name', { ascending: true })
+    .order('name_ar', { ascending: true })
     .range(offset, offset + limit - 1);
 
   if (error) {

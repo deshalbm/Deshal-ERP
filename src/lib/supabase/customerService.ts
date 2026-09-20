@@ -6,7 +6,7 @@
 import { supabase, isSupabaseConfigured } from './client';
 import type { Customer } from '../../types';
 import { enqueueOperation } from '../offline/indexedDBQueue';
-import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../utils/uuid';
 
 import { normalizeOmaniPhone } from '../../utils/phone';
 
@@ -21,7 +21,8 @@ export function normalizePhone(phone: string): string {
 export async function getCustomers(companyId: string): Promise<Customer[]> {
   if (!isSupabaseConfigured) return [];
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('customers') as any)

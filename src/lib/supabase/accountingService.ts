@@ -13,7 +13,7 @@ import type {
   AccountingRevisionLog,
 } from '../../types/accounting';
 import type { ReceiptVoucher } from '../../types';
-import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Atomic Sequence & Financial Posting RPCs
@@ -107,7 +107,8 @@ export async function postVoucherFinancialTransaction(
 export async function getAccounts(companyId: string): Promise<Account[]> {
   if (!isSupabaseConfigured) return [];
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('chart_of_accounts') as any)
@@ -171,10 +172,13 @@ export async function upsertAccount(
 export async function getJournalEntries(companyId: string): Promise<JournalEntry[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('journal_entries') as any)
     .select('*, journal_entry_lines(*)')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('date', { ascending: false });
 
   if (error) {
@@ -297,10 +301,13 @@ export async function saveJournalEntry(
 export async function getFiscalPeriods(companyId: string): Promise<FiscalPeriod[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('fiscal_periods') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('fiscal_year', { ascending: false });
 
   if (error) {
@@ -330,10 +337,13 @@ export async function getFiscalPeriods(companyId: string): Promise<FiscalPeriod[
 export async function getCostCenters(companyId: string): Promise<CostCenter[]> {
   if (!isSupabaseConfigured) return [];
 
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('cost_centers') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', validCompanyId)
     .order('code', { ascending: true });
 
   if (error) {

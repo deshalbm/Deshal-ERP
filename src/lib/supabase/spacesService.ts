@@ -23,12 +23,13 @@ import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../uti
 export async function getRentalSpaces(companyId: string): Promise<RentalSpace[]> {
   if (!isSupabaseConfigured) return [];
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('spaces') as any)
     .select('*')
-    .eq('company_id', validCompanyId)
+    .eq('company_id', cId)
     .order('name_ar', { ascending: true });
 
   if (error) { console.error('[SpacesService] getRentalSpaces:', error.message); return []; }
@@ -193,10 +194,13 @@ export async function upsertSpaceBooking(
 export async function getLeaseContracts(companyId: string): Promise<LeaseContract[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('lease_contracts') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('start_date', { ascending: false });
 
   if (error) { console.error('[SpacesService] getLeaseContracts:', error.message); return []; }
@@ -342,10 +346,13 @@ export async function upsertLeaseContract(
 export async function getConsultingServices(companyId: string): Promise<ConsultingService[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('consulting_services') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('name', { ascending: true });
 
   if (error) { console.error('[SpacesService] getConsultingServices:', error.message); return []; }
@@ -415,10 +422,13 @@ export async function upsertConsultingService(
 export async function getMembershipPackages(companyId: string): Promise<MembershipPackage[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('membership_packages') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('name', { ascending: true });
 
   if (error) { console.error('[SpacesService] getMembershipPackages:', error.message); return []; }
@@ -567,10 +577,13 @@ export async function upsertTenantSubscription(
 export async function getServiceBookings(companyId: string): Promise<ServiceBooking[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('service_bookings') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('booking_date', { ascending: false });
 
   if (error) { console.error('[SpacesService] getServiceBookings:', error.message); return []; }

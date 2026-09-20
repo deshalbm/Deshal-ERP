@@ -46,7 +46,7 @@ import {
 import { loadEmployees, DEFAULT_COMPANY_SETTINGS } from "../../utils/storage";
 import { authenticateKioskAccount, saveActiveKioskDeviceId, saveIsKioskModeEnabled } from "../../utils/attendanceStorage";
 import { useLanguage } from "../../utils/LanguageContext";
-import { isRemoteAuthAvailable, executeRemoteSignIn, executeRemoteSignUp } from "../../application/auth/authUseCases";
+import { isRemoteAuthAvailable, executeRemoteSignIn, executeRemoteSignUp, isMockAuthEnabled } from "../../application/auth/authUseCases";
 import { defaultAuthServiceAdapter } from "../../lib/adapters/authServiceAdapter";
 
 interface LoginPageProps {
@@ -242,6 +242,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         setSuccessMessage(t("loginSuccess"));
         onLoginSuccess(session);
         return;
+      } else {
+        // Production safety: when remote Supabase auth is available, do NOT silently fall back to local mock sessions unless VITE_ENABLE_MOCK_AUTH=true
+        if (!isMockAuthEnabled()) {
+          setIsLoading(false);
+          setErrorMessage(supaRes.error || t("invalidCredentials"));
+          if (onAuditLog) {
+            onAuditLog(
+              "LOGIN",
+              "SECURITY",
+              "failed-attempt",
+              email,
+              `محاولة تسجيل دخول فاشلة بالبريد (${email})`,
+              `Failed password login attempt for (${email}): ${supaRes.error || "Invalid credentials"}`
+            );
+          }
+          return;
+        }
       }
     }
 

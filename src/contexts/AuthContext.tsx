@@ -19,6 +19,8 @@ import { TenantProvider } from './TenantContext';
 
 const DEFAULT_COMPANY_ID = '00000000-0000-0000-0000-000000000001';
 
+export type AuthStatus = 'AUTH_LOADING' | 'AUTHENTICATED' | 'AUTH_UNAUTHENTICATED' | 'AUTH_ERROR';
+
 export interface AuthContextState {
   authSession: AuthSession | null;
   supabaseAuthUser: SupabaseAuthUser | null;
@@ -28,6 +30,7 @@ export interface AuthContextState {
   isKioskTabletUser: boolean;
   isSecurityModalOpen: boolean;
   isSupabaseReady: boolean;
+  authStatus: AuthStatus;
 }
 
 export interface AuthContextActions {
@@ -69,6 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState<boolean>(false);
 
   const companyId = useMemo(() => {
+    if (!authSession && !supabaseAuthUser) return '';
     return supabaseAuthUser?.companyId || authSession?.user?.id || DEFAULT_COMPANY_ID;
   }, [supabaseAuthUser, authSession]);
 
@@ -170,6 +174,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
     setIsSecurityModalOpen(false);
   }, []);
 
+  const authStatus = useMemo<AuthStatus>(() => {
+    if (isAuthLoading) return 'AUTH_LOADING';
+    if (authSession) return 'AUTHENTICATED';
+    return 'AUTH_UNAUTHENTICATED';
+  }, [isAuthLoading, authSession]);
+
   const value: AuthContextValue = {
     state: {
       authSession,
@@ -179,7 +189,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
       isAuthLoading,
       isKioskTabletUser,
       isSecurityModalOpen,
-      isSupabaseReady
+      isSupabaseReady,
+      authStatus
     },
     actions: {
       login: handleLogin,

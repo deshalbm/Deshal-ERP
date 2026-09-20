@@ -5,6 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { InventoryItem, StockMovement, StockTransfer } from '../../types';
+import { resolveCompanyId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Products (Inventory Items)
@@ -13,10 +14,13 @@ import type { InventoryItem, StockMovement, StockTransfer } from '../../types';
 export async function getInventoryItems(companyId: string): Promise<InventoryItem[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('products') as any)
     .select('*, stock_balances(*)')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('name_ar', { ascending: true });
 
   if (error) {
@@ -64,10 +68,13 @@ export async function deleteInventoryItem(id: string): Promise<{ success: boolea
 export async function getStockMovements(companyId: string): Promise<StockMovement[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('inventory_transactions') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('transaction_date', { ascending: false });
 
   if (error) {
@@ -120,10 +127,13 @@ export async function addStockMovement(
 export async function getStockTransfers(companyId: string): Promise<StockTransfer[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('stock_transfers') as any)
     .select('*, stock_transfer_lines(*)')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('created_at', { ascending: false });
 
   if (error) {

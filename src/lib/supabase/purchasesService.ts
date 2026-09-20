@@ -5,7 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { PurchaseInvoice, ReceiptVoucher } from '../../types';
-import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Purchase Invoices (mapped to purchase_orders)
@@ -14,7 +14,8 @@ import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 export async function getPurchases(companyId: string): Promise<PurchaseInvoice[]> {
   if (!isSupabaseConfigured) return [];
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('purchase_orders') as any)
@@ -115,7 +116,8 @@ export async function deletePurchase(id: string): Promise<{ success: boolean; er
 export async function getVouchers(companyId: string): Promise<ReceiptVoucher[]> {
   if (!isSupabaseConfigured) return [];
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('vouchers') as any)

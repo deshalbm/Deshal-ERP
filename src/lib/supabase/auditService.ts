@@ -5,7 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { AuditLogEntry } from '../../types';
-import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../utils/uuid';
 
 export async function logToSupabase(
   entry: AuditLogEntry,
@@ -13,7 +13,9 @@ export async function logToSupabase(
 ): Promise<void> {
   if (!isSupabaseConfigured) return;
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return;
+
   const validId = ensureValidUuid(entry.id);
   const validEntityId = ensureNullableUuid(entry.entityId);
 
@@ -56,7 +58,8 @@ export async function getAuditLogs(
 ): Promise<AuditLogEntry[]> {
   if (!isSupabaseConfigured) return [];
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('audit_logs') as any)

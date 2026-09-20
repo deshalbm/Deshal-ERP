@@ -5,6 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { CustomerInteraction } from '../../types';
+import { resolveCompanyId } from '../../utils/uuid';
 
 export interface Lead {
   id: string;
@@ -32,10 +33,13 @@ export async function getCustomerInteractions(
 ): Promise<CustomerInteraction[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase.from('activities') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('created_at', { ascending: false });
 
   if (customerId) {
@@ -91,10 +95,13 @@ export async function addCustomerInteraction(
 export async function getLeads(companyId: string): Promise<Lead[]> {
   if (!isSupabaseConfigured) return [];
 
+  const cId = resolveCompanyId(companyId);
+  if (!cId) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('leads') as any)
     .select('*')
-    .eq('company_id', companyId)
+    .eq('company_id', cId)
     .order('created_at', { ascending: false });
 
   if (error) {

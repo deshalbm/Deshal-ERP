@@ -103,6 +103,27 @@ export function createCompatibleAuthSession(
   };
 }
 
+/**
+ * Helper to determine if mock offline authentication fallback is enabled.
+ * Defaults to false unless VITE_ENABLE_MOCK_AUTH environment variable is explicitly 'true'.
+ */
+export function isMockAuthEnabled(): boolean {
+  let val: string | undefined;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const metaEnv = (import.meta as any)?.env;
+    if (metaEnv && metaEnv.VITE_ENABLE_MOCK_AUTH !== undefined) {
+      val = String(metaEnv.VITE_ENABLE_MOCK_AUTH);
+    }
+  } catch {
+    // Ignore metaEnv check error
+  }
+  if (val === undefined && typeof process !== 'undefined' && process.env) {
+    val = process.env.VITE_ENABLE_MOCK_AUTH;
+  }
+  return val === 'true';
+}
+
 export function isRemoteAuthAvailable(adapter?: AuthServicePort): boolean {
   return adapter ? adapter.isConfigured() : false;
 }

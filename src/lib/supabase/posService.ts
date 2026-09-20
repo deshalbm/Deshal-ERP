@@ -10,7 +10,7 @@ import type {
   CashierShift,
   POSHeldCart,
 } from '../../types';
-import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
+import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // POS Orders
@@ -19,7 +19,8 @@ import { ensureValidUuid, ensureNullableUuid } from '../../utils/uuid';
 export async function getPOSOrders(companyId: string): Promise<POSOrder[]> {
   if (!isSupabaseConfigured) return [];
 
-  const validCompanyId = ensureValidUuid(companyId);
+  const validCompanyId = resolveCompanyId(companyId);
+  if (!validCompanyId) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('pos_orders') as any)

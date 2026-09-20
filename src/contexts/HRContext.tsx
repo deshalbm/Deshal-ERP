@@ -31,6 +31,7 @@ import * as hrSvc from "../lib/supabase/hrService";
 import { isSupabaseConfigured } from "../lib/supabase/client";
 import { enqueueOfflineMutation } from "../lib/supabase/syncService";
 import { recordKioskAttendance } from "../application/hr/recordKioskAttendance";
+import { resolveCompanyId } from "../utils/uuid";
 
 const DEFAULT_COMPANY_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -172,14 +173,14 @@ export const HRProvider: React.FC<HRProviderProps> = ({
     if (erpData?.setMovementLogsList) erpData.setMovementLogsList(internalMovementLogs);
   }, [internalMovementLogs, erpData]);
 
-  const companyId = erpData?.companyId || DEFAULT_COMPANY_ID;
+  const companyId = resolveCompanyId(erpData?.companyId);
 
   const saveEmployeesAction = useCallback(
     (employees: Employee[]) => {
       setInternalEmployees(employees);
       saveEmployees(employees);
 
-      if (isSupabaseConfigured) {
+      if (isSupabaseConfigured && companyId) {
         Promise.all(employees.map((emp) => employeeSvc.upsertEmployee(emp, companyId))).catch(console.error);
       }
 
@@ -202,7 +203,7 @@ export const HRProvider: React.FC<HRProviderProps> = ({
       setInternalAttendance(records);
       saveAttendanceRecords(records);
 
-      if (isSupabaseConfigured) {
+      if (isSupabaseConfigured && companyId) {
         Promise.all(records.map((r) => hrSvc.upsertAttendanceRecord(r, companyId))).catch(console.error);
       }
 
@@ -225,7 +226,7 @@ export const HRProvider: React.FC<HRProviderProps> = ({
       setInternalPayrollSlips(slips);
       savePayrollSlips(slips);
 
-      if (isSupabaseConfigured) {
+      if (isSupabaseConfigured && companyId) {
         Promise.all(slips.map((s) => hrSvc.upsertPayrollSlip(s, companyId))).catch(console.error);
       }
 
@@ -248,7 +249,7 @@ export const HRProvider: React.FC<HRProviderProps> = ({
       setInternalLeaveRequests(requests);
       saveLeaveRequests(requests);
 
-      if (isSupabaseConfigured) {
+      if (isSupabaseConfigured && companyId) {
         Promise.all(requests.map((r) => hrSvc.upsertLeaveRequest(r, companyId))).catch(console.error);
       }
 
