@@ -1165,10 +1165,9 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  handleFieldChange("status", "DRAFT");
-                  setTimeout(() => {
-                    onSave();
-                  }, 50);
+                  const updatedDraft = { ...voucher, status: "DRAFT" as VoucherStatus, updatedAt: new Date().toISOString() };
+                  onChange(updatedDraft);
+                  onSave();
                 }}
                 className="w-1/2 sm:w-auto px-5 py-3 rounded-xl border border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-950 font-black text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
@@ -1179,12 +1178,9 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  if (voucher.status === "DRAFT") {
-                    handleFieldChange("status", "ISSUED");
-                  }
-                  setTimeout(() => {
-                    onSave();
-                  }, 50);
+                  const updatedIssued = { ...voucher, status: (voucher.status === "DRAFT" ? "ISSUED" : voucher.status) as VoucherStatus, updatedAt: new Date().toISOString() };
+                  onChange(updatedIssued);
+                  onSave();
                 }}
                 className="w-1/2 sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 cursor-pointer scale-102"
               >

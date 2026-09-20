@@ -1,5 +1,6 @@
 import { ReceiptVoucher, VoucherType, CompanySettings } from "../../types";
 import { numberToWords } from "../finance/numberToWords";
+import { generateUuid } from "../../utils/uuid";
 
 /**
  * Pure Business Logic: Factory for generating ReceiptVouchers, Tax Invoices, Quotations, Payments, and Petty Cash documents.
@@ -78,7 +79,7 @@ export function createNewVoucherState(
       : "شركة الدليل الشامل";
 
   return {
-    id: "doc-" + nowMs,
+    id: generateUuid(nowMs),
     type: type,
     voucherNumber: voucherNum,
     referenceNo: `${prefix}-REF-${randRef}`,
@@ -136,7 +137,7 @@ export function createDuplicateVoucherPayload(
   const nowStr = new Date(nowMs).toISOString();
   return {
     ...v,
-    id: "rv-" + nowMs,
+    id: generateUuid(nowMs + 1),
     voucherNumber: `${v.voucherNumber}-COPY`,
     createdAt: nowStr,
     updatedAt: nowStr
