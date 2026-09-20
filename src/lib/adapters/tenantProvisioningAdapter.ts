@@ -302,7 +302,7 @@ export class SupabaseTenantProvisioningAdapter implements ProvisioningAdapter {
       // 5. Fetch Subscription
       const { data: sRow } = await supabase
         .from('tenant_subscriptions')
-        .select('id, company_id, plan_type, status, current_period_end')
+        .select('id, company_id, status, start_date, end_date')
         .eq('company_id', companyId)
         .maybeSingle();
 
@@ -312,9 +312,9 @@ export class SupabaseTenantProvisioningAdapter implements ProvisioningAdapter {
         subscription = {
           id: s.id,
           companyId: s.company_id,
-          planType: s.plan_type || 'PRO',
+          planType: s.package_name || 'PRO',
           status: s.status || 'active',
-          currentPeriodEnd: s.current_period_end || new Date().toISOString()
+          currentPeriodEnd: s.end_date || new Date().toISOString()
         };
       }
 

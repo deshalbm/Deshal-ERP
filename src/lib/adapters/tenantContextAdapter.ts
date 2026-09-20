@@ -148,7 +148,7 @@ export async function fetchTenantContextFromSupabase(
     // 3. Query Branches for Active Company
     const { data: branchesData } = await supabase
       .from('branches')
-      .select('id, code, name_ar, name_en, is_main, is_active, company_id')
+      .select('id, code, name_ar, name_en, is_active, company_id')
       .eq('company_id', activeCompanyId)
       .eq('is_active', true);
 
@@ -158,7 +158,7 @@ export async function fetchTenantContextFromSupabase(
         code: b.code,
         name: b.name_ar || b.name || 'الفرع الرئيسي',
         nameEn: b.name_en,
-        isMain: b.is_main,
+        isMain: (b.code === 'MAIN'),
         status: b.is_active ? 'ACTIVE' : 'INACTIVE',
         companyId: b.company_id
       }));
@@ -231,7 +231,7 @@ export async function fetchTenantContextFromSupabase(
     // 7. Query Subscription
     const { data: subData } = await supabase
       .from('tenant_subscriptions')
-      .select('id, company_id, plan_type, status, current_period_end')
+      .select('id, company_id, status, start_date, end_date')
       .eq('company_id', activeCompanyId)
       .maybeSingle();
 
@@ -240,9 +240,9 @@ export async function fetchTenantContextFromSupabase(
       result.subscription = {
         id: s.id,
         companyId: s.company_id,
-        planType: s.plan_type || 'ENTERPRISE',
+        planType: s.package_name || 'ENTERPRISE',
         status: s.status || 'active',
-        currentPeriodEnd: s.current_period_end || new Date().toISOString()
+        currentPeriodEnd: s.end_date || new Date().toISOString()
       };
     }
 

@@ -64,17 +64,11 @@ export async function seedDemoDataToSupabase(companyId: string): Promise<SeedRes
       const rows = branches.map((b) => ({
         id: b.id,
         company_id: companyId,
-        code: b.code,
-        name: b.name,
+        code: b.code || (b.isMain ? 'MAIN' : 'BR-' + b.id.substring(0, 4)),
+        name_ar: b.name,
         name_en: b.nameEn ?? '',
-        is_main: b.isMain ?? false,
-        phone: b.phone ?? '',
-        email: b.email ?? '',
-        address: b.address ?? '',
-        city: b.city ?? '',
-        country: b.country ?? '',
-        manager_name: b.managerName ?? '',
-        status: b.status ?? 'ACTIVE',
+        city: b.city ?? 'صحار',
+        is_active: (b.status ?? 'ACTIVE') === 'ACTIVE',
       }));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase.from('branches') as any).upsert(rows, { onConflict: 'id' }).select();

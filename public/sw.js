@@ -54,6 +54,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Bypass SW for all cross-origin requests (e.g. Supabase REST API), except Google Fonts
+  const isGoogleFont = url.origin.includes('fonts.googleapis.com') || url.origin.includes('fonts.gstatic.com');
+  if (url.origin !== self.location.origin && !isGoogleFont) {
+    return;
+  }
+
   // API requests: Network only
   if (url.pathname.startsWith('/api/')) {
     return;
@@ -61,7 +67,13 @@ self.addEventListener('fetch', (event) => {
 
   // HTML / Navigation requests: ALWAYS NETWORK-FIRST
   // This guarantees users get the newest index.html immediately without needing hard-refresh
-  const isNavigation = request.mode === 'navigate' || request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html');
+  const isNavigation =
+    request.mode === 'navigate' ||
+    request.destination === 'document' ||
+    url.pathname === '/' ||
+    url.pathname.endsWith('.html') ||
+    (!url.pathname.includes('.') && !url.pathname.startsWith('/assets/'));
+
   if (isNavigation) {
     event.respondWith(
       fetch(request)
@@ -75,15 +87,15 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // Offline fallback
-          return caches.match(request).then((cached) => cached || caches.match('/index.html'));
+          // Offline fallback to SPA index.html
+          return caches.match(request).then((cached) => cached || caches.match('/index.html') || caches.match('/'));
         })
     );
     return;
   }
 
   // Google Fonts caching
-  if (url.origin.includes('fonts.googleapis.com') || url.origin.includes('fonts.gstatic.com')) {
+  if (isGoogleFont) {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cachedResponse = await cache.match(request);
@@ -95,7 +107,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         } catch (err) {
-          return cachedResponse || new Response('', { status: 503, statusText: 'Offline' });
+          return cachedResponse || Response.error();
         }
       })
     );
@@ -116,7 +128,7 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       }).catch((err) => {
         console.warn('[SW] Asset fetch failed or offline:', err);
-        return cachedResponse || new Response('Asset unavailable offline', { status: 503, statusText: 'Service Unavailable' });
+        return cachedResponse || Response.error();
       });
     })
   );

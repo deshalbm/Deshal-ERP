@@ -90,17 +90,13 @@ export async function upsertBranch(
   const row = {
     id: bId,
     company_id: cId,
-    code: branch.code ?? '',
-    name: branch.name,
+    code: branch.code ?? (branch.isMain ? 'MAIN' : 'BR-' + bId.substring(0, 4)),
+    name_ar: branch.name,
     name_en: branch.nameEn ?? '',
-    is_main: branch.isMain ?? false,
-    address: branch.address ?? '',
-    city: branch.city ?? '',
-    country: branch.country ?? '',
+    city: branch.city ?? 'صحار',
+    is_active: (branch.status ?? 'ACTIVE') === 'ACTIVE',
     phone: branch.phone ?? '',
     email: branch.email ?? '',
-    manager_name: branch.managerName ?? '',
-    status: branch.status ?? 'ACTIVE',
     updated_at: new Date().toISOString(),
   };
 
