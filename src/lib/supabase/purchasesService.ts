@@ -5,7 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './client';
 import type { PurchaseInvoice, ReceiptVoucher } from '../../types';
-import { ensureValidUuid, ensureNullableUuid, resolveCompanyId } from '../../utils/uuid';
+import { ensureValidUuid, ensureNullableUuid, resolveCompanyId, ensureValidDateString } from '../../utils/uuid';
 
 // ──────────────────────────────────────────────
 // Purchase Invoices (mapped to purchase_orders)
@@ -44,8 +44,8 @@ export async function upsertPurchase(
     supplier_id: ensureNullableUuid(purchase.supplierId),
     supplier_name: purchase.supplierName ?? '',
     order_number: purchase.purchaseNumber,
-    order_date: purchase.date,
-    expected_delivery_date: purchase.dueDate ?? null,
+    order_date: ensureValidDateString(purchase.date, true),
+    expected_delivery_date: ensureValidDateString(purchase.dueDate, false),
     status: purchase.status ?? 'DRAFT',
     subtotal: purchase.subtotal ?? 0,
     tax_amount: purchase.taxAmount ?? 0,
@@ -148,8 +148,8 @@ export async function upsertVoucher(
     voucher_number: voucher.voucherNumber,
     type: voucher.type ?? 'RECEIPT',
     reference_no: voucher.referenceNo ?? '',
-    date: voucher.date,
-    due_date: voucher.dueDate ?? null,
+    date: ensureValidDateString(voucher.date, true),
+    due_date: ensureValidDateString(voucher.dueDate, false),
     received_from: voucher.receivedFrom ?? '',
     paid_to: voucher.paidTo ?? '',
     payer_email: voucher.payerEmail ?? '',

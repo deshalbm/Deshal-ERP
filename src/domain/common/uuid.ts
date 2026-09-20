@@ -61,6 +61,25 @@ export function ensureNullableUuid(id: string | null | undefined, seedMs: number
   return ensureValidUuid(id, seedMs);
 }
 
+/**
+ * Ensures a valid PostgreSQL DATE string (YYYY-MM-DD) or null.
+ * Prevents "invalid input syntax for type date: ''" error when empty strings are passed.
+ */
+export function ensureValidDateString(val: string | null | undefined, fallbackToToday: boolean = false): string | null {
+  if (!val || typeof val !== 'string' || val.trim() === '') {
+    return fallbackToToday ? new Date().toISOString().split('T')[0] : null;
+  }
+  const trimmed = val.trim();
+  const parsed = new Date(trimmed);
+  if (isNaN(parsed.getTime())) {
+    return fallbackToToday ? new Date().toISOString().split('T')[0] : null;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+  return parsed.toISOString().split('T')[0];
+}
+
 // ──────────────────────────────────────────────
 // Canonical Tenant Identity & Entity Resolvers
 // Must NEVER fabricate fake UUIDs for database foreign keys.
